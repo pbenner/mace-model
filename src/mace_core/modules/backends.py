@@ -37,3 +37,45 @@ class ModelBackend:
                 f"'{field_name}'."
             )
         return fn
+
+
+_MODEL_BACKEND_FIELDS = (
+    "make_irreps",
+    "make_linear",
+    "make_activation",
+    "mask_head",
+    "make_tensor_product",
+    "make_fully_connected_tensor_product",
+    "make_symmetric_contraction",
+    "tp_out_irreps_with_instructions",
+    "reshape_irreps",
+    "scatter_sum",
+)
+
+
+def define_backend(*, name: str):
+    """
+    Decorator that turns a class of backend operations into a ModelBackend.
+    """
+
+    def decorator(ops_cls):
+        kwargs = {}
+        for field_name in _MODEL_BACKEND_FIELDS:
+            fn = getattr(ops_cls, field_name, None)
+            if fn is not None:
+                kwargs[field_name] = fn
+        return ModelBackend(name=name, **kwargs)
+
+    return decorator
+
+
+def use_backend(backend: ModelBackend):
+    """
+    Decorator to bind a specific backend implementation to a block class.
+    """
+
+    def decorator(cls):
+        cls.BACKEND = backend
+        return cls
+
+    return decorator

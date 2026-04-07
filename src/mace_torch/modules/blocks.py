@@ -7,19 +7,19 @@ from e3nn import o3
 
 from mace.modules.wrapper_ops import CuEquivarianceConfig, OEQConfig
 
+from mace_core.modules.backends import use_backend
 from mace_core.modules.blocks import NonLinearReadoutBlock as CoreNonLinearReadoutBlock
 
 from .backends import TORCH_BACKEND
 
 
+@use_backend(TORCH_BACKEND)
 class NonLinearReadoutBlock(CoreNonLinearReadoutBlock, torch.nn.Module):
     """
     PyTorch unified readout block.
 
     Signature mirrors mace.modules.blocks.NonLinearReadoutBlock.
     """
-
-    BACKEND = TORCH_BACKEND
 
     def __init__(
         self,

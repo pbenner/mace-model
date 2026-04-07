@@ -5,15 +5,16 @@ from collections.abc import Callable
 import jax.numpy as jnp
 from e3nn_jax import Irreps, IrrepsArray
 from flax import nnx
+from mace_core.modules.backends import use_backend
+from mace_core.modules.blocks import NonLinearReadoutBlock as CoreNonLinearReadoutBlock
 
 from mace_jax.adapters.nnx.torch import nxx_auto_import_from_torch
 from mace_jax.modules.wrapper_ops import CuEquivarianceConfig
 
-from mace_core.modules.blocks import NonLinearReadoutBlock as CoreNonLinearReadoutBlock
-
 from .backends import JAX_BACKEND
 
 
+@use_backend(JAX_BACKEND)
 @nxx_auto_import_from_torch(allow_missing_mapper=True)
 class NonLinearReadoutBlock(CoreNonLinearReadoutBlock, nnx.Module):
     """
@@ -21,8 +22,6 @@ class NonLinearReadoutBlock(CoreNonLinearReadoutBlock, nnx.Module):
 
     Signature mirrors mace_jax.modules.blocks.NonLinearReadoutBlock.
     """
-
-    BACKEND = JAX_BACKEND
 
     irreps_in: Irreps
     MLP_irreps: Irreps

@@ -27,9 +27,7 @@ class NonLinearReadoutBlock:
     ) -> None:
         backend = getattr(self, "BACKEND", None)
         if backend is None:
-            raise RuntimeError(
-                "NonLinearReadoutBlock requires a class-level BACKEND."
-            )
+            raise RuntimeError("NonLinearReadoutBlock requires a class-level BACKEND.")
         if num_heads < 1:
             raise ValueError(f"num_heads must be >= 1, got {num_heads}")
 
