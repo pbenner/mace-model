@@ -720,10 +720,12 @@ def _build_jax_target_design_matrix_fn(
     target_scope: dict,
 ):
     """Build the JAX-side design-matrix callback for native weight conversion."""
-    graphdef, params_zero, target_basis_kind = _build_matching_jax_symmetric_contraction(
-        torch_module,
-        target_template=target_template,
-        target_scope=target_scope,
+    graphdef, params_zero, target_basis_kind = (
+        _build_matching_jax_symmetric_contraction(
+            torch_module,
+            target_template=target_template,
+            target_scope=target_scope,
+        )
     )
 
     def _design_matrix(basis_dim: int, inputs_np: np.ndarray) -> np.ndarray:

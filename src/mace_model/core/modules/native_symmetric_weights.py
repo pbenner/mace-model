@@ -424,9 +424,7 @@ def _cached_full_cg_transform(
     )
 
     mul = int(cue.Irreps(cue.O3, irreps_in_str)[0].mul)
-    feature_dim = int(
-        sum(term.ir.dim for term in cue.Irreps(cue.O3, irreps_in_str))
-    )
+    feature_dim = int(sum(term.ir.dim for term in cue.Irreps(cue.O3, irreps_in_str)))
 
     native_dim = gather_native_reduced_weights(
         torch_module,
@@ -518,10 +516,7 @@ def convert_native_symmetric_weights(
             f"or 'canonical_full'; got {target_basis_kind!r}."
         )
 
-    if (
-        target_basis_kind in {None, "reduced"}
-        and basis_dim == reduced_dim
-    ):
+    if target_basis_kind in {None, "reduced"} and basis_dim == reduced_dim:
         if native_dim == native_projection_dim:
             converted = np.einsum(
                 "zau,ab->zbu",
