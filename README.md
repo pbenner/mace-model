@@ -2,6 +2,11 @@
 
 `mace-model` hosts the MACE model implementations for this workspace.
 
+Companion repository:
+
+- [`equitrain`](https://github.com/bamescience/equitrain): preprocessing,
+  training, fine-tuning, and experiment orchestration
+
 It provides:
 
 - a PyTorch backend through `mace_model.torch`
@@ -15,6 +20,12 @@ installed as separate top-level packages.
 
 It does not provide the training stack. Data handling, training loops, checkpoint
 management, and experiment orchestration belong in `equitrain`.
+
+The intended workflow is:
+
+1. use `mace-model` to initialize, convert, or download a MACE model artifact
+2. use [`equitrain`](https://github.com/bamescience/equitrain) to preprocess
+   data, train, fine-tune, and manage experiments
 
 ## Purpose
 
@@ -30,6 +41,10 @@ The goal is not to hide all backend differences. The goal is to:
 
 That keeps the architecture work in one place instead of maintaining two model
 codebases that drift over time.
+
+In this workspace, `mace-model` is the model-definition repository and
+[`equitrain`](https://github.com/bamescience/equitrain) is the training
+repository.
 
 ## Install
 
@@ -54,6 +69,15 @@ from mace_model import torch, jax
 from mace_model.torch import ScaleShiftMACE
 from mace_model.jax.tools import build_model
 ```
+
+If you want the full training workflow, install
+[`equitrain`](https://github.com/bamescience/equitrain) alongside this
+repository. The repository boundary is intentional:
+
+- `mace-model`: model definitions, backend adapters, model serialization,
+  conversion, and foundation-model export
+- `equitrain`: dataset preprocessing, training loops, fine-tuning, checkpoints,
+  and experiment execution
 
 ## Initialize A Model From Config
 
@@ -304,8 +328,11 @@ The compile/export helpers are inference-oriented:
 
 The intended split in this workspace is:
 
-- `mace-model`: model definitions, backend adapters, model serialization helpers
-- `equitrain`: data pipelines, training loops, checkpoints, experiment execution
+- [`mace-model`](https://github.com/bamescience/mace-model): model definitions,
+  backend adapters, model serialization helpers, conversion, and foundation
+  export
+- [`equitrain`](https://github.com/bamescience/equitrain): data pipelines,
+  training loops, checkpoints, and experiment execution
 
 So if a change affects model architecture or model semantics, it should usually
 live here.
