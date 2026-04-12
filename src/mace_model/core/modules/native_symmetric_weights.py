@@ -331,259 +331,13 @@ def native_design_matrix(
     return np.stack(outputs, axis=1)
 
 
-def torch_target_design_matrix(
-    target_module,
-    *,
-    basis_dim: int,
-    inputs_np: np.ndarray,
-    probe_indices: list[int] | tuple[int, ...] | None = None,
-) -> np.ndarray:
-    """Evaluate a local cue-backed Torch module on all its basis vectors."""
-    import torch  # noqa: PLC0415
-
-    if not hasattr(target_module, "weight"):
-        raise ValueError("Target Torch symmetric-contraction module lacks 'weight'.")
-
-    torch_inputs = torch.tensor(inputs_np, dtype=target_module.weight.dtype)
-    num_elements = int(target_module.weight.shape[0])
-    if probe_indices is None:
-        probe_indices = _probe_element_indices(num_elements)
-
-    outputs: list[np.ndarray] = []
-    with torch.no_grad():
-        for idx in range(basis_dim):
-            per_element_outputs: list[np.ndarray] = []
-            for element_index in probe_indices:
-                target_module.weight.zero_()
-                target_module.weight[element_index, idx, 0] = 1.0
-                torch_indices = torch.full(
-                    (inputs_np.shape[0],),
-                    int(element_index),
-                    dtype=torch.int32,
-                )
-                out = target_module(torch_inputs, torch_indices).detach().cpu().numpy()
-                per_element_outputs.append(np.asarray(out).reshape(-1))
-            outputs.append(np.concatenate(per_element_outputs, axis=0))
-
-    return np.stack(outputs, axis=1)
-
-
-def _with_zero_weights(params: dict) -> dict:
-    """Return a params pytree with all learnable weights zeroed."""
-    import jax.numpy as jnp  # noqa: PLC0415
-
-    params_mutable = dict(params)
-    params_mutable["weight"] = jnp.zeros_like(params_mutable["weight"])
-    return params_mutable
-
-
-def _canonical_design_matrix(
-    graphdef,
-    params_zero: dict,
-    inputs,
-    indices,
-) -> np.ndarray:
-    """Evaluate the JAX module on the canonical cue basis vectors."""
-    import jax.numpy as jnp  # noqa: PLC0415
-
-    weight_shape = np.asarray(params_zero["weight"]).shape
-    basis_dim = int(weight_shape[1])
-
-    outputs: list[np.ndarray] = []
-    for idx in range(basis_dim):
-        weight = np.zeros(weight_shape, dtype=np.float32)
-        weight[0, idx, 0] = 1.0
-
-        params_idx = dict(params_zero)
-        params_idx["weight"] = jnp.asarray(weight)
-        out, _ = graphdef.apply(params_idx)(inputs, indices)
-        outputs.append(np.asarray(out).reshape(-1))
-
-    return np.stack(outputs, axis=1)
-
-
-def _compute_native_full_cg_transform(
-    irreps_in,
-    irreps_out,
-    correlation: int,
-    *,
-    native_module,
-    target_backend: str,
-) -> np.ndarray:
-    """Return the native -> canonical transform for a full-CG setup."""
-    base_in = cue.Irreps(cue.O3, str(irreps_in)).set_mul(1)
-    base_out = cue.Irreps(cue.O3, str(irreps_out)).set_mul(1)
-    if target_backend == "torch":
-        return _cached_full_cg_transform_from_native_torch(
-            type(native_module),
-            type(native_module.irreps_in),
-            str(base_in),
-            str(base_out),
-            int(correlation),
-        )
-    if target_backend == "jax":
-        return _cached_full_cg_transform_from_native_jax(
-            type(native_module),
-            type(native_module.irreps_in),
-            str(base_in),
-            str(base_out),
-            int(correlation),
-        )
-    raise ValueError(
-        f"target_backend must be either 'torch' or 'jax'; got {target_backend!r}."
-    )
-
-
-@cache
-def _cached_full_cg_transform_from_native_jax(
-    native_cls,
-    native_irreps_cls,
-    irreps_in_str: str,
-    irreps_out_str: str,
-    correlation: int,
-) -> np.ndarray:
-    """Compute the native -> canonical transform using the JAX target module."""
-    import jax.numpy as jnp  # noqa: PLC0415
-    import torch  # noqa: PLC0415
-    from flax import nnx  # noqa: PLC0415
-
-    from mace_model.jax.adapters.cuequivariance.symmetric_contraction import (  # noqa: PLC0415
-        SymmetricContraction as JaxSymmetricContraction,
-    )
-    from mace_model.jax.adapters.e3nn import Irreps as JaxIrreps  # noqa: PLC0415
-    from mace_model.jax.nnx_utils import state_to_pure_dict  # noqa: PLC0415
-
-    native_module = native_cls(
-        irreps_in=native_irreps_cls(irreps_in_str),
-        irreps_out=native_irreps_cls(irreps_out_str),
-        correlation=correlation,
-        use_reduced_cg=False,
-        num_elements=1,
-    ).eval()
-
-    native_dtype = native_module.contractions[0].weights_max.dtype
-    native_module = native_module.to(dtype=native_dtype)
-    jax_module = JaxSymmetricContraction(
-        irreps_in=JaxIrreps(irreps_in_str),
-        irreps_out=JaxIrreps(irreps_out_str),
-        correlation=correlation,
-        num_elements=1,
-        use_reduced_cg=False,
-        rngs=nnx.Rngs(0),
-    )
-
-    mul = int(cue.Irreps(cue.O3, irreps_in_str)[0].mul)
-    feature_dim = int(sum(term.ir.dim for term in cue.Irreps(cue.O3, irreps_in_str)))
-
-    native_dim = gather_native_reduced_weights(
-        native_module,
-        correlation=correlation,
-        mul_dim=mul,
-        num_elements=1,
-    ).shape[1]
-
-    graphdef, state = nnx.split(jax_module)
-    params = state_to_pure_dict(state)
-    params_zero = _with_zero_weights(params)
-    canonical_dim = int(np.asarray(params_zero["weight"]).shape[1])
-
-    solve_dtype = np.float64 if native_dtype == torch.float64 else np.float32
-    batch = max(canonical_dim, native_dim)
-    rng = np.random.default_rng(0)
-    inputs_np = rng.standard_normal((batch, mul, feature_dim)).astype(solve_dtype)
-
-    canonical_matrix = _canonical_design_matrix(
-        graphdef,
-        params_zero,
-        jnp.asarray(inputs_np),
-        jnp.zeros((batch,), dtype=jnp.int32),
-    ).astype(solve_dtype, copy=False)
-    native_matrix = native_design_matrix(
-        native_module,
-        basis_dim=native_dim,
-        inputs_np=inputs_np,
-        probe_indices=[0],
-    ).astype(solve_dtype, copy=False)
-    transform = np.linalg.lstsq(canonical_matrix, native_matrix, rcond=1e-12)[0]
-    return transform.astype(np.float64)
-
-
-@cache
-def _cached_full_cg_transform_from_native_torch(
-    native_cls,
-    native_irreps_cls,
-    irreps_in_str: str,
-    irreps_out_str: str,
-    correlation: int,
-) -> np.ndarray:
-    """Compute the native -> canonical transform using only local Torch code."""
-    import torch  # noqa: PLC0415
-
-    from mace_model.torch.adapters.cuequivariance import (  # noqa: PLC0415
-        SymmetricContractionWrapper as TorchSymmetricContraction,
-    )
-    from mace_model.torch.adapters.e3nn import o3  # noqa: PLC0415
-
-    native_module = native_cls(
-        irreps_in=native_irreps_cls(irreps_in_str),
-        irreps_out=native_irreps_cls(irreps_out_str),
-        correlation=correlation,
-        use_reduced_cg=False,
-        num_elements=1,
-    ).eval()
-
-    native_dtype = native_module.contractions[0].weights_max.dtype
-    native_module = native_module.to(dtype=native_dtype)
-    canonical_module = (
-        TorchSymmetricContraction(
-            irreps_in=o3.Irreps(irreps_in_str),
-            irreps_out=o3.Irreps(irreps_out_str),
-            correlation=correlation,
-            num_elements=1,
-            use_reduced_cg=False,
-        )
-        .to(dtype=native_dtype)
-        .eval()
-    )
-
-    mul = int(cue.Irreps(cue.O3, irreps_in_str)[0].mul)
-    feature_dim = int(sum(term.ir.dim for term in cue.Irreps(cue.O3, irreps_in_str)))
-    native_dim = gather_native_reduced_weights(
-        native_module,
-        correlation=correlation,
-        mul_dim=mul,
-        num_elements=1,
-    ).shape[1]
-    canonical_dim = int(canonical_module.weight.shape[1])
-
-    solve_dtype = np.float64 if native_dtype == torch.float64 else np.float32
-    batch = max(canonical_dim, native_dim)
-    rng = np.random.default_rng(0)
-    inputs_np = rng.standard_normal((batch, mul, feature_dim)).astype(solve_dtype)
-
-    canonical_matrix = torch_target_design_matrix(
-        canonical_module,
-        basis_dim=canonical_dim,
-        inputs_np=inputs_np,
-        probe_indices=[0],
-    ).astype(solve_dtype, copy=False)
-    native_matrix = native_design_matrix(
-        native_module,
-        basis_dim=native_dim,
-        inputs_np=inputs_np,
-        probe_indices=[0],
-    ).astype(solve_dtype, copy=False)
-    transform = np.linalg.lstsq(canonical_matrix, native_matrix, rcond=1e-12)[0]
-    return transform.astype(np.float64)
-
-
 def convert_native_symmetric_weights(
     torch_module,
     *,
     target_template,
     target_design_matrix_fn: Callable[[int, np.ndarray], np.ndarray],
     target_basis_kind: str | None = None,
-    target_backend: str,
+    native_full_to_canonical_fn: Callable[[np.ndarray], np.ndarray] | None = None,
 ) -> np.ndarray:
     """Convert native Torch weights to a target basis using design matrices."""
     template = np.asarray(target_template)
@@ -598,6 +352,11 @@ def convert_native_symmetric_weights(
     if basis_dim == 0 or mul_dim == 0:
         return np.zeros_like(template)
 
+    if target_basis_kind not in {None, "reduced", "native_full", "canonical_full"}:
+        raise ValueError(
+            "target_basis_kind must be one of None, 'reduced', 'native_full', "
+            f"or 'canonical_full'; got {target_basis_kind!r}."
+        )
     metadata = native_symmetric_metadata(torch_module)
     native_weight = gather_native_reduced_weights(
         torch_module,
@@ -624,18 +383,39 @@ def convert_native_symmetric_weights(
         descriptor_projection,
         dtype=native_weight.dtype,
     )
-
     reduced_dim = int(reduced_projection.shape[1])
     full_dim = int(descriptor_projection.shape[0])
 
-    if target_basis_kind not in {None, "reduced", "native_full", "canonical_full"}:
+    def canonical_full_weight() -> np.ndarray:
+        if native_dim == full_dim:
+            if native_full_to_canonical_fn is None:
+                raise ValueError(
+                    "Native full-CG import requires a backend-specific "
+                    "native_full_to_canonical_fn."
+                )
+            converted = np.asarray(
+                native_full_to_canonical_fn(native_weight),
+                dtype=native_weight.dtype,
+            )
+            if converted.shape != native_weight.shape:
+                raise ValueError(
+                    "native_full_to_canonical_fn returned an unexpected shape."
+                )
+            return converted
+        if native_dim == reduced_dim:
+            lift = np.linalg.pinv(descriptor_projection, rcond=1e-12).astype(
+                native_weight.dtype,
+                copy=False,
+            )
+            reduced = np.einsum(
+                "zau,ab->zbu",
+                native_weight,
+                reduced_projection,
+                optimize=True,
+            )
+            return np.einsum("zau,ab->zbu", reduced, lift, optimize=True)
         raise ValueError(
-            "target_basis_kind must be one of None, 'reduced', 'native_full', "
-            f"or 'canonical_full'; got {target_basis_kind!r}."
-        )
-    if target_backend not in {"torch", "jax"}:
-        raise ValueError(
-            f"target_backend must be either 'torch' or 'jax'; got {target_backend!r}."
+            "Native SymmetricContraction weight shape mismatch during import."
         )
 
     if target_basis_kind in {None, "reduced"} and basis_dim == reduced_dim:
@@ -646,48 +426,24 @@ def convert_native_symmetric_weights(
                 reduced_projection,
                 optimize=True,
             )
-            return converted.astype(template.dtype, copy=False)
-        if native_dim == full_dim:
-            transform = _compute_native_full_cg_transform(
-                irreps_in,
-                irreps_out,
-                metadata["correlation"],
-                native_module=torch_module,
-                target_backend=target_backend,
-            ).astype(native_weight.dtype, copy=False)
-            canonical = np.einsum(
-                "ab,zbu->zau",
-                transform,
-                native_weight,
-                optimize=True,
-            )
+        elif native_dim == full_dim:
             converted = np.einsum(
                 "zau,ab->zbu",
-                canonical,
+                canonical_full_weight(),
                 descriptor_projection,
                 optimize=True,
             )
-            return converted.astype(template.dtype, copy=False)
+        else:
+            raise ValueError(
+                "Native SymmetricContraction weight shape mismatch during import."
+            )
+        return converted.astype(template.dtype, copy=False)
 
     if basis_dim == full_dim:
-        if target_basis_kind == "canonical_full" and native_dim == full_dim:
-            transform = _compute_native_full_cg_transform(
-                irreps_in,
-                irreps_out,
-                metadata["correlation"],
-                native_module=torch_module,
-                target_backend=target_backend,
-            ).astype(native_weight.dtype, copy=False)
-            converted = np.einsum(
-                "ab,zbu->zau",
-                transform,
-                native_weight,
-                optimize=True,
-            )
-            return converted.astype(template.dtype, copy=False)
-
         if target_basis_kind == "native_full" and native_dim == full_dim:
             return native_weight.astype(template.dtype, copy=False)
+        if target_basis_kind == "canonical_full":
+            return canonical_full_weight().astype(template.dtype, copy=False)
 
     solve_dtype = np.result_type(template.dtype, native_weight.dtype, np.float64)
     batch = max(16 * max(basis_dim, native_dim), 128)
@@ -738,7 +494,12 @@ def convert_native_symmetric_weights(
 
     transform = best_transform
     transform = transform.astype(native_weight.dtype, copy=False)
-    converted = np.einsum("ab,zbu->zau", transform, native_weight, optimize=True)
+    converted = np.einsum(
+        "ab,zbu->zau",
+        transform,
+        native_weight,
+        optimize=True,
+    )
     return converted.astype(template.dtype, copy=False)
 
 
@@ -748,5 +509,4 @@ __all__ = [
     "gather_native_reduced_weights",
     "native_design_matrix",
     "native_symmetric_metadata",
-    "torch_target_design_matrix",
 ]

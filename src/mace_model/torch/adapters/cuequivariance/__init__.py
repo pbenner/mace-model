@@ -11,7 +11,13 @@ from .fully_connected_tensor_product import (
     FullyConnectedTensorProduct as _CueFullyConnectedTensorProduct,
 )
 from .linear import Linear as _CueLinear
-from .symmetric_contraction import SymmetricContraction as _CueSymmetricContraction
+from .symmetric_contraction import (
+    SymmetricContraction as _CueSymmetricContraction,
+)
+from .symmetric_contraction import (
+    native_full_to_canonical_weight,
+)
+from .symmetric_contraction import torch_target_design_matrix
 from .tensor_product import TensorProduct as _CueTensorProduct
 from .utility import (
     TransposeIrrepsLayoutWrapper,
@@ -164,5 +170,7 @@ __all__ = [
     "FullyConnectedTensorProduct",
     "SymmetricContractionWrapper",
     "TransposeIrrepsLayoutWrapper",
+    "native_full_to_canonical_weight",
+    "torch_target_design_matrix",
     "scatter_sum",
 ]
