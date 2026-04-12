@@ -14,11 +14,11 @@ from typing import Iterator
 import torch
 from torch.serialization import add_safe_globals
 
+from mace_model.torch.adapters.e3nn import Irreps as make_irreps
 from mace_model.torch.adapters.e3nn import (
     get_optimization_defaults,
     set_optimization_defaults,
 )
-from mace_model.torch.adapters.e3nn import Irreps as make_irreps
 from mace_model.torch.adapters.e3nn.math import normalize2mom
 
 MACE_MP_URLS = {
@@ -176,7 +176,6 @@ def _build_legacy_imports() -> dict[str, types.ModuleType]:
     e3nn_o3_irreps = add_module("e3nn.o3._irreps")
     e3nn_o3_linear = add_module("e3nn.o3._linear")
     e3nn_o3_sh = add_module("e3nn.o3._spherical_harmonics")
-    e3nn_o3_tp = add_module("e3nn.o3._tensor_product", package=True)
     e3nn_o3_tp_inst = add_module("e3nn.o3._tensor_product._instruction")
     e3nn_o3_tp_main = add_module("e3nn.o3._tensor_product._tensor_product")
     e3nn_o3_tp_sub = add_module("e3nn.o3._tensor_product._sub")

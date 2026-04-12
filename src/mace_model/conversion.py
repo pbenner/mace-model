@@ -23,11 +23,6 @@ import numpy as np
 import torch
 from flax import serialization
 
-from mace_model.core.modules.native_symmetric_weights import (
-    convert_native_symmetric_weights,
-    torch_target_design_matrix,
-)
-from mace_model.torch.adapters.cuequivariance import CuEquivarianceConfig
 from mace_model.build import (
     _jsonable,
     _normalize_model_class,
@@ -35,9 +30,16 @@ from mace_model.build import (
     _resolve_torch_output,
     _torch_kwargs_from_config,
 )
+from mace_model.core.modules.native_symmetric_weights import (
+    convert_native_symmetric_weights,
+    torch_target_design_matrix,
+)
 from mace_model.legacy_checkpoint import load_legacy_torch_model
+from mace_model.torch.adapters.cuequivariance import CuEquivarianceConfig
 from mace_model.torch.model_utils import (
     extract_torch_model_config as _extract_torch_model_config,
+)
+from mace_model.torch.model_utils import (
     select_local_torch_model_head,
 )
 
@@ -223,6 +225,7 @@ def _transfer_upstream_symmetric_contractions(
                 inputs_np=inputs_np,
             ),
             target_basis_kind=_torch_target_basis_kind(target_product),
+            target_backend="torch",
         )
         target_dict[key] = torch.tensor(
             converted,
@@ -421,6 +424,7 @@ def _convert_native_torch_to_local(torch_model, model_class: str):
                 inputs_np=inputs_np,
             ),
             target_basis_kind=_torch_target_basis_kind(target_product),
+            target_backend="torch",
         )
         target_state[key] = torch.tensor(
             converted,

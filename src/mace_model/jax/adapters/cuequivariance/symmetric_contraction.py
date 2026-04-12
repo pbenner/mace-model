@@ -624,6 +624,7 @@ def _import_native_symmetric_contraction(module, variables, scope) -> None:
         target_template=target_template,
         target_design_matrix_fn=design_matrix_fn,
         target_basis_kind=target_basis_kind,
+        target_backend="jax",
     )
     target["weight"] = jnp.asarray(converted, dtype=weight.dtype)
 

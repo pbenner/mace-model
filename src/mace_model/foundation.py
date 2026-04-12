@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .legacy_checkpoint import (
-    SUPPORTED_FOUNDATION_SOURCES,
-    get_mace_mp_names,
-    resolve_foundation_checkpoint,
-)
 from .conversion import (
     TorchConversionResult,
     convert_torch_model,
     load_serialized_torch_model,
     save_converted_model,
+)
+from .legacy_checkpoint import (
+    SUPPORTED_FOUNDATION_SOURCES,
+    get_mace_mp_names,
+    resolve_foundation_checkpoint,
 )
 
 FoundationResult = TorchConversionResult

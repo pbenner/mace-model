@@ -402,110 +402,110 @@ def _canonical_design_matrix(
     return np.stack(outputs, axis=1)
 
 
-def _compute_full_cg_transform(
+def _compute_native_full_cg_transform(
     irreps_in,
     irreps_out,
     correlation: int,
     *,
-    native_module=None,
+    native_module,
+    target_backend: str,
 ) -> np.ndarray:
     """Return the native -> canonical transform for a full-CG setup."""
     base_in = cue.Irreps(cue.O3, str(irreps_in)).set_mul(1)
     base_out = cue.Irreps(cue.O3, str(irreps_out)).set_mul(1)
-    if native_module is not None:
-        return _cached_full_cg_transform_from_native(
+    if target_backend == "torch":
+        return _cached_full_cg_transform_from_native_torch(
             type(native_module),
             type(native_module.irreps_in),
             str(base_in),
             str(base_out),
             int(correlation),
         )
-    return _cached_full_cg_transform(str(base_in), str(base_out), int(correlation))
+    if target_backend == "jax":
+        return _cached_full_cg_transform_from_native_jax(
+            type(native_module),
+            type(native_module.irreps_in),
+            str(base_in),
+            str(base_out),
+            int(correlation),
+        )
+    raise ValueError(
+        f"target_backend must be either 'torch' or 'jax'; got {target_backend!r}."
+    )
 
 
 @cache
-def _cached_full_cg_transform_from_native(
+def _cached_full_cg_transform_from_native_jax(
     native_cls,
     native_irreps_cls,
     irreps_in_str: str,
     irreps_out_str: str,
     correlation: int,
 ) -> np.ndarray:
-    """Compute the native -> canonical transform from the real native class."""
-    try:
-        import torch  # noqa: PLC0415
-        import jax.numpy as jnp  # noqa: PLC0415
-        from flax import nnx  # noqa: PLC0415
+    """Compute the native -> canonical transform using the JAX target module."""
+    import jax.numpy as jnp  # noqa: PLC0415
+    import torch  # noqa: PLC0415
+    from flax import nnx  # noqa: PLC0415
 
-        from mace_model.jax.adapters.cuequivariance.symmetric_contraction import (  # noqa: PLC0415
-            SymmetricContraction as JaxSymmetricContraction,
-        )
-        from mace_model.jax.adapters.e3nn import Irreps as JaxIrreps  # noqa: PLC0415
-        from mace_model.jax.nnx_utils import state_to_pure_dict  # noqa: PLC0415
+    from mace_model.jax.adapters.cuequivariance.symmetric_contraction import (  # noqa: PLC0415
+        SymmetricContraction as JaxSymmetricContraction,
+    )
+    from mace_model.jax.adapters.e3nn import Irreps as JaxIrreps  # noqa: PLC0415
+    from mace_model.jax.nnx_utils import state_to_pure_dict  # noqa: PLC0415
 
-        native_module = native_cls(
-            irreps_in=native_irreps_cls(irreps_in_str),
-            irreps_out=native_irreps_cls(irreps_out_str),
-            correlation=correlation,
-            use_reduced_cg=False,
-            num_elements=1,
-        ).eval()
+    native_module = native_cls(
+        irreps_in=native_irreps_cls(irreps_in_str),
+        irreps_out=native_irreps_cls(irreps_out_str),
+        correlation=correlation,
+        use_reduced_cg=False,
+        num_elements=1,
+    ).eval()
 
-        native_dtype = native_module.contractions[0].weights_max.dtype
-        native_module = native_module.to(dtype=native_dtype)
-        jax_module = JaxSymmetricContraction(
-            irreps_in=JaxIrreps(irreps_in_str),
-            irreps_out=JaxIrreps(irreps_out_str),
-            correlation=correlation,
-            num_elements=1,
-            use_reduced_cg=False,
-            rngs=nnx.Rngs(0),
-        )
+    native_dtype = native_module.contractions[0].weights_max.dtype
+    native_module = native_module.to(dtype=native_dtype)
+    jax_module = JaxSymmetricContraction(
+        irreps_in=JaxIrreps(irreps_in_str),
+        irreps_out=JaxIrreps(irreps_out_str),
+        correlation=correlation,
+        num_elements=1,
+        use_reduced_cg=False,
+        rngs=nnx.Rngs(0),
+    )
 
-        mul = int(cue.Irreps(cue.O3, irreps_in_str)[0].mul)
-        feature_dim = int(
-            sum(term.ir.dim for term in cue.Irreps(cue.O3, irreps_in_str))
-        )
+    mul = int(cue.Irreps(cue.O3, irreps_in_str)[0].mul)
+    feature_dim = int(sum(term.ir.dim for term in cue.Irreps(cue.O3, irreps_in_str)))
 
-        native_dim = gather_native_reduced_weights(
-            native_module,
-            correlation=correlation,
-            mul_dim=mul,
-            num_elements=1,
-        ).shape[1]
+    native_dim = gather_native_reduced_weights(
+        native_module,
+        correlation=correlation,
+        mul_dim=mul,
+        num_elements=1,
+    ).shape[1]
 
-        graphdef, state = nnx.split(jax_module)
-        params = state_to_pure_dict(state)
-        params_zero = _with_zero_weights(params)
-        canonical_dim = int(np.asarray(params_zero["weight"]).shape[1])
+    graphdef, state = nnx.split(jax_module)
+    params = state_to_pure_dict(state)
+    params_zero = _with_zero_weights(params)
+    canonical_dim = int(np.asarray(params_zero["weight"]).shape[1])
 
-        solve_dtype = np.float64 if native_dtype == torch.float64 else np.float32
-        batch = max(canonical_dim, native_dim)
-        rng = np.random.default_rng(0)
-        inputs_np = rng.standard_normal((batch, mul, feature_dim)).astype(solve_dtype)
+    solve_dtype = np.float64 if native_dtype == torch.float64 else np.float32
+    batch = max(canonical_dim, native_dim)
+    rng = np.random.default_rng(0)
+    inputs_np = rng.standard_normal((batch, mul, feature_dim)).astype(solve_dtype)
 
-        canonical_matrix = _canonical_design_matrix(
-            graphdef,
-            params_zero,
-            jnp.asarray(inputs_np),
-            jnp.zeros((batch,), dtype=jnp.int32),
-        ).astype(solve_dtype, copy=False)
-        native_matrix = native_design_matrix(
-            native_module,
-            basis_dim=native_dim,
-            inputs_np=inputs_np,
-            probe_indices=[0],
-        ).astype(solve_dtype, copy=False)
-        transform = np.linalg.lstsq(canonical_matrix, native_matrix, rcond=1e-12)[0]
-        return transform.astype(np.float64)
-    except Exception:
-        return _cached_full_cg_transform_from_native_torch(
-            native_cls,
-            native_irreps_cls,
-            irreps_in_str,
-            irreps_out_str,
-            correlation,
-        )
+    canonical_matrix = _canonical_design_matrix(
+        graphdef,
+        params_zero,
+        jnp.asarray(inputs_np),
+        jnp.zeros((batch,), dtype=jnp.int32),
+    ).astype(solve_dtype, copy=False)
+    native_matrix = native_design_matrix(
+        native_module,
+        basis_dim=native_dim,
+        inputs_np=inputs_np,
+        probe_indices=[0],
+    ).astype(solve_dtype, copy=False)
+    transform = np.linalg.lstsq(canonical_matrix, native_matrix, rcond=1e-12)[0]
+    return transform.astype(np.float64)
 
 
 @cache
@@ -577,89 +577,13 @@ def _cached_full_cg_transform_from_native_torch(
     return transform.astype(np.float64)
 
 
-@cache
-def _cached_full_cg_transform(
-    irreps_in_str: str,
-    irreps_out_str: str,
-    correlation: int,
-) -> np.ndarray:
-    """Compute the native -> canonical transform for full-CG weights."""
-    import jax.numpy as jnp  # noqa: PLC0415
-    from flax import nnx  # noqa: PLC0415
-
-    from mace_model.jax.adapters.cuequivariance.symmetric_contraction import (  # noqa: PLC0415
-        SymmetricContraction as JaxSymmetricContraction,
-    )
-    from mace_model.jax.adapters.e3nn import Irreps as JaxIrreps  # noqa: PLC0415
-    from mace_model.jax.nnx_utils import state_to_pure_dict  # noqa: PLC0415
-    from mace_model.torch.adapters.cuequivariance import (  # noqa: PLC0415
-        SymmetricContractionWrapper as TorchSymmetricContraction,
-    )
-    from mace_model.torch.adapters.e3nn import o3  # noqa: PLC0415
-
-    torch_module = (
-        TorchSymmetricContraction(
-            irreps_in=o3.Irreps(irreps_in_str),
-            irreps_out=o3.Irreps(irreps_out_str),
-            correlation=correlation,
-            num_elements=1,
-            use_reduced_cg=False,
-        )
-        .float()
-        .eval()
-    )
-
-    jax_module = JaxSymmetricContraction(
-        irreps_in=JaxIrreps(irreps_in_str),
-        irreps_out=JaxIrreps(irreps_out_str),
-        correlation=correlation,
-        num_elements=1,
-        use_reduced_cg=False,
-        rngs=nnx.Rngs(0),
-    )
-
-    mul = int(cue.Irreps(cue.O3, irreps_in_str)[0].mul)
-    feature_dim = int(sum(term.ir.dim for term in cue.Irreps(cue.O3, irreps_in_str)))
-
-    native_dim = gather_native_reduced_weights(
-        torch_module,
-        correlation=correlation,
-        mul_dim=mul,
-        num_elements=1,
-    ).shape[1]
-
-    graphdef, state = nnx.split(jax_module)
-    params = state_to_pure_dict(state)
-    params_zero = _with_zero_weights(params)
-    canonical_dim = int(np.asarray(params_zero["weight"]).shape[1])
-
-    batch = max(canonical_dim, native_dim)
-    rng = np.random.default_rng(0)
-    inputs_np = rng.standard_normal((batch, mul, feature_dim)).astype(np.float32)
-    inputs_jax = jnp.asarray(inputs_np)
-    indices_jax = jnp.zeros((batch,), dtype=jnp.int32)
-
-    canonical_matrix = _canonical_design_matrix(
-        graphdef,
-        params_zero,
-        inputs_jax,
-        indices_jax,
-    )
-    native_matrix = native_design_matrix(
-        torch_module,
-        basis_dim=native_dim,
-        inputs_np=inputs_np,
-    )
-    transform = np.linalg.lstsq(canonical_matrix, native_matrix, rcond=1e-12)[0]
-    return transform.astype(np.float64)
-
-
 def convert_native_symmetric_weights(
     torch_module,
     *,
     target_template,
     target_design_matrix_fn: Callable[[int, np.ndarray], np.ndarray],
     target_basis_kind: str | None = None,
+    target_backend: str,
 ) -> np.ndarray:
     """Convert native Torch weights to a target basis using design matrices."""
     template = np.asarray(target_template)
@@ -701,7 +625,6 @@ def convert_native_symmetric_weights(
         dtype=native_weight.dtype,
     )
 
-    native_projection_dim = int(reduced_projection.shape[0])
     reduced_dim = int(reduced_projection.shape[1])
     full_dim = int(descriptor_projection.shape[0])
 
@@ -709,6 +632,10 @@ def convert_native_symmetric_weights(
         raise ValueError(
             "target_basis_kind must be one of None, 'reduced', 'native_full', "
             f"or 'canonical_full'; got {target_basis_kind!r}."
+        )
+    if target_backend not in {"torch", "jax"}:
+        raise ValueError(
+            f"target_backend must be either 'torch' or 'jax'; got {target_backend!r}."
         )
 
     if target_basis_kind in {None, "reduced"} and basis_dim == reduced_dim:
@@ -721,11 +648,12 @@ def convert_native_symmetric_weights(
             )
             return converted.astype(template.dtype, copy=False)
         if native_dim == full_dim:
-            transform = _compute_full_cg_transform(
+            transform = _compute_native_full_cg_transform(
                 irreps_in,
                 irreps_out,
                 metadata["correlation"],
                 native_module=torch_module,
+                target_backend=target_backend,
             ).astype(native_weight.dtype, copy=False)
             canonical = np.einsum(
                 "ab,zbu->zau",
@@ -743,11 +671,12 @@ def convert_native_symmetric_weights(
 
     if basis_dim == full_dim:
         if target_basis_kind == "canonical_full" and native_dim == full_dim:
-            transform = _compute_full_cg_transform(
+            transform = _compute_native_full_cg_transform(
                 irreps_in,
                 irreps_out,
                 metadata["correlation"],
                 native_module=torch_module,
+                target_backend=target_backend,
             ).astype(native_weight.dtype, copy=False)
             converted = np.einsum(
                 "ab,zbu->zau",
