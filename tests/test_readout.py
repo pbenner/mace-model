@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
+import types
+from pathlib import Path
+
 import cuequivariance as cue
 import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
-import sys
 import torch
-import types
-from pathlib import Path
 
 try:
     import cuequivariance_jax  # noqa: F401
@@ -21,9 +22,8 @@ except Exception as exc:  # pragma: no cover - environment dependent
 
 from flax import nnx
 from mace_model.jax.adapters.e3nn import Irreps
-from mace_model.torch.adapters.e3nn import o3
 from mace_model.jax.modules.blocks import NonLinearReadoutBlock as JaxReferenceReadout
-
+from mace_model.torch.adapters.e3nn import o3
 from mace_model.torch.modules.blocks import NonLinearReadoutBlock as TorchLocalReadout
 
 _LOCAL_JAX_BLOCKS = (

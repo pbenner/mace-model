@@ -22,13 +22,12 @@ ir_dict module.
 from string import ascii_lowercase, ascii_uppercase, digits
 from typing import Any
 
+import cuequivariance as cue
 import cuequivariance_jax as cuex
 import jax
 import jax.numpy as jnp
-from jax import Array
-
-import cuequivariance as cue
 from cuequivariance import Irrep
+from jax import Array
 
 segmented_polynomial = cuex.segmented_polynomial
 
@@ -41,29 +40,6 @@ __all__ = [
     "irreps_add",
     "irreps_zeros_like",
 ]
-
-
-def _ensure_letter_capacity(min_len: int = 1024) -> None:
-    """Extend cuequivariance operand letters to avoid repr crashes on errors."""
-    try:
-        from cuequivariance.segmented_polynomials import operation as sp_operation
-    except Exception:
-        return
-
-    alphabet = ascii_lowercase + ascii_uppercase + digits
-    if len(sp_operation.IVARS) < min_len:
-        repeats = (min_len - len(sp_operation.IVARS) + len(alphabet) - 1) // len(
-            alphabet
-        )
-        sp_operation.IVARS = sp_operation.IVARS + (alphabet * repeats)
-    if len(sp_operation.OVARS) < min_len:
-        repeats = (min_len - len(sp_operation.OVARS) + len(alphabet) - 1) // len(
-            alphabet
-        )
-        sp_operation.OVARS = sp_operation.OVARS + (alphabet * repeats)
-
-
-_ensure_letter_capacity()
 
 
 def _ensure_letter_capacity(min_len: int = 1024) -> None:

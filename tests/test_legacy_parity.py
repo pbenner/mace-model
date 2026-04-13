@@ -7,9 +7,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 import torch
-from torch.serialization import add_safe_globals
-
 from mace_model.conversion import convert_torch_model, load_serialized_torch_model
+from torch.serialization import add_safe_globals
 
 add_safe_globals([slice])
 
@@ -20,9 +19,10 @@ def _require_legacy_mace():
         pytest.skip("Legacy mace repository is not available in this workspace.")
     sys.path.insert(0, str(legacy_repo))
     try:
+        from mace.tools import torch_geometric  # noqa: PLC0415
+
         from e3nn import o3  # noqa: PLC0415
         from mace import data, modules, tools  # noqa: PLC0415
-        from mace.tools import torch_geometric  # noqa: PLC0415
     except Exception as exc:  # pragma: no cover - environment dependent
         pytest.skip(f"Legacy mace dependencies are unavailable: {exc}")
     return o3, data, modules, tools, torch_geometric

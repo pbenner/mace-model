@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 import jax.numpy as jnp
 import numpy as np
 from flax import nnx
+
 from mace_model.core.modules.backends import use_backend
 from mace_model.core.modules.blocks import (
     AtomicEnergiesBlock as CoreAtomicEnergiesBlock,
@@ -58,8 +59,8 @@ from mace_model.core.modules.blocks import (
     RealAgnosticResidualNonLinearInteractionBlock as CoreRealAgnosticResidualNonLinearInteractionBlock,
 )
 from mace_model.core.modules.blocks import ScaleShiftBlock as CoreScaleShiftBlock
-
 from mace_model.jax.adapters.e3nn import Irreps
+
 from ..adapters.nnx.torch import nxx_auto_import_from_torch
 from .backends import JAX_BACKEND
 

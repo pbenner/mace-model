@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import torch
-
 from mace_model.build import build_initial_model
 from mace_model.config import load_build_request
 from mace_model.torch import (
@@ -12,7 +11,6 @@ from mace_model.torch import (
     graph_to_inference_args,
     make_inference_wrapper,
 )
-
 
 TORCH_CONFIG = """
 backend = "torch"

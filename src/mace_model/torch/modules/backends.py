@@ -2,17 +2,18 @@ from __future__ import annotations
 
 import numpy as np
 import torch
+
+from mace_model.core.modules.backends import define_backend
+from mace_model.core.modules.irreps_utils import (
+    CachedIrrepsReshaper,
+    tp_out_irreps_with_instructions,
+)
 from mace_model.torch.adapters.cuequivariance import (
     FullyConnectedTensorProduct,
     Linear,
     SymmetricContractionWrapper,
     TensorProduct,
     TransposeIrrepsLayoutWrapper,
-)
-from mace_model.core.modules.backends import define_backend
-from mace_model.core.modules.irreps_utils import (
-    CachedIrrepsReshaper,
-    tp_out_irreps_with_instructions,
 )
 from mace_model.torch.adapters.e3nn import nn, o3
 

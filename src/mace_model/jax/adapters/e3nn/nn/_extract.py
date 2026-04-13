@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import jax.numpy as jnp
+
 from mace_model.core.modules.e3nn_adapter_utils import (
     build_extract_slices,
     validate_extract_instructions,
@@ -52,16 +53,3 @@ class Extract:
         if self.squeeze_out and len(outputs) == 1:
             return outputs[0]
         return tuple(outputs)
-
-
-class ExtractIr(Extract):
-    """Extract a single irrep from an IrrepsArray."""
-
-    def __init__(self, irreps_in, ir) -> None:
-        ir = Irreps(ir)[0].ir if isinstance(ir, str) else ir
-        irreps_in = Irreps(irreps_in)
-        irreps_out = Irreps([mul_ir for mul_ir in irreps_in if mul_ir.ir == ir])
-        instructions = [
-            tuple(i for i, mul_ir in enumerate(irreps_in) if mul_ir.ir == ir)
-        ]
-        super().__init__(irreps_in, [irreps_out], instructions, squeeze_out=True)

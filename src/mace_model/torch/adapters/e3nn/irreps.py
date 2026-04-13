@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from mace_model.core.modules.e3nn_adapter_utils import (
     make_irrep as Irrep,
+)
+from mace_model.core.modules.e3nn_adapter_utils import (
     make_irreps as Irreps,
+)
+from mace_model.core.modules.e3nn_adapter_utils import (
     spherical_harmonics_irreps,
 )
-
 
 _IRREPS_TYPE = type(Irreps("0e"))
 

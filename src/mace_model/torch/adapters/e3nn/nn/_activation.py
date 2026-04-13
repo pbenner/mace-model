@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import torch
+
 from mace_model.core.modules.e3nn_adapter_utils import (
     build_irreps_block_slices,
     infer_activation_irreps_out,

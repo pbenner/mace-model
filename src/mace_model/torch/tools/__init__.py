@@ -7,7 +7,7 @@ from .compile import (
     simplify,
     simplify_if_compile,
 )
-from .scatter import scatter_mean, scatter_std, scatter_sum
+from .scatter import scatter_sum
 from .utils import LAMMPS_MP
 
 __all__ = [
@@ -18,8 +18,6 @@ __all__ = [
     "graph_to_inference_args",
     "make_inference_wrapper",
     "scatter_sum",
-    "scatter_std",
-    "scatter_mean",
     "simplify_if_compile",
     "simplify",
 ]

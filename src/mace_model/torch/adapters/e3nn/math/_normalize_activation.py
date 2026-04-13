@@ -3,8 +3,11 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import torch
+
 from mace_model.core.modules.e3nn_adapter_utils import (
     activation_key as _activation_key,
+)
+from mace_model.core.modules.e3nn_adapter_utils import (
     estimate_silu_normalize2mom_const,
     normalize2mom_identifier,
 )

@@ -23,16 +23,16 @@ from __future__ import annotations
 import logging
 from functools import cache
 
+import cuequivariance as cue
 import cuequivariance_jax as cuex
 import jax
 import jax.numpy as jnp
 import numpy as np
-from flax import nnx
-
-import cuequivariance as cue
 from cuequivariance.group_theory.experimental.mace.symmetric_contractions import (
     symmetric_contraction as cue_mace_symmetric_contraction,
 )
+from flax import nnx
+
 from mace_model.core.modules.native_symmetric_weights import (
     convert_native_symmetric_weights,
     gather_native_reduced_weights,

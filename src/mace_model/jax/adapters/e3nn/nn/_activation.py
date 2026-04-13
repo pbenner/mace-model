@@ -7,6 +7,7 @@ from collections.abc import Callable, Sequence
 import cuequivariance_jax.activation as cue_activation
 import jax
 import jax.numpy as jnp
+
 from mace_model.core.modules.e3nn_adapter_utils import (
     build_irreps_block_slices,
     infer_activation_irreps_out,

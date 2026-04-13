@@ -5,6 +5,7 @@ from typing import Any
 
 import cuequivariance_torch as cuet
 import torch
+
 from mace_model.core.modules.e3nn_adapter_utils import (
     apply_spherical_harmonics_normalization,
     build_spherical_harmonics_plan,

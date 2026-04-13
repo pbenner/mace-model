@@ -5,12 +5,14 @@ from collections.abc import Callable
 import jax
 import jax.numpy as jnp
 import numpy as np
+
 from mace_model.core.modules.e3nn_adapter_utils import (
     activation_key as _activation_key,
+)
+from mace_model.core.modules.e3nn_adapter_utils import (
     estimate_silu_normalize2mom_const,
     normalize2mom_identifier,
 )
-
 from mace_model.jax.tools.dtype import default_dtype
 
 # Mirrors the Torch ``normalize2mom.cst`` cache keyed by activation identity.

@@ -5,14 +5,9 @@ from typing import Any
 
 import numpy as np
 import torch
-from .utils import (
-    get_atomic_virials_stresses,
-    get_outputs,
-    prepare_graph,
-)
+
 from mace_model.core.modules.backends import use_backend
 from mace_model.core.modules.models import MACEModel
-
 from mace_model.torch.adapters.e3nn import o3
 
 from .backends import TORCH_BACKEND
@@ -28,6 +23,11 @@ from .blocks import (
 )
 from .embeddings import GenericJointEmbedding
 from .radial import ZBLBasis
+from .utils import (
+    get_atomic_virials_stresses,
+    get_outputs,
+    prepare_graph,
+)
 
 
 @use_backend(TORCH_BACKEND)

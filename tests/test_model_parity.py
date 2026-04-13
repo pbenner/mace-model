@@ -34,7 +34,6 @@ from mace_model.core.data.utils import (
 from mace_model.jax.adapters.e3nn import Irreps
 from mace_model.jax.modules.utils import prepare_graph as prepare_graph_jax
 from mace_model.torch.adapters.e3nn import o3
-from mace_model.torch.modules.utils import prepare_graph as prepare_graph_torch
 from mace_model.torch.modules.blocks import (
     RealAgnosticInteractionBlock as TorchLocalRealAgnosticInteraction,
 )
@@ -42,6 +41,7 @@ from mace_model.torch.modules.blocks import (
     RealAgnosticResidualInteractionBlock as TorchLocalRealAgnosticResidualInteraction,
 )
 from mace_model.torch.modules.models import ScaleShiftMACE as TorchLocalScaleShiftMACE
+from mace_model.torch.modules.utils import prepare_graph as prepare_graph_torch
 
 _LOCAL_JAX_BLOCKS = (
     Path(__file__).resolve().parents[1]

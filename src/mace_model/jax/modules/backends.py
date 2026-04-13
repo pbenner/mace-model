@@ -5,14 +5,12 @@ import jax.nn as jnn
 import jax.numpy as jnp
 import numpy as np
 from flax import nnx
+
 from mace_model.core.modules.backends import define_backend
 from mace_model.core.modules.irreps_utils import (
     CachedIrrepsReshaper,
     tp_out_irreps_with_instructions,
 )
-
-from mace_model.jax.adapters.e3nn import nn
-from mace_model.jax.adapters.e3nn import Irrep, Irreps, IrrepsArray
 from mace_model.jax.adapters.cuequivariance import (
     FullyConnectedTensorProduct,
     Linear,
@@ -23,9 +21,10 @@ from mace_model.jax.adapters.cuequivariance.utility import (
     ir_mul_to_mul_ir,
     mul_ir_to_ir_mul,
 )
+from mace_model.jax.adapters.e3nn import Irrep, Irreps, IrrepsArray, nn
+
 from ..tools.dtype import default_dtype
 from ..tools.scatter import scatter_sum as jax_scatter_sum
-
 from .radial import (
     AgnesiTransform,
     BesselBasis,

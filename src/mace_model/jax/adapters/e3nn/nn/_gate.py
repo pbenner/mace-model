@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 
 import jax.numpy as jnp
+
 from mace_model.core.modules.e3nn_adapter_utils import (
     apply_gate_blocks,
     build_gate_plan,

@@ -44,12 +44,6 @@ def state_to_serializable_dict(state: nnx.State) -> dict[str, Any]:
     return _convert(state_to_pure_dict(state))
 
 
-def replace_state_from_pure_dict(state: nnx.State, values: dict[str, Any]) -> nnx.State:
-    """Replace values in an NNX State from a pure dict."""
-    nnx.replace_by_pure_dict(state, values)
-    return state
-
-
 def align_layout_config(values: Any, template: Any) -> Any:
     """Override layout ConfigVar leaves using the template layout values.
 

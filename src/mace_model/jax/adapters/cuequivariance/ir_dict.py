@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
+import cuequivariance as cue
 import jax.numpy as jnp
 
-import cuequivariance as cue
 from mace_model.jax.adapters.e3nn import Irreps
 
 from . import ir_dict_vendor as ir_dict_local
-from .utility import ir_mul_to_mul_ir, mul_ir_to_ir_mul
 
 IrDict = dict[cue.Irrep, jnp.ndarray]
 
@@ -47,24 +46,3 @@ def mul_ir_to_ir_dict(
     cue_irreps = _cue_irreps(irreps, group=group)
     layout = _layout(layout_str)
     return IR_DICT.flat_to_dict(cue_irreps, tensor, layout=layout)
-
-
-def ir_dict_to_mul_ir(
-    irreps: Irreps,
-    feats: IrDict,
-    *,
-    group: object = cue.O3,
-    layout_str: str = "mul_ir",
-) -> jnp.ndarray:
-    cue_irreps = _cue_irreps(irreps, group=group)
-    layout = _layout(layout_str)
-    if not feats:
-        return jnp.zeros((0, cue_irreps.dim))
-
-    IR_DICT.assert_mul_ir_dict(cue_irreps, feats)
-    want_ir_mul = layout == "ir_mul"
-    if want_ir_mul:
-        layout = "mul_ir"
-
-    out = IR_DICT.dict_to_flat(cue_irreps, feats)
-    return mul_ir_to_ir_mul(out, Irreps(irreps)) if want_ir_mul else out

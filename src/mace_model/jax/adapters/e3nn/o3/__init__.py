@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import jax.numpy as jnp
+
 from mace_model.core.modules.e3nn_adapter_utils import wigner_3j_coefficients
 
 from ..irreps import Irrep, Irreps

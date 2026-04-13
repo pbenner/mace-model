@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import torch
+
 from mace_model.core.modules.backends import use_backend
 from mace_model.core.modules.embeddings import (
     GenericJointEmbedding as CoreGenericJointEmbedding,

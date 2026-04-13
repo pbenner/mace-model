@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import torch
+
 from mace_model.core.modules.e3nn_adapter_utils import wigner_3j_coefficients
 
 from ..irreps import Irrep, Irreps

@@ -349,44 +349,6 @@ def _instantiate_local_torch_model(
         torch.set_default_dtype(previous_dtype)
 
 
-def _convert_to_local_torch_from_cueq(torch_model, model_class: str):
-    cueq_config = normalize_extracted_torch_config(
-        extract_torch_model_config(torch_model)
-    )
-    cueq_config.pop("torch_model_class", None)
-    kwargs, normalized = _torch_kwargs_from_config(model_class, cueq_config)
-    try:
-        source_dtype = next(torch_model.parameters()).dtype
-    except StopIteration:
-        source_dtype = torch.get_default_dtype()
-    local_model = _instantiate_local_torch_model(
-        model_class,
-        kwargs,
-        source_dtype=source_dtype,
-    )
-
-    source_state = torch_model.state_dict()
-    target_state = local_model.state_dict()
-    assigned = 0
-    for key, value in source_state.items():
-        mapped = _map_upstream_to_local_torch_key(key)
-        if mapped not in target_state:
-            continue
-        if tuple(value.shape) != tuple(target_state[mapped].shape):
-            continue
-        target_state[mapped] = value
-        assigned += 1
-
-    local_model.load_state_dict(target_state)
-    if assigned != len(source_state):
-        raise RuntimeError(
-            "Failed to transfer all Torch weights to the local Torch model "
-            f"({assigned} of {len(source_state)} assigned)."
-        )
-    normalized["model_class"] = model_class
-    return local_model, normalized
-
-
 def _convert_native_torch_to_local(torch_model, model_class: str):
     native_config = normalize_extracted_torch_config(
         extract_torch_model_config(torch_model)
@@ -596,9 +558,7 @@ def convert_torch_model(
 
     normalized = normalize_extracted_torch_config(config)
     import_model = torch_model
-    from mace_model.jax.cli.from_torch import (
-        convert_model as convert_torch_to_jax,
-    )
+    from mace_model.jax.tools import convert_torch_to_jax
 
     try:
         jax_model, variables, _template_data = convert_torch_to_jax(

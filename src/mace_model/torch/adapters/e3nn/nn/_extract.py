@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from mace_model.core.modules.e3nn_adapter_utils import build_extract_slices
 import torch
+
+from mace_model.core.modules.e3nn_adapter_utils import build_extract_slices
 
 from .. import o3
 

@@ -10,16 +10,16 @@ import cuequivariance_jax as cuex
 import cuequivariance_jax.spherical_harmonics as cue_spherical_harmonics
 import jax.numpy as jnp
 from flax import nnx
+
 from mace_model.core.modules.e3nn_adapter_utils import (
     apply_spherical_harmonics_normalization,
     build_spherical_harmonics_plan,
     validate_layout_str,
 )
-
 from mace_model.jax.adapters.nnx.torch import nxx_auto_import_from_torch
 
-from ..irreps import Irreps
 from ...cuequivariance.utility import ir_mul_to_mul_ir
+from ..irreps import Irreps
 
 
 @nxx_auto_import_from_torch(allow_missing_mapper=True)

@@ -68,16 +68,16 @@ def __dir__() -> list[str]:
 if TYPE_CHECKING:
     from .build import BuildResult, build_initial_model, save_initialized_model
     from .config import BuildRequest, load_build_request, load_config
+    from .conversion import (
+        TorchConversionResult,
+        convert_torch_model,
+        load_serialized_torch_model,
+        save_converted_model,
+    )
     from .foundation import (
         FoundationResult,
         download_foundation_model,
         get_mace_mp_names,
         load_foundation_torch_model,
         save_foundation_model,
-    )
-    from .conversion import (
-        TorchConversionResult,
-        convert_torch_model,
-        load_serialized_torch_model,
-        save_converted_model,
     )

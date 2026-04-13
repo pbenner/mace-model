@@ -13,11 +13,10 @@ except Exception as exc:  # pragma: no cover - environment dependent
         allow_module_level=True,
     )
 
-from mace_model.jax.tools.bundle import load_model_bundle
 from mace_model.build import build_initial_model, save_initialized_model
 from mace_model.config import load_build_request
 from mace_model.convert_cli import main as convert_main
-
+from mace_model.jax.tools.bundle import load_model_bundle
 
 TORCH_CONFIG = """
 backend = "torch"

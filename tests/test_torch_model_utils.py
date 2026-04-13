@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import numpy as np
 import torch
-
+from mace_model.torch.adapters.e3nn import o3
 from mace_model.torch.model_utils import (
     extract_torch_model_config,
     select_local_torch_model_head,
 )
-from mace_model.torch.adapters.e3nn import o3
 from mace_model.torch.modules.blocks import RealAgnosticInteractionBlock
 from mace_model.torch.modules.models import ScaleShiftMACE
 

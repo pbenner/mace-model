@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import torch
+
 from mace_model.core.modules.backends import use_backend
 from mace_model.core.modules.blocks import (
     AtomicEnergiesBlock as CoreAtomicEnergiesBlock,
@@ -57,7 +58,6 @@ from mace_model.core.modules.blocks import (
     RealAgnosticResidualNonLinearInteractionBlock as CoreRealAgnosticResidualNonLinearInteractionBlock,
 )
 from mace_model.core.modules.blocks import ScaleShiftBlock as CoreScaleShiftBlock
-
 from mace_model.torch.adapters.e3nn import o3
 
 from .backends import TORCH_BACKEND

@@ -7,9 +7,9 @@ from typing import Any
 import jax.numpy as jnp
 import numpy as np
 from flax import nnx
+
 from mace_model.core.modules.backends import use_backend
 from mace_model.core.modules.models import MACEModel
-
 from mace_model.jax.adapters.cuequivariance.ir_dict import mul_ir_to_ir_dict
 from mace_model.jax.adapters.e3nn import Irrep, Irreps
 from mace_model.jax.adapters.e3nn.math import (

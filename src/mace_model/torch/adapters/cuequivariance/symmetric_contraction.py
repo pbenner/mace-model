@@ -8,11 +8,11 @@ import cuequivariance_torch as cuet
 import numpy as np
 import torch
 
-from mace_model.torch.adapters.e3nn import o3
 from mace_model.core.modules.native_symmetric_weights import (
     gather_native_reduced_weights,
     native_design_matrix,
 )
+from mace_model.torch.adapters.e3nn import o3
 
 from .utility import _cue_irreps
 

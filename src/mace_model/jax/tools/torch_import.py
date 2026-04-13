@@ -1,8 +1,4 @@
-"""Torch -> JAX import helpers.
-
-The heavy lifting lives in ``mace_model.jax.tools.model_builder`` and the
-NNX Torch import adapters.
-"""
+"""Torch -> JAX model import helpers."""
 
 from __future__ import annotations
 
@@ -24,12 +20,13 @@ from mace_model.jax.tools.model_builder import (
 )
 
 
-def convert_model(
+def convert_torch_to_jax(
     torch_model,
     config: dict[str, Any],
     *,
     cueq_config: CuEquivarianceConfig | None = None,
 ):
+    """Build a local JAX model and import weights from a Torch donor model."""
     jax_model = build_model(
         config,
         cueq_config=cueq_config,
@@ -56,5 +53,5 @@ __all__ = [
     "_build_jax_model",
     "_normalize_atomic_config",
     "_prepare_template_data",
-    "convert_model",
+    "convert_torch_to_jax",
 ]

@@ -6,13 +6,13 @@ import logging
 from collections import OrderedDict
 from math import prod as _prod
 
+import cuequivariance as cue
 import cuequivariance_jax as cuex
 import jax
 import jax.numpy as jnp
 import numpy as np
 from flax import nnx
 
-import cuequivariance as cue
 from mace_model.jax.adapters.e3nn import Irreps
 from mace_model.jax.adapters.nnx.torch import nxx_auto_import_from_torch
 from mace_model.jax.nnx_config import ConfigVar

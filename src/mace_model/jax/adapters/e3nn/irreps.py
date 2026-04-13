@@ -6,12 +6,16 @@ from typing import Any
 
 import cuequivariance as cue
 import jax.numpy as jnp
+
 from mace_model.core.modules.e3nn_adapter_utils import (
     make_irrep as Irrep,
+)
+from mace_model.core.modules.e3nn_adapter_utils import (
     make_irreps as Irreps,
+)
+from mace_model.core.modules.e3nn_adapter_utils import (
     spherical_harmonics_irreps,
 )
-
 
 _LAYOUTS = {
     "mul_ir": cue.mul_ir,

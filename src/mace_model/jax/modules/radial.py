@@ -9,10 +9,9 @@ import jax.numpy as jnp
 import numpy as np
 from flax import nnx
 
+from ..adapters.nnx.torch import nxx_auto_import_from_torch
 from ..tools.dtype import default_dtype
 from ..tools.scatter import scatter_sum
-
-from ..adapters.nnx.torch import nxx_auto_import_from_torch
 
 
 def _validate_edge_aligned_inputs(

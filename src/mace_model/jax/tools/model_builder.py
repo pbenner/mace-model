@@ -20,7 +20,8 @@ from mace_model.core.data.utils import (
     Configuration,
     atomic_numbers_to_indices,
 )
-from mace_model.jax.adapters.e3nn import Irrep, Irreps
+from mace_model.jax.adapters.cuequivariance import CuEquivarianceConfig
+from mace_model.jax.adapters.e3nn import Irreps
 from mace_model.jax.adapters.nnx import resolve_gate_callable
 from mace_model.jax.modules.blocks import (
     LinearDipolePolarReadoutBlock,
@@ -38,8 +39,6 @@ from mace_model.jax.modules.blocks import (
     RealAgnosticResidualNonLinearInteractionBlock,
 )
 from mace_model.jax.modules.models import MACE, ScaleShiftMACE
-from mace_model.jax.adapters.cuequivariance import CuEquivarianceConfig
-
 
 _INTERACTION_CLASSES = {
     cls.__name__: cls

@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
+import types
+from pathlib import Path
+
 import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
-import sys
 import torch
-import types
-from pathlib import Path
 from torch.serialization import add_safe_globals
 
 add_safe_globals([slice])
@@ -23,15 +24,10 @@ except Exception as exc:  # pragma: no cover - environment dependent
 
 from flax import nnx
 from mace_model.jax.adapters.e3nn import Irreps, IrrepsArray
-from mace_model.torch.adapters.e3nn import o3
-from mace_model.torch.adapters.e3nn import o3 as torch_reference_o3
+from mace_model.jax.modules.backends import _ReshapeIrreps as jax_reshape_irreps
 from mace_model.jax.modules.blocks import (
     AtomicEnergiesBlock as JaxReferenceAtomicEnergies,
 )
-from mace_model.jax.modules.blocks import (
-    EquivariantProductBasisBlock as JaxReferenceEquivariantProductBasis,
-)
-from mace_model.jax.modules.backends import _ReshapeIrreps as jax_reshape_irreps
 from mace_model.jax.modules.blocks import (
     LinearDipolePolarReadoutBlock as JaxReferenceLinearDipolePolarReadout,
 )
@@ -45,15 +41,18 @@ from mace_model.jax.modules.blocks import (
     LinearReadoutBlock as JaxReferenceLinearReadout,
 )
 from mace_model.jax.modules.blocks import (
-    NonLinearDipolePolarReadoutBlock as JaxReferenceNonLinearDipolePolarReadout,
+    NonLinearBiasReadoutBlock as JaxReferenceNonLinearBiasReadout,
 )
 from mace_model.jax.modules.blocks import (
-    NonLinearBiasReadoutBlock as JaxReferenceNonLinearBiasReadout,
+    NonLinearDipolePolarReadoutBlock as JaxReferenceNonLinearDipolePolarReadout,
 )
 from mace_model.jax.modules.blocks import (
     RadialEmbeddingBlock as JaxReferenceRadialEmbedding,
 )
 from mace_model.jax.modules.blocks import ScaleShiftBlock as JaxReferenceScaleShift
+from mace_model.torch.adapters.e3nn import o3
+from mace_model.torch.adapters.e3nn import o3 as torch_reference_o3
+from mace_model.torch.modules.backends import _ReshapeIrreps as torch_reshape_irreps
 from mace_model.torch.modules.blocks import (
     AtomicEnergiesBlock as TorchLocalAtomicEnergies,
 )
@@ -73,13 +72,13 @@ from mace_model.torch.modules.blocks import (
     LinearReadoutBlock as TorchLocalLinearReadout,
 )
 from mace_model.torch.modules.blocks import (
+    NonLinearBiasReadoutBlock as TorchLocalNonLinearBiasReadout,
+)
+from mace_model.torch.modules.blocks import (
     NonLinearDipolePolarReadoutBlock as TorchLocalNonLinearDipolePolarReadout,
 )
 from mace_model.torch.modules.blocks import (
     NonLinearDipoleReadoutBlock as TorchLocalNonLinearDipoleReadout,
-)
-from mace_model.torch.modules.blocks import (
-    NonLinearBiasReadoutBlock as TorchLocalNonLinearBiasReadout,
 )
 from mace_model.torch.modules.blocks import (
     RadialEmbeddingBlock as TorchLocalRadialEmbedding,
@@ -103,7 +102,6 @@ from mace_model.torch.modules.blocks import (
     RealAgnosticResidualNonLinearInteractionBlock as TorchLocalRealAgnosticResidualNonLinearInteraction,
 )
 from mace_model.torch.modules.blocks import ScaleShiftBlock as TorchLocalScaleShift
-from mace_model.torch.modules.backends import _ReshapeIrreps as torch_reshape_irreps
 
 TorchReferenceAtomicEnergies = TorchLocalAtomicEnergies
 TorchReferenceEquivariantProductBasis = TorchLocalEquivariantProductBasis

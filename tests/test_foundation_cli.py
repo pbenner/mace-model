@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import torch
-
 from mace_model.build import build_initial_model
 from mace_model.config import load_build_request
 from mace_model.foundation import download_foundation_model, save_foundation_model

@@ -7,6 +7,7 @@ from typing import Optional
 
 from mace_model.torch.adapters.e3nn import o3
 from mace_model.torch.tools.scatter import scatter_sum
+
 from .fully_connected_tensor_product import (
     FullyConnectedTensorProduct as _CueFullyConnectedTensorProduct,
 )
@@ -16,8 +17,8 @@ from .symmetric_contraction import (
 )
 from .symmetric_contraction import (
     native_full_to_canonical_weight,
+    torch_target_design_matrix,
 )
-from .symmetric_contraction import torch_target_design_matrix
 from .tensor_product import TensorProduct as _CueTensorProduct
 from .utility import (
     TransposeIrrepsLayoutWrapper,

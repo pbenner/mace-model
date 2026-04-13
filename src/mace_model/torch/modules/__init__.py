@@ -21,10 +21,10 @@ from .blocks import (
 )
 from .embeddings import GenericJointEmbedding
 from .models import (
+    MACE,
     AtomicDielectricMACE,
     AtomicDipolesMACE,
     EnergyDipolesMACE,
-    MACE,
     ScaleShiftMACE,
 )
 from .radial import (

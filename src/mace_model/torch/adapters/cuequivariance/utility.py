@@ -61,10 +61,6 @@ def _cue_layout(cueq_config) -> object:
     return _normalize_cue_layout(layout)
 
 
-def _cue_group(cueq_config) -> object:
-    return _resolve_cue_group(cueq_config)
-
-
 def _cue_irreps(group: object, irreps) -> cue.Irreps:
     return cue.Irreps(group, irreps)
 
