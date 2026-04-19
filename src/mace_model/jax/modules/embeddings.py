@@ -15,8 +15,8 @@ from .backends import JAX_BACKEND
 
 
 @use_backend(JAX_BACKEND)
-@nxx_register_module("mace_model.torch.modules.embeddings.GenericJointEmbedding")
-@nxx_register_module("mace.modules.embeddings.GenericJointEmbedding")
+@nxx_register_module('mace_model.torch.modules.embeddings.GenericJointEmbedding')
+@nxx_register_module('mace.modules.embeddings.GenericJointEmbedding')
 class GenericJointEmbedding(CoreGenericJointEmbedding, nnx.Module):
     """
     Flax/JAX unified generic joint embedding block.
@@ -49,67 +49,67 @@ class GenericJointEmbedding(CoreGenericJointEmbedding, nnx.Module):
 
         def assign(scope: str, key: str, value):
             node = params
-            for part in scope.split("/"):
+            for part in scope.split('/'):
                 if not part:
                     continue
                 if part.isdigit():
                     part = int(part)
                 if part not in node:
-                    raise KeyError(f"Unknown NNX parameter scope {scope!r}")
+                    raise KeyError(f'Unknown NNX parameter scope {scope!r}')
                 node = node[part]
             if key not in node:
-                raise KeyError(f"Unknown NNX parameter key {key!r} at {scope!r}")
+                raise KeyError(f'Unknown NNX parameter key {key!r} at {scope!r}')
             node[key] = jnp.asarray(value, dtype=node[key].dtype)
 
         for name, spec in torch_module.specs.items():
-            if spec["type"] == "categorical":
+            if spec['type'] == 'categorical':
                 embed = torch_module.embedders[name]
                 assign(
-                    f"embedders/{name}",
-                    "embedding",
+                    f'embedders/{name}',
+                    'embedding',
                     embed.weight.detach().cpu().numpy(),
                 )
-            elif spec["type"] == "continuous":
+            elif spec['type'] == 'continuous':
                 seq = torch_module.embedders[name]
                 lin1 = seq[0]
                 lin2 = seq[2]
                 assign(
-                    f"embedders/{name}/lin1",
-                    "kernel",
+                    f'embedders/{name}/lin1',
+                    'kernel',
                     lin1.weight.detach().cpu().numpy().T,
                 )
                 if lin1.bias is not None:
                     assign(
-                        f"embedders/{name}/lin1",
-                        "bias",
+                        f'embedders/{name}/lin1',
+                        'bias',
                         lin1.bias.detach().cpu().numpy(),
                     )
                 assign(
-                    f"embedders/{name}/lin2",
-                    "kernel",
+                    f'embedders/{name}/lin2',
+                    'kernel',
                     lin2.weight.detach().cpu().numpy().T,
                 )
                 if lin2.bias is not None:
                     assign(
-                        f"embedders/{name}/lin2",
-                        "bias",
+                        f'embedders/{name}/lin2',
+                        'bias',
                         lin2.bias.detach().cpu().numpy(),
                     )
             else:
-                raise ValueError(f"Unknown feature type {spec['type']!r}")
+                raise ValueError(f'Unknown feature type {spec["type"]!r}')
 
-        project = getattr(torch_module, "project")
-        if hasattr(project, "__getitem__"):
+        project = getattr(torch_module, 'project')
+        if hasattr(project, '__getitem__'):
             proj = project[0]
         else:
             proj = project
         assign(
-            "project/lin",
-            "kernel",
+            'project/lin',
+            'kernel',
             proj.weight.detach().cpu().numpy().T,
         )
 
         return params
 
 
-__all__ = ["GenericJointEmbedding"]
+__all__ = ['GenericJointEmbedding']

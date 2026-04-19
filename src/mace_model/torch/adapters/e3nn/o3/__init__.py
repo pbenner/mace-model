@@ -14,4 +14,4 @@ def wigner_3j(l1: int, l2: int, l3: int, dtype=None):
     return torch.tensor(wigner_3j_coefficients(l1, l2, l3), dtype=torch_dtype)
 
 
-__all__ = ["Irrep", "Irreps", "Linear", "SphericalHarmonics", "wigner_3j"]
+__all__ = ['Irrep', 'Irreps', 'Linear', 'SphericalHarmonics', 'wigner_3j']

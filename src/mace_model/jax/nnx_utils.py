@@ -9,7 +9,7 @@ from flax import nnx
 from mace_model.jax.nnx_config import ConfigDict, ConfigVar
 
 _LAYOUT_CONFIG_KEYS = frozenset(
-    {"layout_config", "input_layout_config", "output_layout_config"}
+    {'layout_config', 'input_layout_config', 'output_layout_config'}
 )
 
 

@@ -71,11 +71,11 @@ def get_symmetric_displacement(
     displacement.requires_grad_(True)
     symmetric_displacement = 0.5 * (displacement + displacement.transpose(-1, -2))
     positions = positions + torch.einsum(
-        "be,bec->bc", positions, symmetric_displacement[batch]
+        'be,bec->bc', positions, symmetric_displacement[batch]
     )
     cell = cell.view(-1, 3, 3)
     cell = cell + torch.matmul(cell, symmetric_displacement)
-    shifts = torch.einsum("be,bec->bc", unit_shifts, cell[batch[sender]])
+    shifts = torch.einsum('be,bec->bc', unit_shifts, cell[batch[sender]])
     return positions, shifts, displacement
 
 
@@ -188,7 +188,7 @@ def get_atomic_virials_stresses(
     batch: torch.Tensor,
     cell: torch.Tensor,
 ):
-    edge_virial = torch.einsum("zi,zj->zij", edge_forces, vectors)
+    edge_virial = torch.einsum('zi,zj->zij', edge_forces, vectors)
     atom_virial_sender = scatter_sum(
         src=edge_virial, index=edge_index[0], dim=0, dim_size=num_atoms
     )
@@ -249,50 +249,50 @@ def prepare_graph(
     lammps_mliap: bool = False,
 ) -> GraphContext:
     node_heads = (
-        data["head"][data["batch"]]
-        if "head" in data
-        else torch.zeros_like(data["batch"])
+        data['head'][data['batch']]
+        if 'head' in data
+        else torch.zeros_like(data['batch'])
     )
     if lammps_mliap:
-        n_real, n_total = data["natoms"][0], data["natoms"][1]
+        n_real, n_total = data['natoms'][0], data['natoms'][1]
         num_graphs = 2
-        num_atoms_arange = torch.arange(n_real, device=data["node_attrs"].device)
+        num_atoms_arange = torch.arange(n_real, device=data['node_attrs'].device)
         displacement = None
         positions = torch.zeros(
-            (int(n_real), 3), dtype=data["vectors"].dtype, device=data["vectors"].device
+            (int(n_real), 3), dtype=data['vectors'].dtype, device=data['vectors'].device
         )
         cell = torch.zeros(
             (num_graphs, 3, 3),
-            dtype=data["vectors"].dtype,
-            device=data["vectors"].device,
+            dtype=data['vectors'].dtype,
+            device=data['vectors'].device,
         )
-        vectors = data["vectors"].requires_grad_(True)
+        vectors = data['vectors'].requires_grad_(True)
         lengths = torch.linalg.vector_norm(vectors, dim=1, keepdim=True)
-        ikw = InteractionKwargs(data["lammps_class"], (n_real, n_total))
+        ikw = InteractionKwargs(data['lammps_class'], (n_real, n_total))
     else:
         if not torch.compiler.is_compiling():
-            data["positions"].requires_grad_(True)
-        positions = data["positions"]
-        cell = data["cell"]
+            data['positions'].requires_grad_(True)
+        positions = data['positions']
+        cell = data['cell']
         num_atoms_arange = torch.arange(positions.shape[0], device=positions.device)
-        num_graphs = int(data["ptr"].numel() - 1)
+        num_graphs = int(data['ptr'].numel() - 1)
         displacement = torch.zeros(
             (num_graphs, 3, 3), dtype=positions.dtype, device=positions.device
         )
         if compute_virials or compute_stress or compute_displacement:
             p, s, displacement = get_symmetric_displacement(
                 positions=positions,
-                unit_shifts=data["unit_shifts"],
+                unit_shifts=data['unit_shifts'],
                 cell=cell,
-                edge_index=data["edge_index"],
+                edge_index=data['edge_index'],
                 num_graphs=num_graphs,
-                batch=data["batch"],
+                batch=data['batch'],
             )
-            data["positions"], data["shifts"] = p, s
+            data['positions'], data['shifts'] = p, s
         vectors, lengths = get_edge_vectors_and_lengths(
-            positions=data["positions"],
-            edge_index=data["edge_index"],
-            shifts=data["shifts"],
+            positions=data['positions'],
+            edge_index=data['edge_index'],
+            shifts=data['shifts'],
         )
         ikw = InteractionKwargs(None, (0, 0))
     return GraphContext(
@@ -310,15 +310,15 @@ def prepare_graph(
 
 
 __all__ = [
-    "GraphContext",
-    "InteractionKwargs",
-    "compute_forces",
-    "compute_forces_virials",
-    "compute_hessians_loop",
-    "compute_hessians_vmap",
-    "get_atomic_virials_stresses",
-    "get_edge_vectors_and_lengths",
-    "get_outputs",
-    "get_symmetric_displacement",
-    "prepare_graph",
+    'GraphContext',
+    'InteractionKwargs',
+    'compute_forces',
+    'compute_forces_virials',
+    'compute_hessians_loop',
+    'compute_hessians_vmap',
+    'get_atomic_virials_stresses',
+    'get_edge_vectors_and_lengths',
+    'get_outputs',
+    'get_symmetric_displacement',
+    'prepare_graph',
 ]

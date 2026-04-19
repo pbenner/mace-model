@@ -28,9 +28,9 @@ class LinearNodeEmbeddingBlock:
         cueq_config: Any = None,
         rngs: Any = None,
     ) -> None:
-        backend = _require_backend(self, "LinearNodeEmbeddingBlock")
-        make_irreps = backend.require("make_irreps")
-        make_linear = backend.require("make_linear")
+        backend = _require_backend(self, 'LinearNodeEmbeddingBlock')
+        make_irreps = backend.require('make_irreps')
+        make_linear = backend.require('make_linear')
 
         self.irreps_in = make_irreps(irreps_in)
         self.irreps_out = make_irreps(irreps_out)
@@ -61,9 +61,9 @@ class LinearReadoutBlock:
         cueq_config: Any = None,
         rngs: Any = None,
     ) -> None:
-        backend = _require_backend(self, "LinearReadoutBlock")
-        make_irreps = backend.require("make_irreps")
-        make_linear = backend.require("make_linear")
+        backend = _require_backend(self, 'LinearReadoutBlock')
+        make_irreps = backend.require('make_irreps')
+        make_linear = backend.require('make_linear')
 
         self.irreps_in = make_irreps(irreps_in)
         self.irrep_out = make_irreps(irrep_out)
@@ -100,13 +100,13 @@ class NonLinearReadoutBlock:
         cueq_config: Any = None,
         rngs: Any = None,
     ) -> None:
-        backend = _require_backend(self, "NonLinearReadoutBlock")
+        backend = _require_backend(self, 'NonLinearReadoutBlock')
         if num_heads < 1:
-            raise ValueError(f"num_heads must be >= 1, got {num_heads}")
+            raise ValueError(f'num_heads must be >= 1, got {num_heads}')
 
-        make_irreps = backend.require("make_irreps")
-        make_linear = backend.require("make_linear")
-        make_activation = backend.require("make_activation")
+        make_irreps = backend.require('make_irreps')
+        make_linear = backend.require('make_linear')
+        make_activation = backend.require('make_activation')
 
         self.irreps_in = make_irreps(irreps_in)
         self.MLP_irreps = make_irreps(mlp_irreps)
@@ -136,7 +136,7 @@ class NonLinearReadoutBlock:
 
     def forward(self, x: Any, heads: Any = None) -> Any:
         backend = self.BACKEND
-        mask_head = backend.require("mask_head")
+        mask_head = backend.require('mask_head')
         x = self.linear_1(x)
         x = self.non_linearity(x)
         if self.num_heads > 1 and heads is not None:
@@ -162,14 +162,14 @@ class NonLinearBiasReadoutBlock:
         cueq_config: Any = None,
         rngs: Any = None,
     ) -> None:
-        backend = _require_backend(self, "NonLinearBiasReadoutBlock")
+        backend = _require_backend(self, 'NonLinearBiasReadoutBlock')
         if num_heads < 1:
-            raise ValueError(f"num_heads must be >= 1, got {num_heads}")
+            raise ValueError(f'num_heads must be >= 1, got {num_heads}')
 
-        make_irreps = backend.require("make_irreps")
-        make_linear = backend.require("make_linear")
-        make_bias_linear = backend.require("make_bias_linear")
-        make_activation = backend.require("make_activation")
+        make_irreps = backend.require('make_irreps')
+        make_linear = backend.require('make_linear')
+        make_bias_linear = backend.require('make_bias_linear')
+        make_activation = backend.require('make_activation')
 
         self.irreps_in = make_irreps(irreps_in)
         self.MLP_irreps = make_irreps(mlp_irreps)
@@ -210,8 +210,8 @@ class NonLinearBiasReadoutBlock:
 
     def forward(self, x: Any, heads: Any = None) -> Any:
         backend = self.BACKEND
-        mask_head = backend.require("mask_head")
-        mask_head_stage1 = getattr(backend, "mask_head_stage1", None)
+        mask_head = backend.require('mask_head')
+        mask_head_stage1 = getattr(backend, 'mask_head_stage1', None)
 
         x = self.linear_1(x)
         x = self.non_linearity_1(x)
@@ -239,17 +239,17 @@ class LinearDipoleReadoutBlock:
         cueq_config: Any = None,
         rngs: Any = None,
     ) -> None:
-        backend = _require_backend(self, "LinearDipoleReadoutBlock")
-        make_irreps = backend.require("make_irreps")
-        make_linear = backend.require("make_linear")
+        backend = _require_backend(self, 'LinearDipoleReadoutBlock')
+        make_irreps = backend.require('make_irreps')
+        make_linear = backend.require('make_linear')
 
         self.irreps_in = make_irreps(irreps_in)
         self.dipole_only = bool(dipole_only)
         self.cueq_config = cueq_config
         if self.dipole_only:
-            self.irreps_out = make_irreps("1x1o")
+            self.irreps_out = make_irreps('1x1o')
         else:
-            self.irreps_out = make_irreps("1x0e + 1x1o")
+            self.irreps_out = make_irreps('1x0e + 1x1o')
         self.linear = make_linear(
             irreps_in=self.irreps_in,
             irreps_out=self.irreps_out,
@@ -278,10 +278,10 @@ class NonLinearDipoleReadoutBlock:
         cueq_config: Any = None,
         rngs: Any = None,
     ) -> None:
-        backend = _require_backend(self, "NonLinearDipoleReadoutBlock")
-        make_irreps = backend.require("make_irreps")
-        make_linear = backend.require("make_linear")
-        make_gate = backend.require("make_gate")
+        backend = _require_backend(self, 'NonLinearDipoleReadoutBlock')
+        make_irreps = backend.require('make_irreps')
+        make_linear = backend.require('make_linear')
+        make_gate = backend.require('make_gate')
 
         self.irreps_in = make_irreps(irreps_in)
         self.MLP_irreps = make_irreps(mlp_irreps)
@@ -291,9 +291,9 @@ class NonLinearDipoleReadoutBlock:
         self.cueq_config = cueq_config
 
         if self.dipole_only:
-            self.irreps_out = make_irreps("1x1o")
+            self.irreps_out = make_irreps('1x1o')
         else:
-            self.irreps_out = make_irreps("1x0e + 1x1o")
+            self.irreps_out = make_irreps('1x0e + 1x1o')
 
         irreps_scalars, irreps_gates, irreps_gated = build_gated_irreps(
             make_irreps=make_irreps,
@@ -344,18 +344,18 @@ class LinearDipolePolarReadoutBlock:
         cueq_config: Any = None,
         rngs: Any = None,
     ) -> None:
-        backend = _require_backend(self, "LinearDipolePolarReadoutBlock")
-        make_irreps = backend.require("make_irreps")
-        make_linear = backend.require("make_linear")
+        backend = _require_backend(self, 'LinearDipolePolarReadoutBlock')
+        make_irreps = backend.require('make_irreps')
+        make_linear = backend.require('make_linear')
 
         self.irreps_in = make_irreps(irreps_in)
         self.use_polarizability = bool(use_polarizability)
         self.cueq_config = cueq_config
         if not self.use_polarizability:
             raise ValueError(
-                "LinearDipolePolarReadoutBlock requires use_polarizability=True."
+                'LinearDipolePolarReadoutBlock requires use_polarizability=True.'
             )
-        self.irreps_out = make_irreps("2x0e + 1x1o + 1x2e")
+        self.irreps_out = make_irreps('2x0e + 1x1o + 1x2e')
         self.linear = make_linear(
             irreps_in=self.irreps_in,
             irreps_out=self.irreps_out,
@@ -384,10 +384,10 @@ class NonLinearDipolePolarReadoutBlock:
         cueq_config: Any = None,
         rngs: Any = None,
     ) -> None:
-        backend = _require_backend(self, "NonLinearDipolePolarReadoutBlock")
-        make_irreps = backend.require("make_irreps")
-        make_linear = backend.require("make_linear")
-        make_gate = backend.require("make_gate")
+        backend = _require_backend(self, 'NonLinearDipolePolarReadoutBlock')
+        make_irreps = backend.require('make_irreps')
+        make_linear = backend.require('make_linear')
+        make_gate = backend.require('make_gate')
 
         self.irreps_in = make_irreps(irreps_in)
         self.MLP_irreps = make_irreps(mlp_irreps)
@@ -397,9 +397,9 @@ class NonLinearDipolePolarReadoutBlock:
         self.cueq_config = cueq_config
         if not self.use_polarizability:
             raise ValueError(
-                "NonLinearDipolePolarReadoutBlock requires use_polarizability=True."
+                'NonLinearDipolePolarReadoutBlock requires use_polarizability=True.'
             )
-        self.irreps_out = make_irreps("2x0e + 1x1o + 1x2e")
+        self.irreps_out = make_irreps('2x0e + 1x1o + 1x2e')
 
         irreps_scalars, irreps_gates, irreps_gated = build_gated_irreps(
             make_irreps=make_irreps,
@@ -448,18 +448,18 @@ class RadialEmbeddingBlock:
         r_max: float,
         num_bessel: int,
         num_polynomial_cutoff: int,
-        radial_type: str = "bessel",
-        distance_transform: str = "None",
+        radial_type: str = 'bessel',
+        distance_transform: str = 'None',
         apply_cutoff: bool = True,
         rngs: Any = None,
     ) -> None:
-        backend = _require_backend(self, "RadialEmbeddingBlock")
-        make_bessel_basis = backend.require("make_bessel_basis")
-        make_gaussian_basis = backend.require("make_gaussian_basis")
-        make_chebychev_basis = backend.require("make_chebychev_basis")
-        make_polynomial_cutoff = backend.require("make_polynomial_cutoff")
-        make_agnesi_transform = backend.require("make_agnesi_transform")
-        make_soft_transform = backend.require("make_soft_transform")
+        backend = _require_backend(self, 'RadialEmbeddingBlock')
+        make_bessel_basis = backend.require('make_bessel_basis')
+        make_gaussian_basis = backend.require('make_gaussian_basis')
+        make_chebychev_basis = backend.require('make_chebychev_basis')
+        make_polynomial_cutoff = backend.require('make_polynomial_cutoff')
+        make_agnesi_transform = backend.require('make_agnesi_transform')
+        make_soft_transform = backend.require('make_soft_transform')
 
         self.r_max = float(r_max)
         self.num_bessel = int(num_bessel)
@@ -468,29 +468,29 @@ class RadialEmbeddingBlock:
         self.distance_transform = str(distance_transform)
         self.apply_cutoff = bool(apply_cutoff)
 
-        if self.radial_type == "bessel":
+        if self.radial_type == 'bessel':
             self.basis_fn = make_bessel_basis(
                 r_max=self.r_max,
                 num_basis=self.num_bessel,
                 rngs=rngs,
             )
-        elif self.radial_type == "gaussian":
+        elif self.radial_type == 'gaussian':
             self.basis_fn = make_gaussian_basis(
                 r_max=self.r_max,
                 num_basis=self.num_bessel,
                 rngs=rngs,
             )
-        elif self.radial_type == "chebyshev":
+        elif self.radial_type == 'chebyshev':
             self.basis_fn = make_chebychev_basis(
                 r_max=self.r_max,
                 num_basis=self.num_bessel,
             )
         else:
-            raise ValueError(f"Unknown radial_type: {self.radial_type}")
+            raise ValueError(f'Unknown radial_type: {self.radial_type}')
 
-        if self.distance_transform == "Agnesi":
+        if self.distance_transform == 'Agnesi':
             self.distance_transform_module = make_agnesi_transform(rngs=rngs)
-        elif self.distance_transform == "Soft":
+        elif self.distance_transform == 'Soft':
             self.distance_transform_module = make_soft_transform(rngs=rngs)
         else:
             self.distance_transform_module = None
@@ -554,10 +554,10 @@ class EquivariantProductBasisBlock:
         oeq_config: Any = None,
         rngs: Any = None,
     ) -> None:
-        backend = _require_backend(self, "EquivariantProductBasisBlock")
-        make_irreps = backend.require("make_irreps")
-        make_linear = backend.require("make_linear")
-        make_symmetric_contraction = backend.require("make_symmetric_contraction")
+        backend = _require_backend(self, 'EquivariantProductBasisBlock')
+        make_irreps = backend.require('make_irreps')
+        make_linear = backend.require('make_linear')
+        make_symmetric_contraction = backend.require('make_symmetric_contraction')
 
         self.node_feats_irreps = make_irreps(node_feats_irreps)
         self.target_irreps = make_irreps(target_irreps)
@@ -599,9 +599,9 @@ class EquivariantProductBasisBlock:
         node_attrs_index: Any = None,
     ) -> Any:
         backend = self.BACKEND
-        make_ones = backend.require("make_ones")
-        make_index_attrs = backend.require("make_index_attrs")
-        transpose_mul_ir = backend.require("transpose_mul_ir")
+        make_ones = backend.require('make_ones')
+        make_index_attrs = backend.require('make_index_attrs')
+        transpose_mul_ir = backend.require('transpose_mul_ir')
 
         if self.use_agnostic_product:
             node_attrs = make_ones(node_feats=node_feats, width=1)
@@ -615,9 +615,9 @@ class EquivariantProductBasisBlock:
                 use_cueq = True
 
         if use_cueq:
-            layout_str = getattr(self.cueq_config, "layout_str", "mul_ir")
+            layout_str = getattr(self.cueq_config, 'layout_str', 'mul_ir')
             features = node_feats
-            if layout_str == "mul_ir":
+            if layout_str == 'mul_ir':
                 features = transpose_mul_ir(features)
             features = features.reshape(features.shape[0], -1)
             index_attrs = make_index_attrs(
@@ -641,15 +641,15 @@ class ScaleShiftBlock:
     BACKEND: ModelBackend
 
     def init(self, *, scale: Any, shift: Any) -> None:
-        backend = _require_backend(self, "ScaleShiftBlock")
-        make_scale_shift = backend.require("make_scale_shift")
-        self.scale = make_scale_shift(self, name="scale", value=scale)
-        self.shift = make_scale_shift(self, name="shift", value=shift)
+        backend = _require_backend(self, 'ScaleShiftBlock')
+        make_scale_shift = backend.require('make_scale_shift')
+        self.scale = make_scale_shift(self, name='scale', value=scale)
+        self.shift = make_scale_shift(self, name='shift', value=shift)
 
     def forward(self, x: Any, head: Any) -> Any:
         backend = self.BACKEND
-        get_scale_shift = backend.require("get_scale_shift")
-        atleast_1d = backend.require("atleast_1d")
+        get_scale_shift = backend.require('get_scale_shift')
+        atleast_1d = backend.require('atleast_1d')
 
         scale = atleast_1d(get_scale_shift(self.scale))[head]
         shift = atleast_1d(get_scale_shift(self.shift))[head]
@@ -657,15 +657,15 @@ class ScaleShiftBlock:
 
     def __repr__(self) -> str:
         backend = self.BACKEND
-        get_scale_shift = backend.require("get_scale_shift")
-        atleast_1d = backend.require("atleast_1d")
-        to_numpy = backend.require("to_numpy")
+        get_scale_shift = backend.require('get_scale_shift')
+        atleast_1d = backend.require('atleast_1d')
+        to_numpy = backend.require('to_numpy')
 
         scale_vals = to_numpy(atleast_1d(get_scale_shift(self.scale)))
         shift_vals = to_numpy(atleast_1d(get_scale_shift(self.shift)))
-        formatted_scale = ", ".join(f"{float(value):.4f}" for value in scale_vals)
-        formatted_shift = ", ".join(f"{float(value):.4f}" for value in shift_vals)
-        return f"{self.__class__.__name__}(scale={formatted_scale}, shift={formatted_shift})"
+        formatted_scale = ', '.join(f'{float(value):.4f}' for value in scale_vals)
+        formatted_shift = ', '.join(f'{float(value):.4f}' for value in shift_vals)
+        return f'{self.__class__.__name__}(scale={formatted_scale}, shift={formatted_shift})'
 
 
 class AtomicEnergiesBlock:
@@ -676,33 +676,33 @@ class AtomicEnergiesBlock:
     BACKEND: ModelBackend
 
     def init(self, *, atomic_energies: Any) -> None:
-        backend = _require_backend(self, "AtomicEnergiesBlock")
-        make_atomic_energies = backend.require("make_atomic_energies")
+        backend = _require_backend(self, 'AtomicEnergiesBlock')
+        make_atomic_energies = backend.require('make_atomic_energies')
         self.atomic_energies = make_atomic_energies(self, atomic_energies)
 
     def forward(self, x: Any) -> Any:
         backend = self.BACKEND
-        get_atomic_energies = backend.require("get_atomic_energies")
-        atleast_2d = backend.require("atleast_2d")
-        matmul = backend.require("matmul")
-        transpose = backend.require("transpose")
+        get_atomic_energies = backend.require('get_atomic_energies')
+        atleast_2d = backend.require('atleast_2d')
+        matmul = backend.require('matmul')
+        transpose = backend.require('transpose')
 
         atomic_energies = get_atomic_energies(self.atomic_energies)
         return matmul(x, transpose(atleast_2d(atomic_energies)))
 
     def __repr__(self) -> str:
         backend = self.BACKEND
-        get_atomic_energies = backend.require("get_atomic_energies")
-        atleast_2d = backend.require("atleast_2d")
-        to_numpy = backend.require("to_numpy")
+        get_atomic_energies = backend.require('get_atomic_energies')
+        atleast_2d = backend.require('atleast_2d')
+        to_numpy = backend.require('to_numpy')
 
         atomic_energies = get_atomic_energies(self.atomic_energies)
         energies_np = to_numpy(atleast_2d(atomic_energies))
-        formatted_energies = ", ".join(
-            "[" + ", ".join(f"{value:.4f}" for value in row) + "]"
+        formatted_energies = ', '.join(
+            '[' + ', '.join(f'{value:.4f}' for value in row) + ']'
             for row in energies_np
         )
-        return f"{self.__class__.__name__}(energies=[{formatted_energies}])"
+        return f'{self.__class__.__name__}(energies=[{formatted_energies}])'
 
 
 class InteractionBlock:
@@ -732,8 +732,8 @@ class InteractionBlock:
         oeq_config: Any = None,
         rngs: Any = None,
     ) -> None:
-        backend = _require_backend(self, "InteractionBlock")
-        make_irreps = backend.require("make_irreps")
+        backend = _require_backend(self, 'InteractionBlock')
+        make_irreps = backend.require('make_irreps')
 
         self.node_attrs_irreps = make_irreps(node_attrs_irreps)
         self.node_feats_irreps = make_irreps(node_feats_irreps)
@@ -754,9 +754,9 @@ class InteractionBlock:
         else:
             self.edge_irreps = make_irreps(edge_irreps)
 
-        if self.oeq_config and getattr(self.oeq_config, "conv_fusion", False):
+        if self.oeq_config and getattr(self.oeq_config, 'conv_fusion', False):
             self.conv_fusion = self.oeq_config.conv_fusion
-        if self.cueq_config and getattr(self.cueq_config, "conv_fusion", False):
+        if self.cueq_config and getattr(self.cueq_config, 'conv_fusion', False):
             self.conv_fusion = self.cueq_config.conv_fusion
 
         self._setup(rngs=rngs)
@@ -773,9 +773,9 @@ class InteractionBlock:
     ) -> Any:
         """Pad and exchange node features when running under LAMMPS."""
         backend = self.BACKEND
-        lammps_mp_apply = getattr(backend, "lammps_mp_apply", None)
-        cat = getattr(backend, "cat", None)
-        make_zeros = getattr(backend, "make_zeros", None)
+        lammps_mp_apply = getattr(backend, 'lammps_mp_apply', None)
+        cat = getattr(backend, 'cat', None)
+        make_zeros = getattr(backend, 'make_zeros', None)
         if (
             lammps_class is None
             or first_layer
@@ -821,7 +821,7 @@ class InteractionBlock:
         dim_size: int,
     ) -> Any:
         """Sum edge-aligned quantities onto receiver nodes."""
-        scatter_sum = self.BACKEND.require("scatter_sum")
+        scatter_sum = self.BACKEND.require('scatter_sum')
         return scatter_sum(
             src=edge_values,
             index=edge_index[1],
@@ -860,7 +860,7 @@ class InteractionBlock:
         edge_index: Any,
     ) -> Any:
         """Apply the equivariant convolution and aggregate edge messages."""
-        if hasattr(self, "conv_fusion"):
+        if hasattr(self, 'conv_fusion'):
             return self.conv_tp(node_feats, edge_attrs, tp_weights, edge_index)
         edge_messages = self.conv_tp(
             node_feats[edge_index[0]],
@@ -882,7 +882,7 @@ class InteractionBlock:
         cutoff: Any,
     ) -> Any:
         """Compute receiver-node densities from radial edge features."""
-        tanh = self.BACKEND.require("tanh")
+        tanh = self.BACKEND.require('tanh')
         edge_density = tanh(self.density_fn(edge_feats) ** 2)
         edge_density = self.apply_cutoff(edge_density, cutoff)
         return self.scatter_edges_to_nodes(
@@ -901,15 +901,15 @@ class InteractionBlock:
     ) -> None:
         """Build the common tensor-product message path shared by interaction blocks."""
         backend = self.BACKEND
-        make_linear = backend.require("make_linear")
-        tp_out = backend.require("tp_out_irreps_with_instructions")
-        make_tensor_product = backend.require("make_tensor_product")
-        make_fully_connected_net = backend.require("make_fully_connected_net")
+        make_linear = backend.require('make_linear')
+        tp_out = backend.require('tp_out_irreps_with_instructions')
+        make_tensor_product = backend.require('make_tensor_product')
+        make_fully_connected_net = backend.require('make_fully_connected_net')
         make_fully_connected_tensor_product = backend.require(
-            "make_fully_connected_tensor_product"
+            'make_fully_connected_tensor_product'
         )
-        make_reshape_irreps = backend.require("reshape_irreps")
-        silu = backend.require("silu")
+        make_reshape_irreps = backend.require('reshape_irreps')
+        silu = backend.require('silu')
 
         self.linear_up = make_linear(
             irreps_in=self.node_feats_irreps,
@@ -1185,15 +1185,15 @@ class RealAgnosticAttResidualInteractionBlock(InteractionBlock):
 
     def _setup(self, *, rngs: Any = None) -> None:
         backend = self.BACKEND
-        make_irreps = backend.require("make_irreps")
-        make_linear = backend.require("make_linear")
-        tp_out = backend.require("tp_out_irreps_with_instructions")
-        make_tensor_product = backend.require("make_tensor_product")
-        make_fully_connected_net = backend.require("make_fully_connected_net")
-        make_reshape_irreps = backend.require("reshape_irreps")
-        silu = backend.require("silu")
+        make_irreps = backend.require('make_irreps')
+        make_linear = backend.require('make_linear')
+        tp_out = backend.require('tp_out_irreps_with_instructions')
+        make_tensor_product = backend.require('make_tensor_product')
+        make_fully_connected_net = backend.require('make_fully_connected_net')
+        make_reshape_irreps = backend.require('reshape_irreps')
+        silu = backend.require('silu')
 
-        self.node_feats_down_irreps = make_irreps("64x0e")
+        self.node_feats_down_irreps = make_irreps('64x0e')
         self.linear_up = make_linear(
             irreps_in=self.node_feats_irreps,
             irreps_out=self.edge_irreps,
@@ -1262,7 +1262,7 @@ class RealAgnosticAttResidualInteractionBlock(InteractionBlock):
         first_layer: bool = False,
     ) -> tuple[Any, Any]:
         del node_attrs, lammps_class, lammps_natoms, first_layer
-        cat = self.BACKEND.require("cat")
+        cat = self.BACKEND.require('cat')
 
         sender = edge_index[0]
         sc = self.skip_linear(node_feats)
@@ -1293,19 +1293,19 @@ class RealAgnosticResidualNonLinearInteractionBlock(InteractionBlock):
 
     def _setup(self, *, rngs: Any = None) -> None:
         backend = self.BACKEND
-        make_irreps = backend.require("make_irreps")
-        make_irrep = backend.require("make_irrep")
-        make_linear = backend.require("make_linear")
-        tp_out = backend.require("tp_out_irreps_with_instructions")
-        make_tensor_product = backend.require("make_tensor_product")
-        make_radial_mlp = backend.require("make_radial_mlp")
-        make_custom_gate = backend.require("make_custom_gate")
-        make_reshape_irreps = backend.require("reshape_irreps")
-        make_transpose_irreps_layout = backend.require("make_transpose_irreps_layout")
-        make_parameter = backend.require("make_parameter")
-        init_uniform_ = backend.require("init_uniform_")
-        silu = backend.require("silu")
-        sigmoid = backend.require("sigmoid")
+        make_irreps = backend.require('make_irreps')
+        make_irrep = backend.require('make_irrep')
+        make_linear = backend.require('make_linear')
+        tp_out = backend.require('tp_out_irreps_with_instructions')
+        make_tensor_product = backend.require('make_tensor_product')
+        make_radial_mlp = backend.require('make_radial_mlp')
+        make_custom_gate = backend.require('make_custom_gate')
+        make_reshape_irreps = backend.require('reshape_irreps')
+        make_transpose_irreps_layout = backend.require('make_transpose_irreps_layout')
+        make_parameter = backend.require('make_parameter')
+        init_uniform_ = backend.require('init_uniform_')
+        silu = backend.require('silu')
+        sigmoid = backend.require('sigmoid')
 
         node_scalar_irreps = make_irreps(
             [(self.node_feats_irreps.count(make_irrep(0, 1)), (0, 1))]
@@ -1406,18 +1406,18 @@ class RealAgnosticResidualNonLinearInteractionBlock(InteractionBlock):
             hs=[input_dim + 2 * node_scalar_irreps.dim, 64, 1],
             rngs=rngs,
         )
-        self.alpha = make_parameter(self, name="alpha", value=20.0, requires_grad=True)
-        self.beta = make_parameter(self, name="beta", value=0.0, requires_grad=True)
+        self.alpha = make_parameter(self, name='alpha', value=20.0, requires_grad=True)
+        self.beta = make_parameter(self, name='beta', value=0.0, requires_grad=True)
         self.transpose_mul_ir = make_transpose_irreps_layout(
             irreps=self.irreps_nonlin,
-            source="ir_mul",
-            target="mul_ir",
+            source='ir_mul',
+            target='mul_ir',
             cueq_config=self.cueq_config,
         )
         self.transpose_ir_mul = make_transpose_irreps_layout(
             irreps=self.irreps_out,
-            source="mul_ir",
-            target="ir_mul",
+            source='mul_ir',
+            target='ir_mul',
             cueq_config=self.cueq_config,
         )
 
@@ -1433,7 +1433,7 @@ class RealAgnosticResidualNonLinearInteractionBlock(InteractionBlock):
         lammps_natoms: tuple[int, int] = (0, 0),
         first_layer: bool = False,
     ) -> tuple[Any, Any]:
-        cat = self.BACKEND.require("cat")
+        cat = self.BACKEND.require('cat')
 
         num_nodes = node_feats.shape[0]
         n_real = self.resolve_real_atom_count(lammps_class, lammps_natoms)

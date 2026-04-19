@@ -24,11 +24,11 @@ class _Layer(torch.nn.Module):
 
     def __repr__(self):
         act = self.act
-        if hasattr(act, "__name__"):
+        if hasattr(act, '__name__'):
             act = act.__name__
         elif isinstance(act, torch.nn.Module):
             act = act.__class__.__name__
-        return f"Layer({self.h_in}->{self.h_out}, act={act})"
+        return f'Layer({self.h_in}->{self.h_out}, act={act})'
 
     def forward(self, x: torch.Tensor):
         if self.act is not None:
@@ -58,8 +58,8 @@ class FullyConnectedNet(torch.nn.Sequential):
                 var_out = 1
                 a = act
             layer = _Layer(h1, h2, a, var_in, var_out)
-            setattr(self, f"layer{i}", layer)
+            setattr(self, f'layer{i}', layer)
             var_in = var_out
 
     def __repr__(self):
-        return f"{self.__class__.__name__}{self.hs}"
+        return f'{self.__class__.__name__}{self.hs}'

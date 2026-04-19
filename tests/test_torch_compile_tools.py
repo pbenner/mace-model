@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import torch
+
 from mace_model.build import build_initial_model
 from mace_model.config import load_build_request
 from mace_model.torch import (
@@ -48,8 +49,8 @@ atomic_inter_shift = 0.0
 
 
 def _make_tiny_torch_model(tmp_path: Path):
-    config_path = tmp_path / "compile-tool.toml"
-    config_path.write_text(TORCH_CONFIG.format(output=tmp_path / "unused"))
+    config_path = tmp_path / 'compile-tool.toml'
+    config_path.write_text(TORCH_CONFIG.format(output=tmp_path / 'unused'))
     request = load_build_request(config_path)
     result = build_initial_model(request)
     return result.model.eval()
@@ -57,23 +58,23 @@ def _make_tiny_torch_model(tmp_path: Path):
 
 def _example_graph() -> dict[str, torch.Tensor]:
     return {
-        "positions": torch.tensor(
+        'positions': torch.tensor(
             [[0.0, 0.0, 0.0], [1.8, 0.0, 0.0]],
             dtype=torch.float32,
         ),
-        "node_attrs": torch.tensor(
+        'node_attrs': torch.tensor(
             [[1.0, 0.0], [0.0, 1.0]],
             dtype=torch.float32,
         ),
-        "edge_index": torch.tensor(
+        'edge_index': torch.tensor(
             [[0, 1], [1, 0]],
             dtype=torch.int64,
         ),
-        "shifts": torch.zeros((2, 3), dtype=torch.float32),
-        "unit_shifts": torch.zeros((2, 3), dtype=torch.float32),
-        "cell": torch.zeros((1, 3, 3), dtype=torch.float32),
-        "batch": torch.tensor([0, 0], dtype=torch.int64),
-        "ptr": torch.tensor([0, 2], dtype=torch.int64),
+        'shifts': torch.zeros((2, 3), dtype=torch.float32),
+        'unit_shifts': torch.zeros((2, 3), dtype=torch.float32),
+        'cell': torch.zeros((1, 3, 3), dtype=torch.float32),
+        'batch': torch.tensor([0, 0], dtype=torch.int64),
+        'ptr': torch.tensor([0, 2], dtype=torch.int64),
     }
 
 
@@ -84,14 +85,14 @@ def test_compile_model_matches_eager_wrapper(tmp_path: Path):
 
     eager_wrapper = make_inference_wrapper(
         model,
-        output_keys=("energy", "node_energy"),
+        output_keys=('energy', 'node_energy'),
     )
     eager_out = eager_wrapper(*args)
 
     compiled_wrapper = compile_model(
         model,
-        output_keys=("energy", "node_energy"),
-        backend="eager",
+        output_keys=('energy', 'node_energy'),
+        backend='eager',
     )
     compiled_out = compiled_wrapper(*args)
 
@@ -101,10 +102,10 @@ def test_compile_model_matches_eager_wrapper(tmp_path: Path):
 
 
 def test_export_model_matches_eager_wrapper(tmp_path: Path):
-    if not hasattr(torch, "export"):
+    if not hasattr(torch, 'export'):
         import pytest
 
-        pytest.skip("torch.export is not available in this PyTorch build.")
+        pytest.skip('torch.export is not available in this PyTorch build.')
 
     model = _make_tiny_torch_model(tmp_path)
     graph = _example_graph()
@@ -112,14 +113,14 @@ def test_export_model_matches_eager_wrapper(tmp_path: Path):
 
     eager_wrapper = make_inference_wrapper(
         model,
-        output_keys=("energy", "node_energy"),
+        output_keys=('energy', 'node_energy'),
     )
     eager_out = eager_wrapper(*args)
 
     exported = export_model(
         model,
         graph,
-        output_keys=("energy", "node_energy"),
+        output_keys=('energy', 'node_energy'),
         strict=False,
     )
     exported_out = exported.module()(*args)

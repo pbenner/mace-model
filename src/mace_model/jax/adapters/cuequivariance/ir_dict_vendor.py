@@ -32,13 +32,13 @@ from jax import Array
 segmented_polynomial = cuex.segmented_polynomial
 
 __all__ = [
-    "segmented_polynomial_uniform_1d",
-    "assert_mul_ir_dict",
-    "mul_ir_dict",
-    "flat_to_dict",
-    "dict_to_flat",
-    "irreps_add",
-    "irreps_zeros_like",
+    'segmented_polynomial_uniform_1d',
+    'assert_mul_ir_dict',
+    'mul_ir_dict',
+    'flat_to_dict',
+    'dict_to_flat',
+    'irreps_add',
+    'irreps_zeros_like',
 ]
 
 
@@ -95,29 +95,29 @@ def segmented_polynomial_uniform_1d(
     def flatten_input(i: int, desc: cue.SegmentedOperand, x: Array) -> Array:
         if not desc.all_same_segment_shape():
             raise ValueError(
-                f"Input operand {i}: segments must have uniform shape.\n"
-                f"  Descriptor: {desc}\n"
-                f"  Segment shapes: {desc.segments}"
+                f'Input operand {i}: segments must have uniform shape.\n'
+                f'  Descriptor: {desc}\n'
+                f'  Segment shapes: {desc.segments}'
             )
         expected_suffix = (desc.num_segments,) + desc.segment_shape
         min_ndim = 1 + desc.ndim
         if x.ndim < min_ndim:
             raise ValueError(
-                f"Input operand {i}: array has too few dimensions.\n"
-                f"  Expected at least {min_ndim} dims (batch... + {expected_suffix})\n"
-                f"  Got shape {x.shape} with {x.ndim} dims\n"
-                f"  Descriptor: num_segments={desc.num_segments}, "
-                f"segment_shape={desc.segment_shape}"
+                f'Input operand {i}: array has too few dimensions.\n'
+                f'  Expected at least {min_ndim} dims (batch... + {expected_suffix})\n'
+                f'  Got shape {x.shape} with {x.ndim} dims\n'
+                f'  Descriptor: num_segments={desc.num_segments}, '
+                f'segment_shape={desc.segment_shape}'
             )
         actual_suffix = x.shape[-(1 + desc.ndim) :]
         if actual_suffix != expected_suffix:
             raise ValueError(
-                f"Input operand {i}: shape mismatch in trailing dimensions.\n"
-                f"  Expected trailing dims: {expected_suffix} "
-                f"(num_segments={desc.num_segments}, segment_shape={desc.segment_shape})\n"
-                f"  Got trailing dims: {actual_suffix}\n"
-                f"  Full array shape: {x.shape}\n"
-                f"  Descriptor: {desc}"
+                f'Input operand {i}: shape mismatch in trailing dimensions.\n'
+                f'  Expected trailing dims: {expected_suffix} '
+                f'(num_segments={desc.num_segments}, segment_shape={desc.segment_shape})\n'
+                f'  Got trailing dims: {actual_suffix}\n'
+                f'  Full array shape: {x.shape}\n'
+                f'  Descriptor: {desc}'
             )
         return jnp.reshape(x, x.shape[: -(1 + desc.ndim)] + (desc.size,))
 
@@ -150,10 +150,10 @@ def segmented_polynomial_uniform_1d(
             x = jnp.zeros(
                 default_shape + (desc.num_segments,) + desc.segment_shape, default_dtype
             )
-        assert x.ndim >= 1 + desc.ndim, f"desc: {desc}, x.shape: {x.shape}"
+        assert x.ndim >= 1 + desc.ndim, f'desc: {desc}, x.shape: {x.shape}'
         assert (
             x.shape[-(1 + desc.ndim) :] == (desc.num_segments,) + desc.segment_shape
-        ), f"desc: {desc}, x.shape: {x.shape}"
+        ), f'desc: {desc}, x.shape: {x.shape}'
         return jnp.reshape(x, x.shape[: -(1 + desc.ndim)] + (desc.size,))
 
     list_outputs = jax.tree.leaves(outputs, is_none)
@@ -169,7 +169,7 @@ def segmented_polynomial_uniform_1d(
         list_inputs,
         list_outputs,
         list_indices,
-        method="uniform_1d",
+        method='uniform_1d',
         math_dtype=math_dtype,
         name=name,
     )
@@ -186,7 +186,7 @@ def segmented_polynomial_uniform_1d(
 def assert_mul_ir_dict(irreps: cue.Irreps, x: dict[Irrep, Array]) -> None:
     """Assert that a dict[Irrep, Array] matches the expected irreps structure."""
     error_msg = (
-        f"Dict {jax.tree.map(lambda v: v.shape, x)} does not match irreps {irreps}"
+        f'Dict {jax.tree.map(lambda v: v.shape, x)} does not match irreps {irreps}'
     )
     for (expected_mul, expected_ir), (actual_ir, actual_v) in zip(irreps, x.items()):
         assert actual_ir == expected_ir, error_msg
@@ -199,16 +199,16 @@ def mul_ir_dict(irreps: cue.Irreps, data: Any) -> dict[Irrep, Any]:
 
 
 def flat_to_dict(
-    irreps: cue.Irreps, data: Array, *, layout: str = "mul_ir"
+    irreps: cue.Irreps, data: Array, *, layout: str = 'mul_ir'
 ) -> dict[Irrep, Array]:
     """Convert a flat array to dict[Irrep, Array] with shape (..., mul, ir.dim)."""
-    assert layout in ("mul_ir", "ir_mul")
+    assert layout in ('mul_ir', 'ir_mul')
     result = {}
     offset = 0
     for mul, ir in irreps:
         size = mul * ir.dim
         segment = data[..., offset : offset + size]
-        if layout == "mul_ir":
+        if layout == 'mul_ir':
             result[ir] = jnp.reshape(segment, data.shape[:-1] + (mul, ir.dim))
         else:  # ir_mul
             result[ir] = jnp.reshape(segment, data.shape[:-1] + (ir.dim, mul))

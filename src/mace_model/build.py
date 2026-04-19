@@ -95,7 +95,7 @@ TORCH_READOUTS = {
     )
 }
 
-TORCH_MODEL_CLASSES = {"MACE": TorchMACE, "ScaleShiftMACE": TorchScaleShiftMACE}
+TORCH_MODEL_CLASSES = {'MACE': TorchMACE, 'ScaleShiftMACE': TorchScaleShiftMACE}
 
 
 @dataclass(frozen=True)
@@ -128,35 +128,35 @@ def _jax_runtime():
     from mace_model.jax.tools.model_builder import build_model as build_jax_model
 
     return {
-        "nnx": nnx,
-        "serialization": serialization,
-        "state_to_pure_dict": state_to_pure_dict,
-        "state_to_serializable_dict": state_to_serializable_dict,
-        "build_model": build_jax_model,
-        "model_classes": {"MACE": JaxMACE, "ScaleShiftMACE": JaxScaleShiftMACE},
+        'nnx': nnx,
+        'serialization': serialization,
+        'state_to_pure_dict': state_to_pure_dict,
+        'state_to_serializable_dict': state_to_serializable_dict,
+        'build_model': build_jax_model,
+        'model_classes': {'MACE': JaxMACE, 'ScaleShiftMACE': JaxScaleShiftMACE},
     }
 
 
 def _normalize_atomic_config(
     config: dict[str, Any],
 ) -> tuple[tuple[int, ...], np.ndarray]:
-    atomic_numbers = tuple(int(z) for z in config.get("atomic_numbers", []))
+    atomic_numbers = tuple(int(z) for z in config.get('atomic_numbers', []))
     if not atomic_numbers:
-        raise ValueError("Model config is missing atomic_numbers.")
-    if "atomic_energies" not in config:
-        raise ValueError("Model config is missing atomic_energies.")
-    atomic_energies = np.asarray(config["atomic_energies"], dtype=np.float32)
+        raise ValueError('Model config is missing atomic_numbers.')
+    if 'atomic_energies' not in config:
+        raise ValueError('Model config is missing atomic_energies.')
+    atomic_energies = np.asarray(config['atomic_energies'], dtype=np.float32)
     if atomic_energies.ndim == 1:
         expected = len(atomic_numbers)
         if int(atomic_energies.shape[0]) != expected:
             raise ValueError(
-                "atomic_energies length does not match atomic_numbers "
-                f"({atomic_energies.shape[0]} vs {expected})."
+                'atomic_energies length does not match atomic_numbers '
+                f'({atomic_energies.shape[0]} vs {expected}).'
             )
     elif int(atomic_energies.shape[-1]) != len(atomic_numbers):
         raise ValueError(
-            "atomic_energies last dimension does not match atomic_numbers "
-            f"({atomic_energies.shape[-1]} vs {len(atomic_numbers)})."
+            'atomic_energies last dimension does not match atomic_numbers '
+            f'({atomic_energies.shape[-1]} vs {len(atomic_numbers)}).'
         )
     return atomic_numbers, atomic_energies
 
@@ -164,7 +164,7 @@ def _normalize_atomic_config(
 def _jsonable(value: Any) -> Any:
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
-    if value.__class__.__name__ == "Irreps":
+    if value.__class__.__name__ == 'Irreps':
         return str(value)
     if isinstance(value, Path):
         return str(value)
@@ -180,11 +180,11 @@ def _jsonable(value: Any) -> Any:
         return _jsonable(asdict(value))
     if inspect.isclass(value):
         return value.__name__
-    if callable(value) and hasattr(value, "__name__"):
+    if callable(value) and hasattr(value, '__name__'):
         return value.__name__
-    if hasattr(value, "__dict__"):
+    if hasattr(value, '__dict__'):
         public_attrs = {
-            key: val for key, val in vars(value).items() if not key.startswith("_")
+            key: val for key, val in vars(value).items() if not key.startswith('_')
         }
         if public_attrs:
             return _jsonable(public_attrs)
@@ -198,49 +198,49 @@ def _resolve_torch_gate(gate: Any):
         return gate
     name = str(gate).strip().lower()
     mapping = {
-        "silu": torch.nn.functional.silu,
-        "silu6": torch.nn.functional.silu,
-        "swish": torch.nn.functional.silu,
-        "relu": torch.nn.functional.relu,
-        "tanh": torch.tanh,
-        "sigmoid": torch.sigmoid,
-        "softplus": torch.nn.functional.softplus,
-        "abs": torch.abs,
-        "none": None,
+        'silu': torch.nn.functional.silu,
+        'silu6': torch.nn.functional.silu,
+        'swish': torch.nn.functional.silu,
+        'relu': torch.nn.functional.relu,
+        'tanh': torch.tanh,
+        'sigmoid': torch.sigmoid,
+        'softplus': torch.nn.functional.softplus,
+        'abs': torch.abs,
+        'none': None,
     }
     if name not in mapping:
-        raise ValueError(f"Unsupported Torch gate {gate!r}.")
+        raise ValueError(f'Unsupported Torch gate {gate!r}.')
     return mapping[name]
 
 
 def _as_torch_irreps(value: Any) -> o3.Irreps | None:
     if value is None:
         return None
-    if value.__class__.__name__ == "Irreps":
+    if value.__class__.__name__ == 'Irreps':
         return value
     if isinstance(value, str):
         return o3.Irreps(value)
     if isinstance(value, int):
-        return o3.Irreps(f"{value}x0e")
+        return o3.Irreps(f'{value}x0e')
     return o3.Irreps(str(value))
 
 
 def _normalize_model_class(backend: str, model_class: str):
-    if backend == "torch":
+    if backend == 'torch':
         try:
             return TORCH_MODEL_CLASSES[model_class]
         except KeyError as exc:
             raise ValueError(
-                f"Unsupported Torch model_class {model_class!r}. Expected one of "
-                f"{sorted(TORCH_MODEL_CLASSES)}."
+                f'Unsupported Torch model_class {model_class!r}. Expected one of '
+                f'{sorted(TORCH_MODEL_CLASSES)}.'
             ) from exc
-    jax_model_classes = _jax_runtime()["model_classes"]
+    jax_model_classes = _jax_runtime()['model_classes']
     try:
         return jax_model_classes[model_class]
     except KeyError as exc:
         raise ValueError(
-            f"Unsupported JAX model_class {model_class!r}. Expected one of "
-            f"{sorted(jax_model_classes)}."
+            f'Unsupported JAX model_class {model_class!r}. Expected one of '
+            f'{sorted(jax_model_classes)}.'
         ) from exc
 
 
@@ -249,56 +249,56 @@ def _torch_kwargs_from_config(
     config: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Translate a normalized model config into Torch constructor kwargs."""
-    model_cls = _normalize_model_class("torch", model_class)
+    model_cls = _normalize_model_class('torch', model_class)
     signature = inspect.signature(model_cls.__init__)
-    allowed = set(signature.parameters) - {"self", "kwargs"}
+    allowed = set(signature.parameters) - {'self', 'kwargs'}
     if any(
         param.kind is inspect.Parameter.VAR_KEYWORD
         for param in signature.parameters.values()
     ):
         allowed |= set(inspect.signature(TorchMACE.__init__).parameters) - {
-            "self",
-            "kwargs",
+            'self',
+            'kwargs',
         }
     unsupported = sorted(set(config) - allowed)
     if unsupported:
         raise ValueError(
-            "Unsupported Torch model config keys: " + ", ".join(unsupported)
+            'Unsupported Torch model config keys: ' + ', '.join(unsupported)
         )
 
     atomic_numbers, atomic_energies = _normalize_atomic_config(config)
     kwargs = dict(config)
-    kwargs["interaction_cls"] = TORCH_INTERACTIONS[str(config["interaction_cls"])]
-    kwargs["interaction_cls_first"] = TORCH_INTERACTIONS[
-        str(config["interaction_cls_first"])
+    kwargs['interaction_cls'] = TORCH_INTERACTIONS[str(config['interaction_cls'])]
+    kwargs['interaction_cls_first'] = TORCH_INTERACTIONS[
+        str(config['interaction_cls_first'])
     ]
-    kwargs["hidden_irreps"] = _as_torch_irreps(config["hidden_irreps"])
-    kwargs["MLP_irreps"] = _as_torch_irreps(config["MLP_irreps"])
-    kwargs["gate"] = _resolve_torch_gate(config.get("gate"))
-    kwargs["atomic_numbers"] = list(atomic_numbers)
-    kwargs["atomic_energies"] = atomic_energies
-    kwargs["num_elements"] = len(atomic_numbers)
-    kwargs["cueq_config"] = (
-        TorchCueConfig(**config["cueq_config"])
-        if isinstance(config.get("cueq_config"), dict)
-        else config.get("cueq_config")
+    kwargs['hidden_irreps'] = _as_torch_irreps(config['hidden_irreps'])
+    kwargs['MLP_irreps'] = _as_torch_irreps(config['MLP_irreps'])
+    kwargs['gate'] = _resolve_torch_gate(config.get('gate'))
+    kwargs['atomic_numbers'] = list(atomic_numbers)
+    kwargs['atomic_energies'] = atomic_energies
+    kwargs['num_elements'] = len(atomic_numbers)
+    kwargs['cueq_config'] = (
+        TorchCueConfig(**config['cueq_config'])
+        if isinstance(config.get('cueq_config'), dict)
+        else config.get('cueq_config')
     )
-    kwargs["oeq_config"] = (
-        TorchOEQConfig(**config["oeq_config"])
-        if isinstance(config.get("oeq_config"), dict)
-        else config.get("oeq_config")
+    kwargs['oeq_config'] = (
+        TorchOEQConfig(**config['oeq_config'])
+        if isinstance(config.get('oeq_config'), dict)
+        else config.get('oeq_config')
     )
-    kwargs["readout_cls"] = (
-        TORCH_READOUTS[str(config["readout_cls"])]
-        if config.get("readout_cls") is not None
+    kwargs['readout_cls'] = (
+        TORCH_READOUTS[str(config['readout_cls'])]
+        if config.get('readout_cls') is not None
         else TorchNonLinearReadoutBlock
     )
-    if config.get("edge_irreps") is not None:
-        kwargs["edge_irreps"] = _as_torch_irreps(config["edge_irreps"])
-    if config.get("radial_MLP") is not None:
-        kwargs["radial_MLP"] = tuple(int(v) for v in config["radial_MLP"])
+    if config.get('edge_irreps') is not None:
+        kwargs['edge_irreps'] = _as_torch_irreps(config['edge_irreps'])
+    if config.get('radial_MLP') is not None:
+        kwargs['radial_MLP'] = tuple(int(v) for v in config['radial_MLP'])
     normalized = _jsonable(kwargs)
-    normalized["model_class"] = model_class
+    normalized['model_class'] = model_class
     return kwargs, normalized
 
 
@@ -307,8 +307,8 @@ def _jax_config_from_request(
 ) -> dict[str, Any]:
     """Normalize a build request into the config expected by the JAX builder."""
     normalized = dict(config)
-    if model_class != "MACE":
-        normalized["torch_model_class"] = model_class
+    if model_class != 'MACE':
+        normalized['torch_model_class'] = model_class
     return normalized
 
 
@@ -317,7 +317,7 @@ def _count_array_leaves(tree: Any) -> int:
         return sum(_count_array_leaves(v) for v in tree.values())
     if isinstance(tree, (list, tuple)):
         return sum(_count_array_leaves(v) for v in tree)
-    if hasattr(tree, "shape") and hasattr(tree, "dtype"):
+    if hasattr(tree, 'shape') and hasattr(tree, 'dtype'):
         try:
             return int(np.asarray(tree).size)
         except Exception:
@@ -326,11 +326,11 @@ def _count_array_leaves(tree: Any) -> int:
 
 
 def _parameter_count(backend: str, model: Any) -> int:
-    if backend == "torch":
+    if backend == 'torch':
         return int(sum(param.numel() for param in model.parameters()))
     runtime = _jax_runtime()
-    _, state = runtime["nnx"].split(model)
-    return _count_array_leaves(runtime["state_to_pure_dict"](state))
+    _, state = runtime['nnx'].split(model)
+    return _count_array_leaves(runtime['state_to_pure_dict'](state))
 
 
 def build_initial_model(request: BuildRequest) -> BuildResult:
@@ -340,12 +340,12 @@ def build_initial_model(request: BuildRequest) -> BuildResult:
     JSON-safe representation of the effective model configuration, which makes
     it suitable for later serialization with :func:`save_initialized_model`.
     """
-    if request.backend == "torch":
+    if request.backend == 'torch':
         torch.manual_seed(request.seed)
         kwargs, normalized = _torch_kwargs_from_config(
             request.model_class, request.model_config
         )
-        model_cls = _normalize_model_class("torch", request.model_class)
+        model_cls = _normalize_model_class('torch', request.model_class)
         model = model_cls(**kwargs)
         return BuildResult(
             request=request, model=model, normalized_model_config=normalized
@@ -355,47 +355,47 @@ def build_initial_model(request: BuildRequest) -> BuildResult:
     normalized_config = _jax_config_from_request(
         request.model_class, request.model_config
     )
-    model = runtime["build_model"](
+    model = runtime['build_model'](
         normalized_config,
-        rngs=runtime["nnx"].Rngs(request.seed),
+        rngs=runtime['nnx'].Rngs(request.seed),
     )
     normalized = _jsonable(normalized_config)
-    normalized["model_class"] = request.model_class
+    normalized['model_class'] = request.model_class
     return BuildResult(request=request, model=model, normalized_model_config=normalized)
 
 
 def summarize_build(result: BuildResult) -> dict[str, Any]:
     """Return a compact human-readable summary of a completed build."""
     return {
-        "backend": result.request.backend,
-        "model_class": result.request.model_class,
-        "parameters": _parameter_count(result.request.backend, result.model),
-        "atomic_numbers": list(
-            result.normalized_model_config.get("atomic_numbers", [])
+        'backend': result.request.backend,
+        'model_class': result.request.model_class,
+        'parameters': _parameter_count(result.request.backend, result.model),
+        'atomic_numbers': list(
+            result.normalized_model_config.get('atomic_numbers', [])
         ),
-        "num_interactions": result.normalized_model_config.get("num_interactions"),
+        'num_interactions': result.normalized_model_config.get('num_interactions'),
     }
 
 
 def _resolve_torch_output(path_arg: str | Path) -> tuple[Path | None, Path]:
     path = Path(path_arg).expanduser().resolve()
-    if path.suffix.lower() in {".pt", ".pth", ".ckpt"}:
+    if path.suffix.lower() in {'.pt', '.pth', '.ckpt'}:
         path.parent.mkdir(parents=True, exist_ok=True)
         return None, path
     path.mkdir(parents=True, exist_ok=True)
-    return path / "config.json", path / "state_dict.pt"
+    return path / 'config.json', path / 'state_dict.pt'
 
 
 def _resolve_jax_output(path_arg: str | Path) -> tuple[Path, Path]:
     path = Path(path_arg).expanduser().resolve()
-    if path.suffix.lower() == ".json":
+    if path.suffix.lower() == '.json':
         path.parent.mkdir(parents=True, exist_ok=True)
-        return path, path.with_suffix(".msgpack")
-    if path.suffix.lower() == ".msgpack":
+        return path, path.with_suffix('.msgpack')
+    if path.suffix.lower() == '.msgpack':
         path.parent.mkdir(parents=True, exist_ok=True)
-        return path.with_suffix(".json"), path
+        return path.with_suffix('.json'), path
     path.mkdir(parents=True, exist_ok=True)
-    return path / "config.json", path / "params.msgpack"
+    return path / 'config.json', path / 'params.msgpack'
 
 
 def save_initialized_model(result: BuildResult, output: str | Path) -> list[Path]:
@@ -405,14 +405,14 @@ def save_initialized_model(result: BuildResult, output: str | Path) -> list[Path
     plus ``state_dict.pt`` or as a single checkpoint payload.  JAX outputs are
     stored as ``config.json`` plus ``params.msgpack``.
     """
-    if result.request.backend == "torch":
+    if result.request.backend == 'torch':
         config_path, params_path = _resolve_torch_output(output)
         if config_path is None:
             payload = {
-                "backend": "torch",
-                "model_class": result.request.model_class,
-                "model_config": result.normalized_model_config,
-                "state_dict": result.model.state_dict(),
+                'backend': 'torch',
+                'model_class': result.request.model_class,
+                'model_config': result.normalized_model_config,
+                'state_dict': result.model.state_dict(),
             }
             torch.save(payload, params_path)
             return [params_path]
@@ -424,18 +424,18 @@ def save_initialized_model(result: BuildResult, output: str | Path) -> list[Path
 
     runtime = _jax_runtime()
     config_path, params_path = _resolve_jax_output(output)
-    _, state = runtime["nnx"].split(result.model)
-    state_pure = runtime["state_to_serializable_dict"](state)
+    _, state = runtime['nnx'].split(result.model)
+    state_pure = runtime['state_to_serializable_dict'](state)
     config_path.write_text(
         json.dumps(result.normalized_model_config, indent=2, sort_keys=True)
     )
-    params_path.write_bytes(runtime["serialization"].to_bytes(state_pure))
+    params_path.write_bytes(runtime['serialization'].to_bytes(state_pure))
     return [config_path, params_path]
 
 
 __all__ = [
-    "BuildResult",
-    "build_initial_model",
-    "save_initialized_model",
-    "summarize_build",
+    'BuildResult',
+    'build_initial_model',
+    'save_initialized_model',
+    'summarize_build',
 ]

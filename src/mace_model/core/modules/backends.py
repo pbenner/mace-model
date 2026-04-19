@@ -96,15 +96,15 @@ class ModelBackend:
 
 def _require_backend(instance: Any, class_name: str) -> ModelBackend:
     """Fetch the backend bound to a shared class instance."""
-    backend = getattr(instance, "BACKEND", None)
+    backend = getattr(instance, 'BACKEND', None)
     if backend is None:
-        raise RuntimeError(f"{class_name} requires a class-level BACKEND.")
+        raise RuntimeError(f'{class_name} requires a class-level BACKEND.')
     return backend
 
 
 def _model_backend_field_names() -> tuple[str, ...]:
     """Return the backend-operation fields declared on `ModelBackend`."""
-    return tuple(field.name for field in fields(ModelBackend) if field.name != "name")
+    return tuple(field.name for field in fields(ModelBackend) if field.name != 'name')
 
 
 def define_backend(*, name: str):

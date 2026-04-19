@@ -12,14 +12,14 @@ from flax import nnx
 
 _IMPORT_MAPPERS: dict[str, Callable] = {}
 
-_FIRST_CAP_RE = re.compile(r"(.)([A-Z][a-z]+)")
-_ALL_CAP_RE = re.compile(r"([a-z0-9])([A-Z])")
+_FIRST_CAP_RE = re.compile(r'(.)([A-Z][a-z]+)')
+_ALL_CAP_RE = re.compile(r'([a-z0-9])([A-Z])')
 
 
 def camel_to_snake(value: str) -> str:
     """Return a snake_case version of ``value``."""
-    step1 = _FIRST_CAP_RE.sub(r"\1_\2", value)
-    step2 = _ALL_CAP_RE.sub(r"\1_\2", step1)
+    step1 = _FIRST_CAP_RE.sub(r'\1_\2', value)
+    step2 = _ALL_CAP_RE.sub(r'\1_\2', step1)
     return step2.lower()
 
 
@@ -43,7 +43,7 @@ def nxx_register_import_mapper(torch_type: str) -> Callable[[Callable], Callable
 
 
 def _torch_module_name(module) -> str:
-    return f"{module.__class__.__module__}.{module.__class__.__name__}"
+    return f'{module.__class__.__module__}.{module.__class__.__name__}'
 
 
 def _copy_direct_parameters(torch_module, variables: MutableMapping) -> None:
@@ -56,9 +56,9 @@ def _copy_direct_parameters(torch_module, variables: MutableMapping) -> None:
             return
         target = variables[name]
         array = jnp.asarray(tensor.detach().cpu().numpy())
-        if hasattr(target, "dtype"):
+        if hasattr(target, 'dtype'):
             array = array.astype(target.dtype)
-        target_shape = getattr(target, "shape", None)
+        target_shape = getattr(target, 'shape', None)
         if target_shape is not None and target_shape != array.shape:
             if not target_shape and array.size == 1:
                 array = array.reshape(())
@@ -88,10 +88,10 @@ def _resolve_scope(variables: MutableMapping, scope: Sequence[str]):
         if isinstance(key, str) and key.isdigit():
             key = int(key)
         if not isinstance(node, dict) or key not in node:
-            raise KeyError(f"Scope {'.'.join(scope)} not found in NNX state")
+            raise KeyError(f'Scope {".".join(scope)} not found in NNX state')
         node = node[key]
     if not isinstance(node, dict):
-        raise KeyError(f"Scope {'.'.join(scope)} did not resolve to a dict")
+        raise KeyError(f'Scope {".".join(scope)} did not resolve to a dict')
     return node
 
 
@@ -125,7 +125,7 @@ def _apply_module_import(
         return
 
     raise NotImplementedError(
-        f"No NNX import mapper registered for Torch module {module_name!r}"
+        f'No NNX import mapper registered for Torch module {module_name!r}'
     )
 
 
@@ -148,8 +148,8 @@ def nxx_auto_import_from_torch(
                 return
             if fallback_fn is None:
                 raise NotImplementedError(
-                    f"No NNX import mapper registered for Torch module "
-                    f"{_torch_module_name(module)!r}"
+                    f'No NNX import mapper registered for Torch module '
+                    f'{_torch_module_name(module)!r}'
                 )
             fallback_fn(module, variables_mut)
 
@@ -206,7 +206,7 @@ def nxx_register_module(torch_type: str):
     def decorator(cls):
         def mapper(module, variables, scope: Sequence[str]):
             target = _resolve_scope(variables, scope)
-            if hasattr(cls, "_import_from_torch_impl"):
+            if hasattr(cls, '_import_from_torch_impl'):
                 updated = cls._import_from_torch_impl(
                     module,
                     target,
@@ -235,39 +235,39 @@ def init_from_torch(module: nnx.Module, torch_module):
     return module, state
 
 
-@nxx_register_import_mapper("torch.nn.modules.linear.Linear")
+@nxx_register_import_mapper('torch.nn.modules.linear.Linear')
 def _import_linear(module, variables, scope: Sequence[str]) -> None:
     target = _resolve_scope(variables, scope)
-    target["kernel"] = jnp.asarray(
-        module.weight.detach().cpu().numpy().T, dtype=target["kernel"].dtype
+    target['kernel'] = jnp.asarray(
+        module.weight.detach().cpu().numpy().T, dtype=target['kernel'].dtype
     )
-    if module.bias is not None and "bias" in target:
-        target["bias"] = jnp.asarray(
-            module.bias.detach().cpu().numpy(), dtype=target["bias"].dtype
+    if module.bias is not None and 'bias' in target:
+        target['bias'] = jnp.asarray(
+            module.bias.detach().cpu().numpy(), dtype=target['bias'].dtype
         )
 
 
-@nxx_register_import_mapper("torch.nn.modules.normalization.LayerNorm")
+@nxx_register_import_mapper('torch.nn.modules.normalization.LayerNorm')
 def _import_layernorm(module, variables, scope: Sequence[str]) -> None:
     target = _resolve_scope(variables, scope)
-    target["scale"] = jnp.asarray(
-        module.weight.detach().cpu().numpy(), dtype=target["scale"].dtype
+    target['scale'] = jnp.asarray(
+        module.weight.detach().cpu().numpy(), dtype=target['scale'].dtype
     )
-    target["bias"] = jnp.asarray(
-        module.bias.detach().cpu().numpy(), dtype=target["bias"].dtype
+    target['bias'] = jnp.asarray(
+        module.bias.detach().cpu().numpy(), dtype=target['bias'].dtype
     )
 
 
-@nxx_register_import_mapper("torch.nn.modules.sparse.Embedding")
+@nxx_register_import_mapper('torch.nn.modules.sparse.Embedding')
 def _import_embedding(module, variables, scope: Sequence[str]) -> None:
     target = _resolve_scope(variables, scope)
-    target["embedding"] = jnp.asarray(
-        module.weight.detach().cpu().numpy(), dtype=target["embedding"].dtype
+    target['embedding'] = jnp.asarray(
+        module.weight.detach().cpu().numpy(), dtype=target['embedding'].dtype
     )
 
 
-@nxx_register_import_mapper("mace_model.torch.adapters.e3nn.nn._activation.Activation")
-@nxx_register_import_mapper("e3nn.nn._activation.Activation")
+@nxx_register_import_mapper('mace_model.torch.adapters.e3nn.nn._activation.Activation')
+@nxx_register_import_mapper('e3nn.nn._activation.Activation')
 def _import_e3nn_activation(module, variables, scope: Sequence[str]) -> None:
     del variables, scope
     try:
@@ -275,22 +275,22 @@ def _import_e3nn_activation(module, variables, scope: Sequence[str]) -> None:
     except Exception:
         return None
 
-    acts = getattr(module, "acts", None)
+    acts = getattr(module, 'acts', None)
     if acts is None:
         return None
     for act in acts:
-        const = getattr(act, "cst", None)
+        const = getattr(act, 'cst', None)
         if const is None:
             continue
-        original = getattr(act, "f", None) or act
+        original = getattr(act, 'f', None) or act
         register_normalize2mom_const(original, const)
     return None
 
 
 @nxx_register_import_mapper(
-    "mace_model.torch.adapters.e3nn.math._normalize_activation.normalize2mom"
+    'mace_model.torch.adapters.e3nn.math._normalize_activation.normalize2mom'
 )
-@nxx_register_import_mapper("e3nn.math._normalize_activation.normalize2mom")
+@nxx_register_import_mapper('e3nn.math._normalize_activation.normalize2mom')
 def _import_e3nn_normalize2mom(module, variables, scope: Sequence[str]) -> None:
     del variables, scope
     try:
@@ -298,32 +298,32 @@ def _import_e3nn_normalize2mom(module, variables, scope: Sequence[str]) -> None:
     except Exception:
         return None
 
-    const = getattr(module, "cst", None)
+    const = getattr(module, 'cst', None)
     if const is None:
         return None
-    original = getattr(module, "f", None) or module
+    original = getattr(module, 'f', None) or module
     register_normalize2mom_const(original, const)
     return None
 
 
-@nxx_register_import_mapper("e3nn.o3._tensor_product._sub.ElementwiseTensorProduct")
+@nxx_register_import_mapper('e3nn.o3._tensor_product._sub.ElementwiseTensorProduct')
 def _import_e3nn_elementwise_tp(module, variables, scope: Sequence[str]) -> None:
     del module, variables, scope
 
 
-@nxx_register_import_mapper("mace.modules.irreps_tools.reshape_irreps")
+@nxx_register_import_mapper('mace.modules.irreps_tools.reshape_irreps')
 def _import_mace_reshape_irreps(module, variables, scope: Sequence[str]) -> None:
     del module, variables, scope
 
 
-@nxx_register_import_mapper("mace.modules.radial.RadialMLP")
-@nxx_register_import_mapper("mace_model.torch.modules.radial.RadialMLP")
+@nxx_register_import_mapper('mace.modules.radial.RadialMLP')
+@nxx_register_import_mapper('mace_model.torch.modules.radial.RadialMLP')
 def _import_mace_radial_mlp(module, variables, scope: Sequence[str]) -> None:
     target = _resolve_scope(variables, scope)
-    net = target.get("net")
+    net = target.get('net')
     if net is None:
         return None
-    layers = net.get("layers")
+    layers = net.get('layers')
     if layers is None:
         return None
 
@@ -334,77 +334,77 @@ def _import_mace_radial_mlp(module, variables, scope: Sequence[str]) -> None:
             continue
         layer_vars = layers[name]
         if isinstance(child, torch.nn.Linear):
-            layer_vars["kernel"] = jnp.asarray(
-                child.weight.detach().cpu().numpy().T, dtype=layer_vars["kernel"].dtype
+            layer_vars['kernel'] = jnp.asarray(
+                child.weight.detach().cpu().numpy().T, dtype=layer_vars['kernel'].dtype
             )
-            if child.bias is not None and "bias" in layer_vars:
-                layer_vars["bias"] = jnp.asarray(
-                    child.bias.detach().cpu().numpy(), dtype=layer_vars["bias"].dtype
+            if child.bias is not None and 'bias' in layer_vars:
+                layer_vars['bias'] = jnp.asarray(
+                    child.bias.detach().cpu().numpy(), dtype=layer_vars['bias'].dtype
                 )
         elif isinstance(child, torch.nn.LayerNorm):
-            layer_vars["scale"] = jnp.asarray(
-                child.weight.detach().cpu().numpy(), dtype=layer_vars["scale"].dtype
+            layer_vars['scale'] = jnp.asarray(
+                child.weight.detach().cpu().numpy(), dtype=layer_vars['scale'].dtype
             )
-            layer_vars["bias"] = jnp.asarray(
-                child.bias.detach().cpu().numpy(), dtype=layer_vars["bias"].dtype
+            layer_vars['bias'] = jnp.asarray(
+                child.bias.detach().cpu().numpy(), dtype=layer_vars['bias'].dtype
             )
     return None
 
 
-@nxx_register_import_mapper("mace_model.torch.adapters.e3nn.o3._linear.Linear")
-@nxx_register_import_mapper("e3nn.o3._linear.Linear")
+@nxx_register_import_mapper('mace_model.torch.adapters.e3nn.o3._linear.Linear')
+@nxx_register_import_mapper('e3nn.o3._linear.Linear')
 def _import_e3nn_linear(module, variables, scope: Sequence[str]) -> None:
     target = _resolve_scope(variables, scope)
-    weight_tensor = getattr(module, "weight", None)
-    if weight_tensor is None and hasattr(module, "linear"):
-        weight_tensor = getattr(module.linear, "weight", None)
+    weight_tensor = getattr(module, 'weight', None)
+    if weight_tensor is None and hasattr(module, 'linear'):
+        weight_tensor = getattr(module.linear, 'weight', None)
     if weight_tensor is None:
         state_dict = module.state_dict()
-        weight_tensor = state_dict.get("linear.weight")
+        weight_tensor = state_dict.get('linear.weight')
     if weight_tensor is None:
-        raise AttributeError(f"Unable to locate Linear weights for module {module!r}.")
+        raise AttributeError(f'Unable to locate Linear weights for module {module!r}.')
     weight = weight_tensor.detach().cpu().numpy()
-    if "weight" in target:
-        target["weight"] = jnp.asarray(
-            weight.reshape(target["weight"].shape), dtype=target["weight"].dtype
+    if 'weight' in target:
+        target['weight'] = jnp.asarray(
+            weight.reshape(target['weight'].shape), dtype=target['weight'].dtype
         )
-    if hasattr(module, "bias") and module.bias is not None and "bias" in target:
-        target["bias"] = jnp.asarray(
+    if hasattr(module, 'bias') and module.bias is not None and 'bias' in target:
+        target['bias'] = jnp.asarray(
             module.bias.detach().cpu().numpy(),
-            dtype=target["bias"].dtype,
+            dtype=target['bias'].dtype,
         )
 
 
-@nxx_register_import_mapper("mace_model.torch.adapters.e3nn.nn._fc._Layer")
-@nxx_register_import_mapper("e3nn.nn._fc._Layer")
+@nxx_register_import_mapper('mace_model.torch.adapters.e3nn.nn._fc._Layer')
+@nxx_register_import_mapper('e3nn.nn._fc._Layer')
 def _import_e3nn_fc_layer(module, variables, scope: Sequence[str]) -> None:
     target = _resolve_scope(variables, scope)
     weight = jnp.asarray(module.weight.detach().cpu().numpy())
-    if "weight" in target:
-        target["weight"] = weight.astype(target["weight"].dtype, copy=False)
-    elif "kernel" in target:
-        reshaped = weight.reshape(target["kernel"].shape)
-        target["kernel"] = reshaped.astype(target["kernel"].dtype, copy=False)
-    if getattr(module, "act", None) is not None and "act_scale" in target:
-        const = getattr(module.act, "cst", None)
+    if 'weight' in target:
+        target['weight'] = weight.astype(target['weight'].dtype, copy=False)
+    elif 'kernel' in target:
+        reshaped = weight.reshape(target['kernel'].shape)
+        target['kernel'] = reshaped.astype(target['kernel'].dtype, copy=False)
+    if getattr(module, 'act', None) is not None and 'act_scale' in target:
+        const = getattr(module.act, 'cst', None)
         if const is not None:
-            target["act_scale"] = jnp.asarray(const, dtype=target["act_scale"].dtype)
-    if hasattr(module, "bias") and module.bias is not None:
+            target['act_scale'] = jnp.asarray(const, dtype=target['act_scale'].dtype)
+    if hasattr(module, 'bias') and module.bias is not None:
         bias = jnp.asarray(module.bias.detach().cpu().numpy())
-        if "bias" in target:
-            target["bias"] = bias.astype(target["bias"].dtype, copy=False)
+        if 'bias' in target:
+            target['bias'] = bias.astype(target['bias'].dtype, copy=False)
 
 
-@nxx_register_import_mapper("mace_model.torch.adapters.e3nn.nn._fc.FullyConnectedNet")
-@nxx_register_import_mapper("e3nn.nn._fc.FullyConnectedNet")
+@nxx_register_import_mapper('mace_model.torch.adapters.e3nn.nn._fc.FullyConnectedNet')
+@nxx_register_import_mapper('e3nn.nn._fc.FullyConnectedNet')
 def _import_e3nn_fc(module, variables, scope: Sequence[str]) -> None:
     target = _resolve_scope(variables, scope)
-    layers = target.get("layers")
+    layers = target.get('layers')
     if isinstance(layers, dict):
         for name, child in module.named_children():
-            if not name.startswith("layer"):
+            if not name.startswith('layer'):
                 continue
-            suffix = name[len("layer") :]
+            suffix = name[len('layer') :]
             if not suffix.isdigit():
                 continue
             idx = int(suffix)
@@ -413,9 +413,9 @@ def _import_e3nn_fc(module, variables, scope: Sequence[str]) -> None:
             _import_e3nn_fc_layer(child, layers, [idx])
 
 
-@nxx_register_import_mapper("e3nn.o3._tensor_product._sub.FullyConnectedTensorProduct")
+@nxx_register_import_mapper('e3nn.o3._tensor_product._sub.FullyConnectedTensorProduct')
 @nxx_register_import_mapper(
-    "cuequivariance_torch.operations.fully_connected_tensor_product.FullyConnectedTensorProduct"
+    'cuequivariance_torch.operations.fully_connected_tensor_product.FullyConnectedTensorProduct'
 )
 def _import_fctp(module, variables, scope: Sequence[str]) -> None:
     try:
@@ -424,15 +424,15 @@ def _import_fctp(module, variables, scope: Sequence[str]) -> None:
         )
     except Exception:
         target = _resolve_scope(variables, scope)
-        if hasattr(module, "weight") and "weight" in target:
+        if hasattr(module, 'weight') and 'weight' in target:
             weight = module.weight.detach().cpu().numpy()
-            target["weight"] = jnp.asarray(weight, dtype=target["weight"].dtype)
+            target['weight'] = jnp.asarray(weight, dtype=target['weight'].dtype)
         return
     upstream_map_fctp(module, variables, scope)
 
 
 @nxx_register_import_mapper(
-    "cuequivariance_torch.operations.symmetric_contraction.SymmetricContraction"
+    'cuequivariance_torch.operations.symmetric_contraction.SymmetricContraction'
 )
 def _import_cue_symmetric_contraction(module, variables, scope: Sequence[str]) -> None:
     try:
@@ -441,16 +441,16 @@ def _import_cue_symmetric_contraction(module, variables, scope: Sequence[str]) -
         )
     except Exception:
         target = _resolve_scope(variables, scope)
-        if hasattr(module, "weight"):
+        if hasattr(module, 'weight'):
             weight = module.weight.detach().cpu().numpy()
-            existing = target.get("weight")
+            existing = target.get('weight')
             dtype = existing.dtype if existing is not None else weight.dtype
-            target["weight"] = jnp.asarray(weight, dtype=dtype)
+            target['weight'] = jnp.asarray(weight, dtype=dtype)
         return
     upstream_import(module, variables, scope)
 
 
-@nxx_register_import_mapper("mace.modules.symmetric_contraction.SymmetricContraction")
+@nxx_register_import_mapper('mace.modules.symmetric_contraction.SymmetricContraction')
 def _import_native_symmetric_contraction(
     module, variables, scope: Sequence[str]
 ) -> None:
@@ -460,25 +460,25 @@ def _import_native_symmetric_contraction(
         )
     except Exception:
         target = _resolve_scope(variables, scope)
-        if hasattr(module, "weight") and "weight" in target:
+        if hasattr(module, 'weight') and 'weight' in target:
             weight = module.weight.detach().cpu().numpy()
-            target["weight"] = jnp.asarray(weight, dtype=target["weight"].dtype)
+            target['weight'] = jnp.asarray(weight, dtype=target['weight'].dtype)
         return
     upstream_import(module, variables, scope)
 
 
 _GATE_MAP: dict[str, Callable | None] = {
-    "silu": jnn.silu,
-    "silu6": jnn.silu,
-    "swish": jnn.silu,
-    "relu": jnn.relu,
-    "tanh": jnn.tanh,
-    "sigmoid": jnn.sigmoid,
-    "softplus": jnn.softplus,
-    "softsign": jnn.soft_sign,
-    "gelu": jnn.gelu,
-    "abs": jnp.abs,
-    "none": None,
+    'silu': jnn.silu,
+    'silu6': jnn.silu,
+    'swish': jnn.silu,
+    'relu': jnn.relu,
+    'tanh': jnn.tanh,
+    'sigmoid': jnn.sigmoid,
+    'softplus': jnn.softplus,
+    'softsign': jnn.soft_sign,
+    'gelu': jnn.gelu,
+    'abs': jnp.abs,
+    'none': None,
 }
 
 
@@ -487,19 +487,19 @@ def resolve_gate_callable(gate: Callable | str | None) -> Callable | None:
         return None
     if isinstance(gate, str):
         return _GATE_MAP.get(gate.lower(), None)
-    name = getattr(gate, "__name__", None)
+    name = getattr(gate, '__name__', None)
     if name is None:
-        cls = getattr(gate, "__class__", None)
-        name = getattr(cls, "__name__", None)
+        cls = getattr(gate, '__class__', None)
+        name = getattr(cls, '__name__', None)
     if not name:
         return None
     return _GATE_MAP.get(name.lower(), None)
 
 
 __all__ = [
-    "nxx_auto_import_from_torch",
-    "nxx_register_import_mapper",
-    "nxx_register_module",
-    "init_from_torch",
-    "resolve_gate_callable",
+    'nxx_auto_import_from_torch',
+    'nxx_register_import_mapper',
+    'nxx_register_module',
+    'init_from_torch',
+    'resolve_gate_callable',
 ]

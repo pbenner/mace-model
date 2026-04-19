@@ -40,4 +40,4 @@ class GenericJointEmbedding(CoreGenericJointEmbedding, torch.nn.Module):
     forward = CoreGenericJointEmbedding.forward
 
 
-__all__ = ["GenericJointEmbedding"]
+__all__ = ['GenericJointEmbedding']

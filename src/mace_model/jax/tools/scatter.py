@@ -22,7 +22,7 @@ def _broadcast(src: jnp.ndarray, other: jnp.ndarray, dim: int) -> jnp.ndarray:
             shape.append(o_dim)
         else:
             raise ValueError(
-                f"Incompatible shapes for broadcasting: {src.shape} vs {other.shape}"
+                f'Incompatible shapes for broadcasting: {src.shape} vs {other.shape}'
             )
 
     return jnp.broadcast_to(src, shape)
@@ -34,13 +34,13 @@ def scatter_sum(
     dim: int = -1,
     out: jnp.ndarray | None = None,
     dim_size: int | None = None,
-    reduce: str = "sum",
+    reduce: str = 'sum',
     indices_are_sorted: bool = False,
     unique_indices: bool = False,
     bucket_size: int | None = None,
     mode: str | None = None,
 ) -> jnp.ndarray:
-    assert reduce == "sum"
+    assert reduce == 'sum'
 
     if dim < 0:
         dim = src.ndim + dim
@@ -77,7 +77,7 @@ def scatter_sum(
             size[dim] = int(index.max()) + 1
         out = jnp.zeros(size, dtype=src.dtype)
 
-    idx_grids = jnp.meshgrid(*[jnp.arange(s) for s in src.shape], indexing="ij")
+    idx_grids = jnp.meshgrid(*[jnp.arange(s) for s in src.shape], indexing='ij')
     idx_grids[dim] = index
     scatter_indices = tuple(idx_grids)
 

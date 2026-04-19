@@ -56,11 +56,11 @@ class MACE(MACEModel, torch.nn.Module):
         use_agnostic_product: bool = False,
         use_last_readout_only: bool = False,
         use_embedding_readout: bool = False,
-        distance_transform: str = "None",
+        distance_transform: str = 'None',
         edge_irreps: o3.Irreps | None = None,
         use_edge_irreps_first: bool = False,
         radial_MLP: Sequence[int] | None = None,
-        radial_type: str | None = "bessel",
+        radial_type: str | None = 'bessel',
         heads: Sequence[str] | None = None,
         cueq_config: Any = None,
         embedding_specs: dict[str, Any] | None = None,
@@ -72,13 +72,13 @@ class MACE(MACEModel, torch.nn.Module):
     ) -> None:
         super().__init__()
         self.register_buffer(
-            "atomic_numbers", torch.tensor(atomic_numbers, dtype=torch.int64)
+            'atomic_numbers', torch.tensor(atomic_numbers, dtype=torch.int64)
         )
         self.register_buffer(
-            "r_max", torch.tensor(r_max, dtype=torch.get_default_dtype())
+            'r_max', torch.tensor(r_max, dtype=torch.get_default_dtype())
         )
         self.register_buffer(
-            "num_interactions", torch.tensor(num_interactions, dtype=torch.int64)
+            'num_interactions', torch.tensor(num_interactions, dtype=torch.int64)
         )
 
         self.initialize_mace_common_attributes(
@@ -112,13 +112,13 @@ class MACE(MACEModel, torch.nn.Module):
             readout_cls=readout_cls,
             readout_use_higher_irrep_invariants=readout_use_higher_irrep_invariants,
             readout_invariant_eps=readout_invariant_eps,
-            mlp_attr_name="mlp_irreps",
-            radial_mlp_attr_name="radial_mlp",
+            mlp_attr_name='mlp_irreps',
+            radial_mlp_attr_name='radial_mlp',
             keep_r_max_attr=False,
             extra_attrs={
-                "use_edge_irreps_first": bool(use_edge_irreps_first),
-                "oeq_config": oeq_config,
-                "lammps_mliap": lammps_mliap,
+                'use_edge_irreps_first': bool(use_edge_irreps_first),
+                'oeq_config': oeq_config,
+                'lammps_mliap': lammps_mliap,
             },
         )
 
@@ -155,7 +155,7 @@ class MACE(MACEModel, torch.nn.Module):
             r_max=self.r_max_value,
             num_bessel=self.num_bessel,
             num_polynomial_cutoff=self.num_polynomial_cutoff,
-            radial_type=self.radial_type or "bessel",
+            radial_type=self.radial_type or 'bessel',
             distance_transform=self.distance_transform,
             apply_cutoff=self.apply_cutoff,
         )
@@ -167,11 +167,11 @@ class MACE(MACEModel, torch.nn.Module):
         return AtomicEnergiesBlock(self.atomic_energies)
 
     def _shared_oeq_kwargs(self) -> dict[str, Any]:
-        return {"oeq_config": self.oeq_config}
+        return {'oeq_config': self.oeq_config}
 
     def _interaction_kwargs(self, *, edge_irreps: o3.Irreps | None) -> dict[str, Any]:
         kwargs = self._shared_oeq_kwargs()
-        kwargs["edge_irreps"] = edge_irreps
+        kwargs['edge_irreps'] = edge_irreps
         return kwargs
 
     def _pair_node_energy(
@@ -253,13 +253,13 @@ class MACE(MACEModel, torch.nn.Module):
         )
 
         self.spherical_harmonics = o3.SphericalHarmonics(
-            sh_irreps, normalize=True, normalization="component"
+            sh_irreps, normalize=True, normalization='component'
         )
 
         edge_irreps_first = None
         if self.use_edge_irreps_first and self.edge_irreps is not None:
             edge_irreps_first = o3.Irreps(
-                f"{self.edge_irreps.count(o3.Irrep(0, 1))}x0e"
+                f'{self.edge_irreps.count(o3.Irrep(0, 1))}x0e'
             )
 
         self.interactions, self.products, self.readouts = (
@@ -322,10 +322,10 @@ class MACE(MACEModel, torch.nn.Module):
         if compute_atomic_stresses and edge_forces is not None:
             return get_atomic_virials_stresses(
                 edge_forces=edge_forces,
-                edge_index=data["edge_index"],
+                edge_index=data['edge_index'],
                 vectors=vectors,
                 num_atoms=positions.shape[0],
-                batch=data["batch"],
+                batch=data['batch'],
                 cell=cell,
             )
         return None, None
@@ -351,9 +351,9 @@ class MACE(MACEModel, torch.nn.Module):
         lammps_class, lammps_natoms, _ = self.resolve_lammps_runtime(ctx)
         is_lammps = ctx.is_lammps
         n_real = lammps_natoms[0] if is_lammps else None
-        batch = data["batch"]
-        edge_index = data["edge_index"]
-        node_attrs = data["node_attrs"]
+        batch = data['batch']
+        edge_index = data['edge_index']
+        node_attrs = data['node_attrs']
 
         def _pair_node_energy(
             lengths_value: torch.Tensor,
@@ -536,7 +536,7 @@ class MACE(MACEModel, torch.nn.Module):
             use_scale_shift=use_scale_shift,
         )
         energy_for_derivatives = (
-            core["interaction_energy"] if use_scale_shift else core["total_energy"]
+            core['interaction_energy'] if use_scale_shift else core['total_energy']
         )
         edge_forces_flag = compute_edge_forces or (
             use_scale_shift and compute_atomic_stresses
@@ -623,7 +623,7 @@ class _UnavailableReferenceModel(torch.nn.Module):
     def __init__(self, *args, **kwargs):
         del args, kwargs
         raise NotImplementedError(
-            "This auxiliary Torch model has not been ported to mace-model yet."
+            'This auxiliary Torch model has not been ported to mace-model yet.'
         )
 
 
@@ -640,9 +640,9 @@ class EnergyDipolesMACE(_UnavailableReferenceModel):
 
 
 __all__ = [
-    "MACE",
-    "ScaleShiftMACE",
-    "AtomicDipolesMACE",
-    "AtomicDielectricMACE",
-    "EnergyDipolesMACE",
+    'MACE',
+    'ScaleShiftMACE',
+    'AtomicDipolesMACE',
+    'AtomicDielectricMACE',
+    'EnergyDipolesMACE',
 ]

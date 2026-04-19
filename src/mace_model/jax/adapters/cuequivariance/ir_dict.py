@@ -18,7 +18,7 @@ IR_DICT = ir_dict_local
 
 def _layout(layout_str: str) -> str:
     layout = layout_str.lower()
-    if layout not in {"mul_ir", "ir_mul"}:
+    if layout not in {'mul_ir', 'ir_mul'}:
         raise ValueError(f"Unsupported layout_str '{layout_str}'.")
     return layout
 
@@ -40,9 +40,9 @@ def mul_ir_to_ir_dict(
     array: jnp.ndarray,
     *,
     group: object = cue.O3,
-    layout_str: str = "mul_ir",
+    layout_str: str = 'mul_ir',
 ) -> IrDict:
-    tensor = getattr(array, "array", array)
+    tensor = getattr(array, 'array', array)
     cue_irreps = _cue_irreps(irreps, group=group)
     layout = _layout(layout_str)
     return IR_DICT.flat_to_dict(cue_irreps, tensor, layout=layout)

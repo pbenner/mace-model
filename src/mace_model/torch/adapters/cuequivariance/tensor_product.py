@@ -39,7 +39,7 @@ def TensorProduct(
             cuet.SegmentedPolynomial(
                 descriptor,
                 math_dtype=torch.get_default_dtype(),
-                method="uniform_1d",
+                method='uniform_1d',
             )
         )
     return cuet.ChannelWiseTensorProduct(
@@ -51,8 +51,8 @@ def TensorProduct(
         internal_weights=internal_weights,
         dtype=torch.get_default_dtype(),
         math_dtype=torch.get_default_dtype(),
-        method="naive",
+        method='naive',
     )
 
 
-__all__ = ["TensorProduct"]
+__all__ = ['TensorProduct']

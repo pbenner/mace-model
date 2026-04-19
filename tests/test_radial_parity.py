@@ -15,7 +15,7 @@ try:
     import cuequivariance_jax  # noqa: F401
 except Exception as exc:  # pragma: no cover - environment dependent
     pytest.skip(
-        f"cuequivariance_jax is unavailable in this environment: {exc}",
+        f'cuequivariance_jax is unavailable in this environment: {exc}',
         allow_module_level=True,
     )
 
@@ -25,31 +25,31 @@ from mace_model.torch.modules.radial import ZBLBasis as TorchZBLBasis
 
 _LOCAL_JAX_RADIAL = (
     Path(__file__).resolve().parents[1]
-    / "src"
-    / "mace_model"
-    / "jax"
-    / "modules"
-    / "radial.py"
+    / 'src'
+    / 'mace_model'
+    / 'jax'
+    / 'modules'
+    / 'radial.py'
 )
 _LOCAL_JAX_ADAPTER = (
     Path(__file__).resolve().parents[1]
-    / "src"
-    / "mace_model"
-    / "jax"
-    / "adapters"
-    / "nnx"
-    / "torch.py"
+    / 'src'
+    / 'mace_model'
+    / 'jax'
+    / 'adapters'
+    / 'nnx'
+    / 'torch.py'
 )
 _LOCAL_JAX_ROOT = _LOCAL_JAX_RADIAL.parent.parent
 _LOCAL_JAX_MODULES = _LOCAL_JAX_RADIAL.parent
-_ALIAS_ROOT = "mace_local_jax_radial"
-_ALIAS_MODULES = f"{_ALIAS_ROOT}.modules"
+_ALIAS_ROOT = 'mace_local_jax_radial'
+_ALIAS_MODULES = f'{_ALIAS_ROOT}.modules'
 
 
 def _load_local_module(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
-        raise RuntimeError(f"Failed to load local module {name} from {path}")
+        raise RuntimeError(f'Failed to load local module {name} from {path}')
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
     spec.loader.exec_module(module)
@@ -66,9 +66,9 @@ if _ALIAS_MODULES not in sys.modules:
     modules_pkg.__path__ = [str(_LOCAL_JAX_MODULES)]  # type: ignore[attr-defined]
     sys.modules[_ALIAS_MODULES] = modules_pkg
 
-_LOCAL_JAX_MODULE = _load_local_module(f"{_ALIAS_MODULES}.radial", _LOCAL_JAX_RADIAL)
+_LOCAL_JAX_MODULE = _load_local_module(f'{_ALIAS_MODULES}.radial', _LOCAL_JAX_RADIAL)
 _LOCAL_ADAPTER_MODULE = _load_local_module(
-    f"{_ALIAS_ROOT}.nnx_torch_adapter",
+    f'{_ALIAS_ROOT}.nnx_torch_adapter',
     _LOCAL_JAX_ADAPTER,
 )
 init_from_torch = _LOCAL_ADAPTER_MODULE.init_from_torch
@@ -79,7 +79,7 @@ JaxZBLBasis = _LOCAL_JAX_MODULE.ZBLBasis
 
 
 def _to_numpy(value):
-    return np.asarray(value.array if hasattr(value, "array") else value)
+    return np.asarray(value.array if hasattr(value, 'array') else value)
 
 
 def test_torch_and_jax_bessel_match_after_weight_transfer():

@@ -5,4 +5,4 @@ from ._extract import Extract
 from ._fc import FullyConnectedNet, Layer, _Layer
 from ._gate import Gate
 
-__all__ = ["Activation", "Extract", "FullyConnectedNet", "Gate", "Layer", "_Layer"]
+__all__ = ['Activation', 'Extract', 'FullyConnectedNet', 'Gate', 'Layer', '_Layer']

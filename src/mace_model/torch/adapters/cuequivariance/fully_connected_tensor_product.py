@@ -24,8 +24,8 @@ def FullyConnectedTensorProduct(
         layout=layout,
         shared_weights=shared_weights,
         internal_weights=internal_weights,
-        method="naive",
+        method='naive',
     )
 
 
-__all__ = ["FullyConnectedTensorProduct"]
+__all__ = ['FullyConnectedTensorProduct']

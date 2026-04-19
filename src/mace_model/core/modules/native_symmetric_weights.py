@@ -35,10 +35,10 @@ def native_symmetric_metadata(torch_module) -> dict[str, int]:
     mul = int(irreps_in[0].mul)
     feature_dim = int(sum(term.ir.dim for term in irreps_in))
     return {
-        "correlation": correlation,
-        "num_elements": num_elements,
-        "mul": mul,
-        "feature_dim": feature_dim,
+        'correlation': correlation,
+        'num_elements': num_elements,
+        'mul': mul,
+        'feature_dim': feature_dim,
     }
 
 
@@ -112,9 +112,9 @@ def _native_symmetric_polynomial(irreps_in, irreps_out, degree: int):
     input_operands = range(1, degree + 1)
     output_operand = degree + 1
 
-    abc = "abcdefgh"[:degree]
+    abc = 'abcdefgh'[:degree]
     descriptor = cue.SegmentedTensorProduct.from_subscripts(
-        f"u_{'_'.join(f'{a}' for a in abc)}_i+{abc}ui"
+        f'u_{"_".join(f"{a}" for a in abc)}_i+{abc}ui'
     )
 
     for operand in input_operands:
@@ -132,13 +132,13 @@ def _native_symmetric_polynomial(irreps_in, irreps_out, degree: int):
         u = np.moveaxis(u, 0, -1)
 
         if u.shape[-2] == 0:
-            descriptor.add_segment(output_operand, {"i": ir.dim})
+            descriptor.add_segment(output_operand, {'i': ir.dim})
         else:
             u = triu_array(u, degree)
             descriptor.add_path(None, *(0,) * degree, None, c=u)
 
     descriptor = descriptor.flatten_coefficient_modes()
-    descriptor = descriptor.append_modes_to_all_operands("u", {"u": mul})
+    descriptor = descriptor.append_modes_to_all_operands('u', {'u': mul})
 
     [weights, x], y = descriptor.operands[:2], descriptor.operands[-1]
     return cue.EquivariantPolynomial(
@@ -230,11 +230,11 @@ def gather_native_reduced_weights(
         for degree in range(correlation, 0, -1):
             if degree == correlation:
                 weight_param = contraction.weights_max
-                zeroed = bool(getattr(contraction, "weights_max_zeroed", False))
+                zeroed = bool(getattr(contraction, 'weights_max_zeroed', False))
             else:
                 idx = correlation - degree - 1
                 weight_param = contraction.weights[idx]
-                zeroed = bool(getattr(contraction, f"weights_{idx}_zeroed", False))
+                zeroed = bool(getattr(contraction, f'weights_{idx}_zeroed', False))
 
             array = np.asarray(weight_param.detach().cpu().numpy(), dtype=dtype)
             if zeroed:
@@ -253,7 +253,7 @@ def gather_native_reduced_weights(
         stacked = np.zeros((num_elements, 0, mul_dim), dtype=dtype)
 
     if stacked.shape[0] != num_elements or stacked.shape[2] != mul_dim:
-        raise ValueError("Native SymmetricContraction weights shape mismatch.")
+        raise ValueError('Native SymmetricContraction weights shape mismatch.')
 
     return stacked
 
@@ -289,7 +289,7 @@ def assign_native_basis(
                 offset += width
 
     if offset != basis_vector.size:
-        raise ValueError("Basis vector length mismatch while scattering weights.")
+        raise ValueError('Basis vector length mismatch while scattering weights.')
 
 
 def _manual_contraction_forward(contraction, x, attrs):
@@ -302,7 +302,7 @@ def _manual_contraction_forward(contraction, x, attrs):
     """
     correlation = int(contraction.correlation)
     out = contraction.graph_opt_main(
-        getattr(contraction, f"U_matrix_{correlation}"),
+        getattr(contraction, f'U_matrix_{correlation}'),
         contraction.weights_max,
         x,
         attrs,
@@ -316,7 +316,7 @@ def _manual_contraction_forward(contraction, x, attrs):
     ):
         degree = correlation - idx - 1
         c_tensor = contract_weights(
-            getattr(contraction, f"U_matrix_{degree}"),
+            getattr(contraction, f'U_matrix_{degree}'),
             weight,
             attrs,
         )
@@ -329,7 +329,7 @@ def _manual_native_forward(torch_module, x, attrs):
     """Evaluate a native symmetric-contraction module without using .forward()."""
     import torch  # noqa: PLC0415
 
-    if not hasattr(torch_module, "contractions"):
+    if not hasattr(torch_module, 'contractions'):
         raise AttributeError(
             "Serialized native symmetric-contraction module has no 'contractions'."
         )
@@ -348,17 +348,17 @@ def _native_forward_with_mode(torch_module, x, attrs, mode: str | None):
     - ``'manual'``: execute the serialized MACE contraction graphs directly.
     - ``None``: auto-detect and cache the chosen mode.
     """
-    if mode == "manual":
-        return _manual_native_forward(torch_module, x, attrs), "manual"
-    if mode == "direct":
-        return torch_module(x, attrs), "direct"
+    if mode == 'manual':
+        return _manual_native_forward(torch_module, x, attrs), 'manual'
+    if mode == 'direct':
+        return torch_module(x, attrs), 'direct'
 
     try:
-        return torch_module(x, attrs), "direct"
+        return torch_module(x, attrs), 'direct'
     except (NotImplementedError, AttributeError):
         # Legacy checkpoint stubs intentionally raise here. We then run the
         # serialized contraction graphs directly.
-        return _manual_native_forward(torch_module, x, attrs), "manual"
+        return _manual_native_forward(torch_module, x, attrs), 'manual'
 
 
 def native_design_matrix(
@@ -419,8 +419,8 @@ def convert_native_symmetric_weights(
     template = np.asarray(target_template)
     if template.ndim != 3:
         raise ValueError(
-            "Target symmetric-contraction template must have shape "
-            "(num_elements, basis_dim, mul)."
+            'Target symmetric-contraction template must have shape '
+            '(num_elements, basis_dim, mul).'
         )
 
     basis_dim = int(template.shape[1])
@@ -428,7 +428,7 @@ def convert_native_symmetric_weights(
     if basis_dim == 0 or mul_dim == 0:
         return np.zeros_like(template)
 
-    if target_basis_kind not in {None, "reduced", "native_full", "canonical_full"}:
+    if target_basis_kind not in {None, 'reduced', 'native_full', 'canonical_full'}:
         raise ValueError(
             "target_basis_kind must be one of None, 'reduced', 'native_full', "
             f"or 'canonical_full'; got {target_basis_kind!r}."
@@ -436,14 +436,14 @@ def convert_native_symmetric_weights(
     metadata = native_symmetric_metadata(torch_module)
     native_weight = gather_native_reduced_weights(
         torch_module,
-        correlation=metadata["correlation"],
+        correlation=metadata['correlation'],
         mul_dim=mul_dim,
         num_elements=int(template.shape[0]),
     )
     native_dim = int(native_weight.shape[1])
     irreps_in = cue.Irreps(cue.O3, str(torch_module.irreps_in))
     irreps_out = cue.Irreps(cue.O3, str(torch_module.irreps_out))
-    degrees = tuple(range(1, metadata["correlation"] + 1))
+    degrees = tuple(range(1, metadata['correlation'] + 1))
 
     reduced_projection = _native_reduced_projection(
         str(irreps_in),
@@ -466,8 +466,8 @@ def convert_native_symmetric_weights(
         if native_dim == full_dim:
             if native_full_to_canonical_fn is None:
                 raise ValueError(
-                    "Native full-CG import requires a backend-specific "
-                    "native_full_to_canonical_fn."
+                    'Native full-CG import requires a backend-specific '
+                    'native_full_to_canonical_fn.'
                 )
             converted = np.asarray(
                 native_full_to_canonical_fn(native_weight),
@@ -475,7 +475,7 @@ def convert_native_symmetric_weights(
             )
             if converted.shape != native_weight.shape:
                 raise ValueError(
-                    "native_full_to_canonical_fn returned an unexpected shape."
+                    'native_full_to_canonical_fn returned an unexpected shape.'
                 )
             return converted
         if native_dim == reduced_dim:
@@ -484,41 +484,41 @@ def convert_native_symmetric_weights(
                 copy=False,
             )
             reduced = np.einsum(
-                "zau,ab->zbu",
+                'zau,ab->zbu',
                 native_weight,
                 reduced_projection,
                 optimize=True,
             )
-            return np.einsum("zau,ab->zbu", reduced, lift, optimize=True)
+            return np.einsum('zau,ab->zbu', reduced, lift, optimize=True)
         raise ValueError(
-            "Native SymmetricContraction weight shape mismatch during import."
+            'Native SymmetricContraction weight shape mismatch during import.'
         )
 
-    if target_basis_kind in {None, "reduced"} and basis_dim == reduced_dim:
+    if target_basis_kind in {None, 'reduced'} and basis_dim == reduced_dim:
         if native_dim == reduced_dim:
             converted = np.einsum(
-                "zau,ab->zbu",
+                'zau,ab->zbu',
                 native_weight,
                 reduced_projection,
                 optimize=True,
             )
         elif native_dim == full_dim:
             converted = np.einsum(
-                "zau,ab->zbu",
+                'zau,ab->zbu',
                 canonical_full_weight(),
                 descriptor_projection,
                 optimize=True,
             )
         else:
             raise ValueError(
-                "Native SymmetricContraction weight shape mismatch during import."
+                'Native SymmetricContraction weight shape mismatch during import.'
             )
         return converted.astype(template.dtype, copy=False)
 
     if basis_dim == full_dim:
-        if target_basis_kind == "native_full" and native_dim == full_dim:
+        if target_basis_kind == 'native_full' and native_dim == full_dim:
             return native_weight.astype(template.dtype, copy=False)
-        if target_basis_kind == "canonical_full":
+        if target_basis_kind == 'canonical_full':
             return canonical_full_weight().astype(template.dtype, copy=False)
 
     solve_dtype = np.result_type(template.dtype, native_weight.dtype, np.float64)
@@ -531,7 +531,7 @@ def convert_native_symmetric_weights(
     for seed in range(16):
         rng = np.random.default_rng(seed)
         inputs_np = rng.standard_normal(
-            (batch, metadata["mul"], metadata["feature_dim"])
+            (batch, metadata['mul'], metadata['feature_dim'])
         ).astype(solve_dtype, copy=False)
 
         target_matrix_seed = np.asarray(
@@ -564,14 +564,14 @@ def convert_native_symmetric_weights(
 
     if best_transform is None:
         raise RuntimeError(
-            "Failed to compute a native symmetric-contraction basis solve. "
-            f"Best observed rank was {best_rank} for basis dimension {basis_dim}."
+            'Failed to compute a native symmetric-contraction basis solve. '
+            f'Best observed rank was {best_rank} for basis dimension {basis_dim}.'
         )
 
     transform = best_transform
     transform = transform.astype(native_weight.dtype, copy=False)
     converted = np.einsum(
-        "ab,zbu->zau",
+        'ab,zbu->zau',
         transform,
         native_weight,
         optimize=True,
@@ -580,9 +580,9 @@ def convert_native_symmetric_weights(
 
 
 __all__ = [
-    "assign_native_basis",
-    "convert_native_symmetric_weights",
-    "gather_native_reduced_weights",
-    "native_design_matrix",
-    "native_symmetric_metadata",
+    'assign_native_basis',
+    'convert_native_symmetric_weights',
+    'gather_native_reduced_weights',
+    'native_design_matrix',
+    'native_symmetric_metadata',
 ]

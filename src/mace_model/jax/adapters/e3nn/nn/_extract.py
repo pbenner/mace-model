@@ -37,8 +37,8 @@ class Extract:
 
         if array.shape[-1] != self.irreps_in.dim:
             raise ValueError(
-                f"Invalid input shape: expected last dim {self.irreps_in.dim}, "
-                f"got {array.shape[-1]}"
+                f'Invalid input shape: expected last dim {self.irreps_in.dim}, '
+                f'got {array.shape[-1]}'
             )
 
         outputs: list[jnp.ndarray] = []

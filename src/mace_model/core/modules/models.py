@@ -15,4 +15,4 @@ class MACEModel(
     """Shared helpers for Torch/JAX MACE model wrappers."""
 
 
-__all__ = ["MACEModel"]
+__all__ = ['MACEModel']

@@ -19,8 +19,8 @@ def _validate_edge_aligned_inputs(
     num_distances = int(x.shape[0])
     if num_distances != num_edges:
         raise ValueError(
-            f"{module_name} expects one distance per edge; received "
-            f"{num_distances} distances for {num_edges} edges."
+            f'{module_name} expects one distance per edge; received '
+            f'{num_distances} distances for {num_edges} edges.'
         )
 
 
@@ -45,13 +45,13 @@ class BesselBasis(torch.nn.Module):
         if trainable:
             self.bessel_weights = torch.nn.Parameter(bessel_weights)
         else:
-            self.register_buffer("bessel_weights", bessel_weights)
+            self.register_buffer('bessel_weights', bessel_weights)
 
         self.register_buffer(
-            "r_max", torch.tensor(r_max, dtype=torch.get_default_dtype())
+            'r_max', torch.tensor(r_max, dtype=torch.get_default_dtype())
         )
         self.register_buffer(
-            "prefactor",
+            'prefactor',
             torch.tensor(np.sqrt(2.0 / r_max), dtype=torch.get_default_dtype()),
         )
 
@@ -61,9 +61,9 @@ class BesselBasis(torch.nn.Module):
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}(r_max={self.r_max}, "
-            f"num_basis={len(self.bessel_weights)}, "
-            f"trainable={self.bessel_weights.requires_grad})"
+            f'{self.__class__.__name__}(r_max={self.r_max}, '
+            f'num_basis={len(self.bessel_weights)}, '
+            f'trainable={self.bessel_weights.requires_grad})'
         )
 
 
@@ -75,7 +75,7 @@ class ChebychevBasis(torch.nn.Module):
     def __init__(self, r_max: float, num_basis: int = 8):
         super().__init__()
         self.register_buffer(
-            "n",
+            'n',
             torch.arange(1, num_basis + 1, dtype=torch.get_default_dtype()).unsqueeze(
                 0
             ),
@@ -90,7 +90,7 @@ class ChebychevBasis(torch.nn.Module):
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}(r_max={self.r_max}, num_basis={self.num_basis},"
+            f'{self.__class__.__name__}(r_max={self.r_max}, num_basis={self.num_basis},'
         )
 
 
@@ -109,7 +109,7 @@ class GaussianBasis(torch.nn.Module):
                 gaussian_weights, requires_grad=True
             )
         else:
-            self.register_buffer("gaussian_weights", gaussian_weights)
+            self.register_buffer('gaussian_weights', gaussian_weights)
         self.coeff = -0.5 / (r_max / (num_basis - 1)) ** 2
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -127,9 +127,9 @@ class PolynomialCutoff(torch.nn.Module):
 
     def __init__(self, r_max: float, p: int = 6):
         super().__init__()
-        self.register_buffer("p", torch.tensor(p, dtype=torch.int))
+        self.register_buffer('p', torch.tensor(p, dtype=torch.int))
         self.register_buffer(
-            "r_max", torch.tensor(r_max, dtype=torch.get_default_dtype())
+            'r_max', torch.tensor(r_max, dtype=torch.get_default_dtype())
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -149,7 +149,7 @@ class PolynomialCutoff(torch.nn.Module):
         return envelope * (x < r_max)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(p={self.p}, r_max={self.r_max})"
+        return f'{self.__class__.__name__}(p={self.p}, r_max={self.r_max})'
 
 
 class ZBLBasis(torch.nn.Module):
@@ -161,20 +161,20 @@ class ZBLBasis(torch.nn.Module):
 
     def __init__(self, p: int = 6, trainable: bool = False, **kwargs):
         super().__init__()
-        if "r_max" in kwargs:
+        if 'r_max' in kwargs:
             logging.warning(
-                "r_max is deprecated. r_max is determined from the covalent radii."
+                'r_max is deprecated. r_max is determined from the covalent radii.'
             )
 
         self.register_buffer(
-            "c",
+            'c',
             torch.tensor(
                 [0.1818, 0.5099, 0.2802, 0.02817], dtype=torch.get_default_dtype()
             ),
         )
-        self.register_buffer("p", torch.tensor(p, dtype=torch.int))
+        self.register_buffer('p', torch.tensor(p, dtype=torch.int))
         self.register_buffer(
-            "covalent_radii",
+            'covalent_radii',
             torch.tensor(
                 ase.data.covalent_radii,
                 dtype=torch.get_default_dtype(),
@@ -186,8 +186,8 @@ class ZBLBasis(torch.nn.Module):
                 torch.tensor(0.4543, requires_grad=True)
             )
         else:
-            self.register_buffer("a_exp", torch.tensor(0.300))
-            self.register_buffer("a_prefactor", torch.tensor(0.4543))
+            self.register_buffer('a_exp', torch.tensor(0.300))
+            self.register_buffer('a_prefactor', torch.tensor(0.4543))
 
     def forward(
         self,
@@ -196,7 +196,7 @@ class ZBLBasis(torch.nn.Module):
         edge_index: torch.Tensor,
         atomic_numbers: torch.Tensor,
     ) -> torch.Tensor:
-        _validate_edge_aligned_inputs(x, edge_index, module_name="ZBLBasis")
+        _validate_edge_aligned_inputs(x, edge_index, module_name='ZBLBasis')
         sender = edge_index[0]
         receiver = edge_index[1]
         node_atomic_numbers = atomic_numbers[torch.argmax(node_attrs, dim=1)].unsqueeze(
@@ -224,7 +224,7 @@ class ZBLBasis(torch.nn.Module):
         return v_zbl.squeeze(-1)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(c={self.c})"
+        return f'{self.__class__.__name__}(c={self.c})'
 
 
 class AgnesiTransform(torch.nn.Module):
@@ -240,11 +240,11 @@ class AgnesiTransform(torch.nn.Module):
         trainable: bool = False,
     ):
         super().__init__()
-        self.register_buffer("q", torch.tensor(q, dtype=torch.get_default_dtype()))
-        self.register_buffer("p", torch.tensor(p, dtype=torch.get_default_dtype()))
-        self.register_buffer("a", torch.tensor(a, dtype=torch.get_default_dtype()))
+        self.register_buffer('q', torch.tensor(q, dtype=torch.get_default_dtype()))
+        self.register_buffer('p', torch.tensor(p, dtype=torch.get_default_dtype()))
+        self.register_buffer('a', torch.tensor(a, dtype=torch.get_default_dtype()))
         self.register_buffer(
-            "covalent_radii",
+            'covalent_radii',
             torch.tensor(
                 ase.data.covalent_radii,
                 dtype=torch.get_default_dtype(),
@@ -262,7 +262,7 @@ class AgnesiTransform(torch.nn.Module):
         edge_index: torch.Tensor,
         atomic_numbers: torch.Tensor,
     ) -> torch.Tensor:
-        _validate_edge_aligned_inputs(x, edge_index, module_name="AgnesiTransform")
+        _validate_edge_aligned_inputs(x, edge_index, module_name='AgnesiTransform')
         sender = edge_index[0]
         receiver = edge_index[1]
         node_atomic_numbers = atomic_numbers[torch.argmax(node_attrs, dim=1)].unsqueeze(
@@ -283,7 +283,7 @@ class AgnesiTransform(torch.nn.Module):
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}(a={self.a:.4f}, q={self.q:.4f}, p={self.p:.4f})"
+            f'{self.__class__.__name__}(a={self.a:.4f}, q={self.q:.4f}, p={self.p:.4f})'
         )
 
 
@@ -296,12 +296,12 @@ class SoftTransform(torch.nn.Module):
     def __init__(self, alpha: float = 4.0, trainable: bool = False):
         super().__init__()
         self.register_buffer(
-            "alpha", torch.tensor(alpha, dtype=torch.get_default_dtype())
+            'alpha', torch.tensor(alpha, dtype=torch.get_default_dtype())
         )
         if trainable:
             self.alpha = torch.nn.Parameter(self.alpha.clone())
         self.register_buffer(
-            "covalent_radii",
+            'covalent_radii',
             torch.tensor(
                 ase.data.covalent_radii,
                 dtype=torch.get_default_dtype(),
@@ -331,7 +331,7 @@ class SoftTransform(torch.nn.Module):
         edge_index: torch.Tensor,
         atomic_numbers: torch.Tensor,
     ) -> torch.Tensor:
-        _validate_edge_aligned_inputs(x, edge_index, module_name="SoftTransform")
+        _validate_edge_aligned_inputs(x, edge_index, module_name='SoftTransform')
         r_0 = self.compute_r_0(node_attrs, edge_index, atomic_numbers)
         p_0 = (3 / 4) * r_0
         p_1 = (4 / 3) * r_0
@@ -341,7 +341,7 @@ class SoftTransform(torch.nn.Module):
         return p_0 + (x - p_0) * s_x
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(alpha={self.alpha.item():.4f})"
+        return f'{self.__class__.__name__}(alpha={self.alpha.item():.4f})'
 
 
 class RadialMLP(torch.nn.Module):
@@ -370,12 +370,12 @@ class RadialMLP(torch.nn.Module):
 
 
 __all__ = [
-    "AgnesiTransform",
-    "BesselBasis",
-    "ChebychevBasis",
-    "GaussianBasis",
-    "PolynomialCutoff",
-    "RadialMLP",
-    "SoftTransform",
-    "ZBLBasis",
+    'AgnesiTransform',
+    'BesselBasis',
+    'ChebychevBasis',
+    'GaussianBasis',
+    'PolynomialCutoff',
+    'RadialMLP',
+    'SoftTransform',
+    'ZBLBasis',
 ]

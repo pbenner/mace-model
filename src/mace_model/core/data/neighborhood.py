@@ -37,7 +37,7 @@ def get_neighborhood(
 
     if _neighbour_list is not None:
         sender, receiver, unit_shifts = _neighbour_list(
-            quantities="ijS",
+            quantities='ijS',
             pbc=pbc,
             cell=cell,
             positions=positions,
@@ -45,7 +45,7 @@ def get_neighborhood(
         )
     else:  # pragma: no cover - fallback path
         sender, receiver, unit_shifts = _primitive_neighbor_list(
-            quantities="ijS",
+            quantities='ijS',
             pbc=pbc,
             cell=cell,
             positions=positions,

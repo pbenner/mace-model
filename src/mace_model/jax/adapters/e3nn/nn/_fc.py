@@ -29,9 +29,9 @@ class Layer(nnx.Module):
     def __repr__(self) -> str:
         act = self.act
         act_name = (
-            act.__name__ if callable(act) and hasattr(act, "__name__") else str(act)
+            act.__name__ if callable(act) and hasattr(act, '__name__') else str(act)
         )
-        return f"{self.__class__.__name__}({self.h_in}->{self.h_out}, act={act_name})"
+        return f'{self.__class__.__name__}({self.h_in}->{self.h_out}, act={act_name})'
 
     def __init__(
         self,
@@ -51,7 +51,7 @@ class Layer(nnx.Module):
         self._use_activation = self.act is not None
         if self._use_activation:
             normalized = normalize2mom(self.act)  # compute reference constant
-            const = getattr(normalized, "_normalize2mom_const", 1.0)
+            const = getattr(normalized, '_normalize2mom_const', 1.0)
             self._act_fn = self.act
             self._act_scale_init = jnp.asarray(const)
         else:
@@ -135,7 +135,7 @@ class FullyConnectedNet(nnx.Module):
         self.variance_out = variance_out
         self.out_act = out_act
         if len(self.hs) < 2:
-            raise ValueError("hs must contain at least input and output dimensions.")
+            raise ValueError('hs must contain at least input and output dimensions.')
 
         var_in = self.variance_in
         layers = []
@@ -176,40 +176,40 @@ class FullyConnectedNet(nnx.Module):
         return x
 
     def __repr__(self) -> str:
-        hs_str = ", ".join(str(h) for h in self.hs)
-        return f"{self.__class__.__name__}([{hs_str}])"
+        hs_str = ', '.join(str(h) for h in self.hs)
+        return f'{self.__class__.__name__}([{hs_str}])'
 
 
-@nxx_register_import_mapper("mace_model.torch.adapters.e3nn.nn._fc._Layer")
-@nxx_register_import_mapper("e3nn.nn._fc._Layer")
+@nxx_register_import_mapper('mace_model.torch.adapters.e3nn.nn._fc._Layer')
+@nxx_register_import_mapper('e3nn.nn._fc._Layer')
 def _import_e3nn_fc_layer(module, variables, scope):
     target = _resolve_scope(variables, scope)
     weight = jnp.asarray(module.weight.detach().cpu().numpy())
-    if "weight" in target:
-        target["weight"] = weight.astype(target["weight"].dtype, copy=False)
-    elif "kernel" in target:
-        reshaped = weight.reshape(target["kernel"].shape)
-        target["kernel"] = reshaped.astype(target["kernel"].dtype, copy=False)
-    if getattr(module, "act", None) is not None and "act_scale" in target:
-        const = getattr(module.act, "cst", None)
+    if 'weight' in target:
+        target['weight'] = weight.astype(target['weight'].dtype, copy=False)
+    elif 'kernel' in target:
+        reshaped = weight.reshape(target['kernel'].shape)
+        target['kernel'] = reshaped.astype(target['kernel'].dtype, copy=False)
+    if getattr(module, 'act', None) is not None and 'act_scale' in target:
+        const = getattr(module.act, 'cst', None)
         if const is not None:
-            target["act_scale"] = jnp.asarray(const, dtype=target["act_scale"].dtype)
-    if hasattr(module, "bias") and module.bias is not None:
+            target['act_scale'] = jnp.asarray(const, dtype=target['act_scale'].dtype)
+    if hasattr(module, 'bias') and module.bias is not None:
         bias = jnp.asarray(module.bias.detach().cpu().numpy())
-        if "bias" in target:
-            target["bias"] = bias.astype(target["bias"].dtype, copy=False)
+        if 'bias' in target:
+            target['bias'] = bias.astype(target['bias'].dtype, copy=False)
 
 
-@nxx_register_import_mapper("mace_model.torch.adapters.e3nn.nn._fc.FullyConnectedNet")
-@nxx_register_import_mapper("e3nn.nn._fc.FullyConnectedNet")
+@nxx_register_import_mapper('mace_model.torch.adapters.e3nn.nn._fc.FullyConnectedNet')
+@nxx_register_import_mapper('e3nn.nn._fc.FullyConnectedNet')
 def _import_e3nn_fc(module, variables, scope):
     target = _resolve_scope(variables, scope)
-    layers = target.get("layers")
+    layers = target.get('layers')
     if isinstance(layers, dict):
         for name, child in module.named_children():
-            if not name.startswith("layer"):
+            if not name.startswith('layer'):
                 continue
-            suffix = name[len("layer") :]
+            suffix = name[len('layer') :]
             if not suffix.isdigit():
                 continue
             idx = int(suffix)
@@ -218,7 +218,7 @@ def _import_e3nn_fc(module, variables, scope):
             _import_e3nn_fc_layer(child, layers, [idx])
         return
 
-    if hasattr(FullyConnectedNet, "_import_from_torch_impl"):
+    if hasattr(FullyConnectedNet, '_import_from_torch_impl'):
         updated = FullyConnectedNet._import_from_torch_impl(
             module,
             target,

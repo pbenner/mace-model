@@ -108,7 +108,7 @@ def _normalize_backend(value: str | None) -> str:
     if value is None:
         raise ValueError("Config is missing 'backend'.")
     backend = str(value).strip().lower()
-    if backend not in {"torch", "jax"}:
+    if backend not in {'torch', 'jax'}:
         raise ValueError(f"Unsupported backend {value!r}; expected 'torch' or 'jax'.")
     return backend
 
@@ -117,12 +117,12 @@ def load_config(path: str | Path) -> dict[str, Any]:
     """Load a TOML or JSON configuration file into a Python dict."""
     config_path = Path(path).expanduser().resolve()
     suffix = config_path.suffix.lower()
-    if suffix == ".toml":
+    if suffix == '.toml':
         return tomllib.loads(config_path.read_text())
-    if suffix == ".json":
+    if suffix == '.json':
         return json.loads(config_path.read_text())
     raise ValueError(
-        f"Unsupported config format {config_path.suffix!r}; use .toml or .json."
+        f'Unsupported config format {config_path.suffix!r}; use .toml or .json.'
     )
 
 
@@ -138,12 +138,12 @@ def load_build_request(
     with the backend-specific ``[torch.model]`` or ``[jax.model]`` overrides.
     """
     raw = load_config(path)
-    backend = _normalize_backend(backend_override or raw.get("backend"))
-    model_class = str(raw.get("model_class", "MACE"))
-    seed = int(raw.get("seed", 0))
-    output = output_override if output_override is not None else raw.get("output")
+    backend = _normalize_backend(backend_override or raw.get('backend'))
+    model_class = str(raw.get('model_class', 'MACE'))
+    seed = int(raw.get('seed', 0))
+    output = output_override if output_override is not None else raw.get('output')
 
-    base_model = raw.get("model")
+    base_model = raw.get('model')
     if not isinstance(base_model, dict):
         raise ValueError("Config must contain a [model] table or 'model' object.")
 
@@ -151,14 +151,14 @@ def load_build_request(
     if backend_section is None:
         backend_section = {}
     if not isinstance(backend_section, dict):
-        raise ValueError(f"Backend section {backend!r} must be a table/object.")
+        raise ValueError(f'Backend section {backend!r} must be a table/object.')
 
-    backend_model = backend_section.get("model", {})
+    backend_model = backend_section.get('model', {})
     if backend_model is None:
         backend_model = {}
     if not isinstance(backend_model, dict):
         raise ValueError(
-            f"Backend-specific model section for {backend!r} must be a table/object."
+            f'Backend-specific model section for {backend!r} must be a table/object.'
         )
 
     merged_model = _deep_merge(base_model, backend_model)
@@ -173,8 +173,8 @@ def load_build_request(
 
 
 __all__ = [
-    "BuildRequest",
-    "DEFAULT_CONFIG_TOML",
-    "load_build_request",
-    "load_config",
+    'BuildRequest',
+    'DEFAULT_CONFIG_TOML',
+    'load_build_request',
+    'load_config',
 ]

@@ -32,15 +32,15 @@ class MACEModelAssembly:
     ) -> Any:
         """Instantiate one interaction block with normalized shared kwargs."""
         kwargs: dict[str, Any] = {
-            "node_attrs_irreps": node_attrs_irreps,
-            "node_feats_irreps": node_feats_irreps,
-            "edge_attrs_irreps": edge_attrs_irreps,
-            "edge_feats_irreps": edge_feats_irreps,
-            "target_irreps": target_irreps,
-            "hidden_irreps": hidden_irreps,
-            "avg_num_neighbors": avg_num_neighbors,
-            "radial_MLP": radial_mlp,
-            "cueq_config": cueq_config,
+            'node_attrs_irreps': node_attrs_irreps,
+            'node_feats_irreps': node_feats_irreps,
+            'edge_attrs_irreps': edge_attrs_irreps,
+            'edge_feats_irreps': edge_feats_irreps,
+            'target_irreps': target_irreps,
+            'hidden_irreps': hidden_irreps,
+            'avg_num_neighbors': avg_num_neighbors,
+            'radial_MLP': radial_mlp,
+            'cueq_config': cueq_config,
         }
         if extra_kwargs is not None:
             kwargs.update(extra_kwargs)
@@ -62,14 +62,14 @@ class MACEModelAssembly:
     ) -> Any:
         """Instantiate one equivariant product block with shared defaults."""
         kwargs: dict[str, Any] = {
-            "node_feats_irreps": node_feats_irreps,
-            "target_irreps": target_irreps,
-            "correlation": correlation,
-            "num_elements": num_elements,
-            "use_sc": use_sc,
-            "cueq_config": cueq_config,
-            "use_reduced_cg": use_reduced_cg,
-            "use_agnostic_product": use_agnostic_product,
+            'node_feats_irreps': node_feats_irreps,
+            'target_irreps': target_irreps,
+            'correlation': correlation,
+            'num_elements': num_elements,
+            'use_sc': use_sc,
+            'cueq_config': cueq_config,
+            'use_reduced_cg': use_reduced_cg,
+            'use_agnostic_product': use_agnostic_product,
         }
         if extra_kwargs is not None:
             kwargs.update(extra_kwargs)
@@ -86,9 +86,9 @@ class MACEModelAssembly:
     ) -> Any:
         """Instantiate a linear readout block."""
         kwargs: dict[str, Any] = {
-            "irreps_in": readout_irreps,
-            "irrep_out": readout_output_irreps,
-            "cueq_config": cueq_config,
+            'irreps_in': readout_irreps,
+            'irrep_out': readout_output_irreps,
+            'cueq_config': cueq_config,
         }
         if extra_kwargs is not None:
             kwargs.update(extra_kwargs)
@@ -110,12 +110,12 @@ class MACEModelAssembly:
     ) -> Any:
         """Instantiate the final non-linear readout block."""
         kwargs: dict[str, Any] = {
-            "irreps_in": hidden_irreps_out,
-            "MLP_irreps": (num_heads * mlp_irreps).simplify(),
-            "gate": gate,
-            "irrep_out": readout_output_irreps,
-            "num_heads": num_heads,
-            "cueq_config": cueq_config,
+            'irreps_in': hidden_irreps_out,
+            'MLP_irreps': (num_heads * mlp_irreps).simplify(),
+            'gate': gate,
+            'irrep_out': readout_output_irreps,
+            'num_heads': num_heads,
+            'cueq_config': cueq_config,
         }
         kwargs.update(
             self.maybe_readout_kwargs(
@@ -328,4 +328,4 @@ class MACEModelAssembly:
         return interactions, products, readouts
 
 
-__all__ = ["MACEModelAssembly"]
+__all__ = ['MACEModelAssembly']

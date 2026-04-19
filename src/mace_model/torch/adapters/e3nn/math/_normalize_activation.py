@@ -38,8 +38,8 @@ def moment(f: Callable, n: int, dtype=None, device=None):
     if dtype is None:
         dtype = torch.get_default_dtype()
     if device is None:
-        device = "cpu"
-    gen = torch.Generator(device="cpu").manual_seed(0)
+        device = 'cpu'
+    gen = torch.Generator(device='cpu').manual_seed(0)
     z = torch.randn(1_000_000, generator=gen, dtype=torch.float64).to(
         dtype=dtype,
         device=device,
@@ -59,7 +59,7 @@ class normalize2mom(torch.nn.Module):
             cst = (
                 float(override)
                 if override is not None
-                else moment(f, 2, dtype=torch.float64, device="cpu").pow(-0.5).item()
+                else moment(f, 2, dtype=torch.float64, device='cpu').pow(-0.5).item()
             )
         self._is_id = abs(cst - 1.0) < 1e-4
         self.f = f

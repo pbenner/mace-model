@@ -19,7 +19,7 @@ class SphericalHarmonics(torch.nn.Module):
         self,
         irreps_out: int | Sequence[int] | str | Any,
         normalize: bool,
-        normalization: str = "integral",
+        normalization: str = 'integral',
         irreps_in: Any = None,
     ) -> None:
         super().__init__()
@@ -31,7 +31,7 @@ class SphericalHarmonics(torch.nn.Module):
         irreps_out = Irreps(self.irreps_out)
         self._plan = build_spherical_harmonics_plan(
             irreps_out,
-            Irreps("1o" if self.irreps_in is None else self.irreps_in),
+            Irreps('1o' if self.irreps_in is None else self.irreps_in),
             self.normalization,
             require_unique_sorted=True,
         )
@@ -40,7 +40,7 @@ class SphericalHarmonics(torch.nn.Module):
         self._sh = cuet.SphericalHarmonics(
             list(self._plan.degrees),
             normalize=normalize,
-            method="naive",
+            method='naive',
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

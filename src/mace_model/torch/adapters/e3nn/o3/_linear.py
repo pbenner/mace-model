@@ -28,7 +28,7 @@ class Linear(torch.nn.Module):
             layout=cue.mul_ir,
             shared_weights=shared_weights,
             internal_weights=internal_weights,
-            method="naive",
+            method='naive',
         )
         self.weight_numel = self.linear.weight_numel
         bias_slices = []

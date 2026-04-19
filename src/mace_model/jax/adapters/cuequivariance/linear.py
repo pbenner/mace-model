@@ -34,7 +34,7 @@ class Linear(nnx.Module):
     irreps_out: Irreps
     shared_weights: bool | None = None
     internal_weights: bool | None = None
-    layout: object = "mul_ir"
+    layout: object = 'mul_ir'
     group: object = cue.O3
 
     def __init__(
@@ -43,7 +43,7 @@ class Linear(nnx.Module):
         irreps_out: Irreps,
         shared_weights: bool | None = None,
         internal_weights: bool | None = None,
-        layout: object = "mul_ir",
+        layout: object = 'mul_ir',
         group: object = cue.O3,
         *,
         rngs: nnx.Rngs | None = None,
@@ -82,14 +82,14 @@ class Linear(nnx.Module):
         self._descriptor_output_layout = descriptor.outputs[0].layout
         # Stash chosen layout for later validation (e.g., during Torch import).
         # Store as int code (0=mul_ir, 1=ir_mul) to keep the variables tree JIT-safe.
-        layout_code = 0 if self._layout_str == "mul_ir" else 1
+        layout_code = 0 if self._layout_str == 'mul_ir' else 1
         self.layout_config = ConfigVar(
             jnp.asarray(layout_code, dtype=jnp.int32),
             is_mutable=False,
         )
         if self._internal_weights:
             if rngs is None:
-                raise ValueError("rngs is required when internal_weights=True")
+                raise ValueError('rngs is required when internal_weights=True')
             self.weight = nnx.Param(
                 jax.random.normal(
                     rngs(),
@@ -104,26 +104,26 @@ class Linear(nnx.Module):
     def _resolve_layout(layout_obj: object) -> tuple[cue.IrrepsLayout, str]:
         """Return the cue layout object and a readable identifier."""
         if isinstance(layout_obj, str):
-            if layout_obj not in {"mul_ir", "ir_mul"}:
+            if layout_obj not in {'mul_ir', 'ir_mul'}:
                 raise ValueError(
                     f"Linear received unsupported layout string '{layout_obj}'."
                 )
             return getattr(cue, layout_obj), layout_obj
 
         if layout_obj == cue.mul_ir:
-            return layout_obj, "mul_ir"
+            return layout_obj, 'mul_ir'
         if layout_obj == cue.ir_mul:
-            return layout_obj, "ir_mul"
+            return layout_obj, 'ir_mul'
 
         raise ValueError(
-            "Linear received an unknown layout object; expected cue.mul_ir or "
-            "cue.ir_mul."
+            'Linear received an unknown layout object; expected cue.mul_ir or '
+            'cue.ir_mul.'
         )
 
     def _weight_param(self) -> jnp.ndarray:
         """Return the internal weight parameter value."""
         if self.weight is None:
-            raise ValueError("Internal weights are not initialized for this Linear.")
+            raise ValueError('Internal weights are not initialized for this Linear.')
         return self.weight
 
     def _extract_array(self, x: jnp.ndarray | IrrepsArray) -> tuple[jnp.ndarray, bool]:
@@ -131,7 +131,7 @@ class Linear(nnx.Module):
         if isinstance(x, IrrepsArray):
             if x.irreps != self.irreps_in_o3:
                 raise ValueError(
-                    f"Linear expects input irreps {self.irreps_in_o3}, got {x.irreps}"
+                    f'Linear expects input irreps {self.irreps_in_o3}, got {x.irreps}'
                 )
             return jnp.asarray(x.array), True
         return jnp.asarray(x), False
@@ -152,8 +152,8 @@ class Linear(nnx.Module):
             payload = ir_mul_to_mul_ir(array, Irreps(self.irreps_in_o3))
         else:
             raise ValueError(
-                "Linear does not support conversion from "
-                f"{self._api_layout!r} to {self._descriptor_input_layout!r}."
+                'Linear does not support conversion from '
+                f'{self._api_layout!r} to {self._descriptor_input_layout!r}.'
             )
 
         return cuex.RepArray(
@@ -172,7 +172,7 @@ class Linear(nnx.Module):
         if self._internal_weights:
             if weights is not None:
                 raise ValueError(
-                    "Weights must be None when internal_weights=True in Linear"
+                    'Weights must be None when internal_weights=True in Linear'
                 )
             return cuex.RepArray(
                 self.weight_irreps,
@@ -183,23 +183,23 @@ class Linear(nnx.Module):
         if self._shared_weights:
             if weights is None:
                 raise ValueError(
-                    "Weights must be provided when internal_weights=False and shared_weights=True in Linear"
+                    'Weights must be provided when internal_weights=False and shared_weights=True in Linear'
                 )
             array = jnp.asarray(weights, dtype=dtype)
             if array.ndim == 1:
                 if array.shape[0] != self.weight_numel:
                     raise ValueError(
-                        f"Expected weights last dimension {self.weight_numel}, got {array.shape[-1]}"
+                        f'Expected weights last dimension {self.weight_numel}, got {array.shape[-1]}'
                     )
                 array = array[jnp.newaxis, :]
             elif array.ndim == 2:
                 if array.shape[-1] != self.weight_numel:
                     raise ValueError(
-                        f"Expected weights last dimension {self.weight_numel}, got {array.shape[-1]}"
+                        f'Expected weights last dimension {self.weight_numel}, got {array.shape[-1]}'
                     )
             else:
                 raise ValueError(
-                    "Weights must have rank 1 or 2 when shared external weights are used"
+                    'Weights must have rank 1 or 2 when shared external weights are used'
                 )
             return cuex.RepArray(self.weight_irreps, array, self._weight_layout)
 
@@ -223,7 +223,7 @@ class Linear(nnx.Module):
             self.descriptor,
             [weight_rep, x_rep],
             math_dtype=dtype,
-            method="naive",
+            method='naive',
         )
         raw_output = output_rep.array
         irreps_out = Irreps(self.irreps_out_o3)
@@ -241,8 +241,8 @@ class Linear(nnx.Module):
             out_mul_ir = mul_ir_to_ir_mul(raw_output, irreps_out)
         else:
             raise ValueError(
-                "Linear does not support conversion from "
-                f"{self._descriptor_output_layout!r} to {self._api_layout!r}."
+                'Linear does not support conversion from '
+                f'{self._descriptor_output_layout!r} to {self._api_layout!r}.'
             )
 
         if had_irreps:
@@ -252,7 +252,7 @@ class Linear(nnx.Module):
 
 def _linear_import_from_torch_with_layout(cls, torch_module, variables):
     """Wrapper around the auto-generated import that enforces layout parity."""
-    expected_layout = variables.get("layout_config", None)
+    expected_layout = variables.get('layout_config', None)
 
     def _decode_layout(val):
         # Meta layout is stored as int code (0=mul_ir, 1=ir_mul) for JIT safety.
@@ -261,9 +261,9 @@ def _linear_import_from_torch_with_layout(cls, torch_module, variables):
                 val_int = int(val)
             except Exception:
                 return None
-            return "mul_ir" if val_int == 0 else "ir_mul"
+            return 'mul_ir' if val_int == 0 else 'ir_mul'
         if isinstance(val, (int, np.integer)):
-            return "mul_ir" if int(val) == 0 else "ir_mul"
+            return 'mul_ir' if int(val) == 0 else 'ir_mul'
         return val
 
     def _layout_str_from_obj(layout_obj) -> str | None:
@@ -271,17 +271,17 @@ def _linear_import_from_torch_with_layout(cls, torch_module, variables):
             return None
         if isinstance(layout_obj, str):
             return layout_obj
-        for attr in ("layout_str", "name", "__name__"):
+        for attr in ('layout_str', 'name', '__name__'):
             val = getattr(layout_obj, attr, None)
             if val is not None:
                 return str(val)
         return str(layout_obj)
 
     expected_layout = _decode_layout(expected_layout)
-    torch_layout_str = _layout_str_from_obj(getattr(torch_module, "layout", None))
+    torch_layout_str = _layout_str_from_obj(getattr(torch_module, 'layout', None))
     if torch_layout_str is None:
-        descriptor = getattr(torch_module, "descriptor", None) or getattr(
-            torch_module, "_descriptor", None
+        descriptor = getattr(torch_module, 'descriptor', None) or getattr(
+            torch_module, '_descriptor', None
         )
         if descriptor is not None:
             try:
@@ -289,11 +289,11 @@ def _linear_import_from_torch_with_layout(cls, torch_module, variables):
             except Exception:
                 torch_layout_str = None
     if torch_layout_str is None:
-        torch_layout_str = "mul_ir"
+        torch_layout_str = 'mul_ir'
 
     if expected_layout is not None and str(expected_layout) != str(torch_layout_str):
         logging.warning(
-            "JAX Linear layout %r differs from Torch layout %r; importing weights without conversion.",
+            'JAX Linear layout %r differs from Torch layout %r; importing weights without conversion.',
             expected_layout,
             torch_layout_str,
         )

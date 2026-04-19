@@ -24,7 +24,7 @@ from .utility import collapse_ir_mul_segments, ir_mul_to_mul_ir, mul_ir_to_ir_mu
 
 
 def _normalize_group(group: object) -> object:
-    if group in ("O3", "O3_e3nn", None):
+    if group in ('O3', 'O3_e3nn', None):
         return cue.O3
     return group
 
@@ -56,7 +56,7 @@ def _expected_channelwise_instructions(
                 if ir_out in target_irreps:
                     idx = len(collected)
                     collected.append((mul_in1, ir_out))
-                    instructions.append((i_in1, i_in2, idx, "uvu", True, 1.0))
+                    instructions.append((i_in1, i_in2, idx, 'uvu', True, 1.0))
 
     irreps_out = Irreps(collected)
     irreps_out_sorted, perm, _ = irreps_out.sort()
@@ -81,8 +81,8 @@ def _normalise_instruction(inst) -> tuple[int, int, int, str, bool, float]:
         i1, i2, i_out, mode, has_weight, path_weight = inst
     else:
         raise ValueError(
-            "TensorProduct instructions must have length 5 or 6, "
-            f"got length {len(inst)}"
+            'TensorProduct instructions must have length 5 or 6, '
+            f'got length {len(inst)}'
         )
     return (
         int(i1),
@@ -142,7 +142,7 @@ class TensorProduct(nnx.Module):
         # Initialise cue descriptors and validate the instruction template.
         if self.internal_weights and not self.shared_weights:
             raise ValueError(
-                "TensorProduct requires shared_weights=True when internal_weights=True"
+                'TensorProduct requires shared_weights=True when internal_weights=True'
             )
         self._shared_weights = self.shared_weights
         self._internal_weights = self.internal_weights
@@ -171,7 +171,7 @@ class TensorProduct(nnx.Module):
         self.descriptor_out_irreps_str = str(descriptor.outputs[0].irreps)
         self.output_segment_shapes = tuple(descriptor.polynomial.operands[-1].segments)
         self.descriptor_out_dim = Irreps(self.descriptor_out_irreps_str).dim
-        layout_code = 0 if self._layout_str == "mul_ir" else 1
+        layout_code = 0 if self._layout_str == 'mul_ir' else 1
         self.layout_config = ConfigVar(
             jnp.asarray(layout_code, dtype=jnp.int32),
             is_mutable=False,
@@ -182,7 +182,7 @@ class TensorProduct(nnx.Module):
         )
         if expected_irreps != self.irreps_out_o3:
             raise ValueError(
-                "TensorProduct irreps_out is incompatible with channel-wise descriptor"
+                'TensorProduct irreps_out is incompatible with channel-wise descriptor'
             )
 
         if self.instructions is not None:
@@ -190,12 +190,12 @@ class TensorProduct(nnx.Module):
             if normalised != expected_instructions:
                 raise ValueError(
                     'TensorProduct only supports channel-wise "uvu" instructions '
-                    "matching those returned by e3nn; received "
-                    f"{self.instructions!r}"
+                    'matching those returned by e3nn; received '
+                    f'{self.instructions!r}'
                 )
 
         self._conv_fusion = bool(self.conv_fusion)
-        self._conv_method = "naive"
+        self._conv_method = 'naive'
 
         conv_polynomial = None
         if self._conv_fusion:
@@ -215,7 +215,7 @@ class TensorProduct(nnx.Module):
         self._conv_polynomial = conv_polynomial
         if self._internal_weights:
             if rngs is None:
-                raise ValueError("rngs is required when internal_weights=True")
+                raise ValueError('rngs is required when internal_weights=True')
             self.weight = nnx.Param(
                 jax.random.normal(
                     rngs(),
@@ -229,7 +229,7 @@ class TensorProduct(nnx.Module):
     def _weight_param(self) -> jnp.ndarray:
         """Create the shared/internal weight parameter."""
         if self.weight is None:
-            raise ValueError("Internal weights are not initialized for TensorProduct.")
+            raise ValueError('Internal weights are not initialized for TensorProduct.')
         return self.weight
 
     def _as_rep(
@@ -245,25 +245,25 @@ class TensorProduct(nnx.Module):
             payload = array
         else:
             raise ValueError(
-                f"TensorProduct does not support layout {self._api_layout!r}."
+                f'TensorProduct does not support layout {self._api_layout!r}.'
             )
         return cuex.RepArray(irreps_cue, jnp.asarray(payload), cue.ir_mul)
 
     @staticmethod
     def _resolve_layout(layout_obj: object) -> tuple[cue.IrrepsLayout, str]:
         if isinstance(layout_obj, str):
-            if layout_obj not in {"mul_ir", "ir_mul"}:
+            if layout_obj not in {'mul_ir', 'ir_mul'}:
                 raise ValueError(
                     f"TensorProduct received unsupported layout string '{layout_obj}'."
                 )
             return getattr(cue, layout_obj), layout_obj
         if layout_obj == cue.mul_ir:
-            return layout_obj, "mul_ir"
+            return layout_obj, 'mul_ir'
         if layout_obj == cue.ir_mul:
-            return layout_obj, "ir_mul"
+            return layout_obj, 'ir_mul'
         raise ValueError(
-            "TensorProduct received an unknown layout object; expected cue.mul_ir "
-            "or cue.ir_mul."
+            'TensorProduct received an unknown layout object; expected cue.mul_ir '
+            'or cue.ir_mul.'
         )
 
     def _resolve_weight_tensor(
@@ -277,38 +277,38 @@ class TensorProduct(nnx.Module):
         if self._internal_weights:
             if weights is not None:
                 raise ValueError(
-                    "TensorProduct uses internal weights; weights argument must be None"
+                    'TensorProduct uses internal weights; weights argument must be None'
                 )
             tensor = self._weight_param().astype(dtype)
         else:
             if weights is None:
                 raise ValueError(
-                    "TensorProduct requires explicit weights when internal_weights=False"
+                    'TensorProduct requires explicit weights when internal_weights=False'
                 )
             tensor = jnp.asarray(weights, dtype=dtype)
 
         if tensor.ndim == 1:
             tensor = tensor[jnp.newaxis, :]
         elif tensor.ndim != 2:
-            raise ValueError(f"Weights must have rank 1 or 2, got rank {tensor.ndim}")
+            raise ValueError(f'Weights must have rank 1 or 2, got rank {tensor.ndim}')
 
         if tensor.shape[-1] != self.weight_numel:
             raise ValueError(
-                f"Expected weights last dimension {self.weight_numel}, got {tensor.shape[-1]}"
+                f'Expected weights last dimension {self.weight_numel}, got {tensor.shape[-1]}'
             )
 
         leading = tensor.shape[0]
         if self._shared_weights:
             if leading not in (1, batch_size):
                 raise ValueError(
-                    "Shared weights require leading dimension 1 or equal to the batch size"
+                    'Shared weights require leading dimension 1 or equal to the batch size'
                 )
             if leading == 1 and batch_size != 1:
                 tensor = jnp.broadcast_to(tensor, (batch_size, self.weight_numel))
         else:
             if leading != batch_size:
                 raise ValueError(
-                    "Unshared weights require leading dimension equal to the batch size"
+                    'Unshared weights require leading dimension equal to the batch size'
                 )
 
         return tensor
@@ -320,8 +320,8 @@ class TensorProduct(nnx.Module):
         expected = desc.num_segments * (int(_prod(seg_shape)) if seg_shape else 1)
         if weights.shape[-1] != expected:
             raise ValueError(
-                "TensorProduct ir_dict weights mismatch: "
-                f"expected {expected}, got {weights.shape[-1]}"
+                'TensorProduct ir_dict weights mismatch: '
+                f'expected {expected}, got {weights.shape[-1]}'
             )
         if not seg_shape:
             return weights.reshape(weights.shape[0], desc.num_segments)
@@ -354,7 +354,7 @@ class TensorProduct(nnx.Module):
         input_descs = list(self._ir_dict_poly.inputs)
         if len(input_descs) != 1 + len(x1_dict) + len(x2):
             raise ValueError(
-                "TensorProduct ir_dict input descriptors do not match expected inputs."
+                'TensorProduct ir_dict input descriptors do not match expected inputs.'
             )
         x1_descs = input_descs[1 : 1 + len(x1_dict)]
         x2_descs = input_descs[1 + len(x1_dict) :]
@@ -362,14 +362,14 @@ class TensorProduct(nnx.Module):
         x1_order = [ir for _, ir in self.irreps_in1_cue]
         x2_order = [ir for _, ir in self.irreps_in2_cue]
         if set(x1_dict.keys()) != set(x1_order):
-            raise ValueError("TensorProduct ir_dict inputs missing irreps for x1.")
+            raise ValueError('TensorProduct ir_dict inputs missing irreps for x1.')
         if set(x2.keys()) != set(x2_order):
-            raise ValueError("TensorProduct ir_dict inputs missing irreps for x2.")
+            raise ValueError('TensorProduct ir_dict inputs missing irreps for x2.')
 
         def _reshape_leaf(value: jnp.ndarray, desc) -> jnp.ndarray:
             if value.ndim < 2:
                 raise ValueError(
-                    "TensorProduct ir_dict inputs must be at least rank-2."
+                    'TensorProduct ir_dict inputs must be at least rank-2.'
                 )
             leading = value.shape[:-2]
             mul = int(value.shape[-2])
@@ -379,8 +379,8 @@ class TensorProduct(nnx.Module):
             expected = desc.num_segments * (int(_prod(seg_shape)) if seg_shape else 1)
             if expected != total:
                 raise ValueError(
-                    "TensorProduct ir_dict input size mismatch: "
-                    f"expected {expected}, got {total}."
+                    'TensorProduct ir_dict input size mismatch: '
+                    f'expected {expected}, got {total}.'
                 )
             ir_mul = jnp.swapaxes(value, -1, -2)
             flat = ir_mul.reshape(*leading, total)
@@ -406,15 +406,15 @@ class TensorProduct(nnx.Module):
 
         if len(outputs_list) != len(self._ir_dict_poly.outputs):
             raise ValueError(
-                "TensorProduct ir_dict outputs length mismatch: "
-                f"expected {len(self._ir_dict_poly.outputs)}, got {len(outputs_list)}."
+                'TensorProduct ir_dict outputs length mismatch: '
+                f'expected {len(self._ir_dict_poly.outputs)}, got {len(outputs_list)}.'
             )
 
         flats: list[jnp.ndarray] = []
         for out, desc in zip(outputs_list, self._ir_dict_poly.outputs):
             if out.ndim < 1 + desc.ndim:
                 raise ValueError(
-                    "TensorProduct ir_dict output has too few dimensions for descriptor."
+                    'TensorProduct ir_dict output has too few dimensions for descriptor.'
                 )
             leading = out.shape[: -(1 + desc.ndim)]
             flat = out.reshape(*leading, desc.size)
@@ -463,7 +463,7 @@ class TensorProduct(nnx.Module):
                 weights, dtype=dtype, batch_size=batch_size
             )
             if is_ir_dict(x1) and not is_ir_dict(x2):
-                raise ValueError("TensorProduct expects ir_dict x2 when x1 is ir_dict.")
+                raise ValueError('TensorProduct expects ir_dict x2 when x1 is ir_dict.')
             if is_ir_dict(x2):
                 out = self._channelwise_apply_ir_dict(
                     x1,
@@ -478,16 +478,16 @@ class TensorProduct(nnx.Module):
                     weight_tensor,
                     dtype=dtype,
                 )
-            object.__setattr__(self, "_conv_method", "naive")
+            object.__setattr__(self, '_conv_method', 'naive')
             return out
 
         if edge_index is None:
-            raise ValueError("TensorProduct conv_fusion requires edge_index")
+            raise ValueError('TensorProduct conv_fusion requires edge_index')
         edge_index = jnp.asarray(edge_index)
         if edge_index.ndim != 2 or edge_index.shape[0] != 2:
             raise ValueError(
-                "edge_index must have shape (2, num_edges); "
-                f"received {edge_index.shape}"
+                'edge_index must have shape (2, num_edges); '
+                f'received {edge_index.shape}'
             )
 
         sender = jnp.asarray(edge_index[0])
@@ -504,7 +504,7 @@ class TensorProduct(nnx.Module):
         )
 
         if is_ir_dict(x1) and not is_ir_dict(x2):
-            raise ValueError("TensorProduct expects ir_dict x2 when x1 is ir_dict.")
+            raise ValueError('TensorProduct expects ir_dict x2 when x1 is ir_dict.')
         if is_ir_dict(x2):
             fused_out = self._conv_fused_apply_ir_dict(
                 node_feats=x1,
@@ -515,7 +515,7 @@ class TensorProduct(nnx.Module):
                 num_nodes=num_nodes,
                 dtype=dtype,
             )
-            object.__setattr__(self, "_conv_method", "uniform_1d")
+            object.__setattr__(self, '_conv_method', 'uniform_1d')
             return fused_out
         fused_out: jnp.ndarray | None = None
         if self._conv_polynomial is not None:
@@ -532,7 +532,7 @@ class TensorProduct(nnx.Module):
             except (RuntimeError, ValueError, NotImplementedError):
                 fused_out = None
         if fused_out is not None:
-            object.__setattr__(self, "_conv_method", "uniform_1d")
+            object.__setattr__(self, '_conv_method', 'uniform_1d')
             return fused_out
 
         if is_ir_dict(x2):
@@ -545,7 +545,7 @@ class TensorProduct(nnx.Module):
         else:
             if edge_x1 is None:
                 raise ValueError(
-                    "TensorProduct array path requires array x1 when conv_fusion is disabled."
+                    'TensorProduct array path requires array x1 when conv_fusion is disabled.'
                 )
             per_edge = self._channelwise_apply(
                 edge_x1,
@@ -554,7 +554,7 @@ class TensorProduct(nnx.Module):
                 dtype=dtype,
             )
         aggregated = scatter_sum(per_edge, receiver, dim=0, dim_size=num_nodes)
-        object.__setattr__(self, "_conv_method", "naive")
+        object.__setattr__(self, '_conv_method', 'naive')
         return aggregated
 
     def _channelwise_apply(
@@ -575,7 +575,7 @@ class TensorProduct(nnx.Module):
             self.descriptor,
             [weight_rep, x1_rep, x2_rep],
             math_dtype=dtype,
-            method="naive",
+            method='naive',
         )
         out_ir_mul = collapse_ir_mul_segments(
             output_rep.array,
@@ -702,7 +702,7 @@ class TensorProduct(nnx.Module):
             [weights, node_ir_mul, edge_ir_mul],
             outputs_shape_dtype,
             indices=indices,
-            method="uniform_1d",
+            method='uniform_1d',
             math_dtype=math_dtype,
         )
         out_ir_mul = collapse_ir_mul_segments(
@@ -719,7 +719,7 @@ class TensorProduct(nnx.Module):
 def _tensor_product_import_from_torch(cls, torch_module, variables):
     """Copy Torch tensor product weights into the NNX parameter dict."""
     params = variables
-    expected_layout = params.get("layout_config", None)
+    expected_layout = params.get('layout_config', None)
 
     def _decode_layout(val):
         if isinstance(val, jnp.ndarray):
@@ -727,9 +727,9 @@ def _tensor_product_import_from_torch(cls, torch_module, variables):
                 val_int = int(val)
             except Exception:
                 return None
-            return "mul_ir" if val_int == 0 else "ir_mul"
+            return 'mul_ir' if val_int == 0 else 'ir_mul'
         if isinstance(val, (int, np.integer)):
-            return "mul_ir" if int(val) == 0 else "ir_mul"
+            return 'mul_ir' if int(val) == 0 else 'ir_mul'
         return val
 
     def _layout_str_from_obj(layout_obj) -> str | None:
@@ -737,17 +737,17 @@ def _tensor_product_import_from_torch(cls, torch_module, variables):
             return None
         if isinstance(layout_obj, str):
             return layout_obj
-        for attr in ("layout_str", "name", "__name__"):
+        for attr in ('layout_str', 'name', '__name__'):
             val = getattr(layout_obj, attr, None)
             if val is not None:
                 return str(val)
         return str(layout_obj)
 
     expected_layout = _decode_layout(expected_layout)
-    torch_layout_str = _layout_str_from_obj(getattr(torch_module, "layout", None))
+    torch_layout_str = _layout_str_from_obj(getattr(torch_module, 'layout', None))
     if torch_layout_str is None:
-        descriptor = getattr(torch_module, "descriptor", None) or getattr(
-            torch_module, "_descriptor", None
+        descriptor = getattr(torch_module, 'descriptor', None) or getattr(
+            torch_module, '_descriptor', None
         )
         if descriptor is not None:
             try:
@@ -755,25 +755,25 @@ def _tensor_product_import_from_torch(cls, torch_module, variables):
             except Exception:
                 torch_layout_str = None
     if torch_layout_str is None:
-        torch_layout_str = "mul_ir"
+        torch_layout_str = 'mul_ir'
 
     if expected_layout is not None and str(expected_layout) != str(torch_layout_str):
         logging.warning(
-            "JAX TensorProduct layout %r differs from Torch layout %r; importing weights without conversion.",
+            'JAX TensorProduct layout %r differs from Torch layout %r; importing weights without conversion.',
             expected_layout,
             torch_layout_str,
         )
 
     if (
-        getattr(torch_module, "internal_weights", False)
-        and getattr(torch_module, "weight_numel", 0) > 0
+        getattr(torch_module, 'internal_weights', False)
+        and getattr(torch_module, 'weight_numel', 0) > 0
     ):
         weight_np = torch_module.weight.detach().cpu().numpy()
         if weight_np.ndim == 1:
             weight_np = weight_np.reshape(1, -1)
-        existing = params.get("weight")
+        existing = params.get('weight')
         dtype = existing.dtype if existing is not None else weight_np.dtype
-        params["weight"] = jnp.asarray(weight_np, dtype=dtype)
+        params['weight'] = jnp.asarray(weight_np, dtype=dtype)
 
     return params
 

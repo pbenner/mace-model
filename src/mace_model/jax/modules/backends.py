@@ -74,13 +74,13 @@ class _NoOpTransposeIrrepsLayout:
 
         if self.source == self.target:
             transposed = array
-        elif self.source == "ir_mul" and self.target == "mul_ir":
+        elif self.source == 'ir_mul' and self.target == 'mul_ir':
             transposed = ir_mul_to_mul_ir(array, self.irreps)
-        elif self.source == "mul_ir" and self.target == "ir_mul":
+        elif self.source == 'mul_ir' and self.target == 'ir_mul':
             transposed = mul_ir_to_ir_mul(array, self.irreps)
         else:
             raise ValueError(
-                f"Unsupported irreps layout transpose {self.source!r} -> {self.target!r}."
+                f'Unsupported irreps layout transpose {self.source!r} -> {self.target!r}.'
             )
 
         if return_irreps:
@@ -115,7 +115,7 @@ class _ReshapeIrreps:
         self.cueq_config = self._reshaper.cueq_config
 
     def __call__(self, tensor: jnp.ndarray) -> jnp.ndarray:
-        array = getattr(tensor, "array", tensor)
+        array = getattr(tensor, 'array', tensor)
         return self._reshaper.reshape(
             array,
             concat_fields=lambda fields, axis: jnp.concatenate(fields, axis=axis),
@@ -138,7 +138,7 @@ def _mask_head(x: jnp.ndarray | IrrepsArray, head: int, num_heads: int):
     return masked
 
 
-@define_backend(name="jax")
+@define_backend(name='jax')
 class _JaxBackendSpec:
     @staticmethod
     def make_irreps(value):
@@ -167,7 +167,7 @@ class _JaxBackendSpec:
         return nn.Activation(
             irreps_in=hidden_irreps,
             acts=[gate],
-            layout_str=getattr(cueq_config, "layout_str", "mul_ir"),
+            layout_str=getattr(cueq_config, 'layout_str', 'mul_ir'),
         )
 
     @staticmethod
@@ -178,7 +178,7 @@ class _JaxBackendSpec:
             irreps_gates=irreps_gates,
             act_gates=[gate] * len(irreps_gates),
             irreps_gated=irreps_gated,
-            layout_str=getattr(cueq_config, "layout_str", "mul_ir"),
+            layout_str=getattr(cueq_config, 'layout_str', 'mul_ir'),
         )
 
     @staticmethod
@@ -280,7 +280,7 @@ class _JaxBackendSpec:
             irreps_gates=irreps_gates,
             act_gates=act_gates,
             irreps_gated=irreps_gated,
-            layout_str=getattr(cueq_config, "layout_str", "mul_ir"),
+            layout_str=getattr(cueq_config, 'layout_str', 'mul_ir'),
         )
 
     @staticmethod
@@ -296,23 +296,23 @@ class _JaxBackendSpec:
         embedders = nnx.Dict()
         for name in feature_names:
             spec = specs[name]
-            emb_dim = int(spec["emb_dim"])
+            emb_dim = int(spec['emb_dim'])
 
-            if spec["type"] == "categorical":
+            if spec['type'] == 'categorical':
                 embedders[name] = nnx.Embed(
-                    num_embeddings=int(spec["num_classes"]),
+                    num_embeddings=int(spec['num_classes']),
                     features=emb_dim,
                     rngs=rngs,
                 )
-            elif spec["type"] == "continuous":
+            elif spec['type'] == 'continuous':
                 embedders[name] = _ContinuousEmbed(
-                    in_dim=int(spec.get("in_dim", 1)),
+                    in_dim=int(spec.get('in_dim', 1)),
                     out_dim=emb_dim,
-                    use_bias=bool(spec.get("use_bias", True)),
+                    use_bias=bool(spec.get('use_bias', True)),
                     rngs=rngs,
                 )
             else:
-                raise ValueError(f"Unknown feature type {spec['type']!r}")
+                raise ValueError(f'Unknown feature type {spec["type"]!r}')
         return embedders
 
     @staticmethod
@@ -389,16 +389,14 @@ class _JaxBackendSpec:
     sum = staticmethod(lambda value, dim: jnp.sum(value, axis=dim))
     to_numpy = staticmethod(np.asarray)
     scatter_sum = staticmethod(
-        lambda src,
-        index,
-        dim=-1,
-        dim_size=None,
-        indices_are_sorted=False: jax_scatter_sum(
-            src=src,
-            index=index,
-            dim=dim,
-            dim_size=dim_size,
-            indices_are_sorted=indices_are_sorted,
+        lambda src, index, dim=-1, dim_size=None, indices_are_sorted=False: (
+            jax_scatter_sum(
+                src=src,
+                index=index,
+                dim=dim,
+                dim_size=dim_size,
+                indices_are_sorted=indices_are_sorted,
+            )
         )
     )
 

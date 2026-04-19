@@ -12,40 +12,40 @@ from .foundation import (
 
 def _make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="mace-model-foundation",
-        description="Download an upstream MACE foundation model and convert it to the local Torch or JAX backend.",
+        prog='mace-model-foundation',
+        description='Download an upstream MACE foundation model and convert it to the local Torch or JAX backend.',
     )
     parser.add_argument(
-        "--backend",
+        '--backend',
         required=True,
-        choices=("torch", "jax"),
-        help="Target backend for the exported local model.",
+        choices=('torch', 'jax'),
+        help='Target backend for the exported local model.',
     )
     parser.add_argument(
-        "--source",
+        '--source',
         required=True,
         choices=SUPPORTED_FOUNDATION_SOURCES,
-        help="Foundation source to download from.",
+        help='Foundation source to download from.',
     )
     parser.add_argument(
-        "--model",
-        help="Optional foundation variant or model path, depending on the source.",
+        '--model',
+        help='Optional foundation variant or model path, depending on the source.',
     )
     parser.add_argument(
-        "--head",
-        help="Optional head to select from a multi-head foundation model before conversion.",
+        '--head',
+        help='Optional head to select from a multi-head foundation model before conversion.',
     )
     parser.add_argument(
-        "--output",
+        '--output',
         help="Optional output path. Defaults to '<source>-<model>-<backend>'.",
     )
     parser.add_argument(
-        "--device",
-        default="cpu",
-        help="Device used for the upstream Torch model download/conversion.",
+        '--device',
+        default='cpu',
+        help='Device used for the upstream Torch model download/conversion.',
     )
     parser.add_argument(
-        "--dtype",
+        '--dtype',
         help="Optional upstream loader dtype override, for example 'float32' or 'float64'.",
     )
     return parser
@@ -70,18 +70,18 @@ def main(argv: list[str] | None = None) -> int:
         model=args.model,
     )
 
-    print(f"backend: {result.backend}")
-    print(f"foundation_source: {args.source}")
-    print(f"foundation_model: {args.model or 'default'}")
-    print(f"model_class: {result.model_class}")
-    print(f"atomic_numbers: {result.normalized_model_config.get('atomic_numbers', [])}")
-    print(f"num_interactions: {result.normalized_model_config.get('num_interactions')}")
-    print("written:")
+    print(f'backend: {result.backend}')
+    print(f'foundation_source: {args.source}')
+    print(f'foundation_model: {args.model or "default"}')
+    print(f'model_class: {result.model_class}')
+    print(f'atomic_numbers: {result.normalized_model_config.get("atomic_numbers", [])}')
+    print(f'num_interactions: {result.normalized_model_config.get("num_interactions")}')
+    print('written:')
     for path in written:
-        print(f"  {Path(path)}")
+        print(f'  {Path(path)}')
 
     return 0
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     raise SystemExit(main())

@@ -28,8 +28,8 @@ class MACEModelForward:
         dim_size: int,
         indices_are_sorted: bool = False,
     ) -> Any:
-        backend = _require_backend(self, "MACEModel")
-        scatter_sum = backend.require("scatter_sum")
+        backend = _require_backend(self, 'MACEModel')
+        scatter_sum = backend.require('scatter_sum')
         return scatter_sum(
             src=src,
             index=index,
@@ -39,18 +39,18 @@ class MACEModelForward:
         )
 
     def backend_stack(self, values: Sequence[Any], dim: int) -> Any:
-        backend = _require_backend(self, "MACEModel")
-        stack = backend.require("stack")
+        backend = _require_backend(self, 'MACEModel')
+        stack = backend.require('stack')
         return stack(values, dim=dim)
 
     def backend_sum(self, value: Any, dim: int) -> Any:
-        backend = _require_backend(self, "MACEModel")
-        reduce_sum = backend.require("sum")
+        backend = _require_backend(self, 'MACEModel')
+        reduce_sum = backend.require('sum')
         return reduce_sum(value, dim=dim)
 
     def backend_cat(self, values: Sequence[Any], dim: int) -> Any:
-        backend = _require_backend(self, "MACEModel")
-        cat = backend.require("cat")
+        backend = _require_backend(self, 'MACEModel')
+        cat = backend.require('cat')
         return cat(values, dim=dim)
 
     def scatter_to_graph(
@@ -83,13 +83,13 @@ class MACEModelForward:
         lammps_natoms: Any,
     ) -> dict[str, Any]:
         return {
-            "energy": total_energy,
-            "node_energy": node_energy,
-            "contributions": contributions,
-            "node_feats": node_feats,
-            "interaction_energy": interaction_energy,
-            "displacement": displacement,
-            "lammps_natoms": lammps_natoms,
+            'energy': total_energy,
+            'node_energy': node_energy,
+            'contributions': contributions,
+            'node_feats': node_feats,
+            'interaction_energy': interaction_energy,
+            'displacement': displacement,
+            'lammps_natoms': lammps_natoms,
         }
 
     def make_energy_output_from_core(
@@ -97,11 +97,11 @@ class MACEModelForward:
     ) -> dict[str, Any]:
         """Convert the shared forward-core state into the public output payload."""
         return self.make_energy_output(
-            total_energy=core["total_energy"],
-            node_energy=core["node_energy"],
-            contributions=core["contributions"],
-            node_feats=core["node_feats_out"],
-            interaction_energy=core["interaction_energy"],
+            total_energy=core['total_energy'],
+            node_energy=core['node_energy'],
+            contributions=core['contributions'],
+            node_feats=core['node_feats_out'],
+            interaction_energy=core['interaction_energy'],
             displacement=ctx.displacement,
             lammps_natoms=ctx.interaction_kwargs.lammps_natoms,
         )
@@ -156,17 +156,17 @@ class MACEModelForward:
         scatter_node_energy: Any,
     ) -> tuple[Any, Any]:
         """Add optional auxiliary feature embeddings to node features and energy."""
-        if not getattr(self, "_embedding_specs", None):
+        if not getattr(self, '_embedding_specs', None):
             return node_feats, e0
 
-        joint_embedding = getattr(self, "joint_embedding", None)
+        joint_embedding = getattr(self, 'joint_embedding', None)
         if joint_embedding is None:
             return node_feats, e0
 
         embedding_features = {name: data[name] for name in self._embedding_names}
-        node_feats = node_feats + joint_embedding(data["batch"], embedding_features)
+        node_feats = node_feats + joint_embedding(data['batch'], embedding_features)
         if self.use_embedding_readout:
-            embedding_readout = getattr(self, "embedding_readout", None)
+            embedding_readout = getattr(self, 'embedding_readout', None)
             if embedding_readout is not None:
                 embedding_node_energy = embedding_readout(
                     node_feats, node_heads
@@ -415,20 +415,20 @@ class MACEModelForward:
             inter_e = None
 
         return {
-            "node_e0": node_e0,
-            "e0": e0,
-            "node_feats": node_feats,
-            "node_feats_list": node_feats_list,
-            "node_feats_out": node_feats_out,
-            "pair_node_energy": pair_node_energy,
-            "pair_energy": pair_energy,
-            "contributions": contributions,
-            "total_energy": total_energy,
-            "node_energy": node_energy,
-            "interaction_energy": interaction_energy,
-            "node_inter_es": node_inter_es,
-            "inter_e": inter_e,
-            "energies": energies,
+            'node_e0': node_e0,
+            'e0': e0,
+            'node_feats': node_feats,
+            'node_feats_list': node_feats_list,
+            'node_feats_out': node_feats_out,
+            'pair_node_energy': pair_node_energy,
+            'pair_energy': pair_energy,
+            'contributions': contributions,
+            'total_energy': total_energy,
+            'node_energy': node_energy,
+            'interaction_energy': interaction_energy,
+            'node_inter_es': node_inter_es,
+            'inter_e': inter_e,
+            'energies': energies,
         }
 
     def forward_energy_core_from_context(
@@ -481,4 +481,4 @@ class MACEModelForward:
         )
 
 
-__all__ = ["MACEModelForward"]
+__all__ = ['MACEModelForward']

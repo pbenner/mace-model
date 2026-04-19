@@ -24,8 +24,8 @@ def _validate_edge_aligned_inputs(
     num_distances = int(x.shape[0])
     if num_distances != num_edges:
         raise ValueError(
-            f"{module_name} expects one distance per edge; received "
-            f"{num_distances} distances for {num_edges} edges."
+            f'{module_name} expects one distance per edge; received '
+            f'{num_distances} distances for {num_edges} edges.'
         )
 
 
@@ -82,7 +82,7 @@ class BesselBasis(nnx.Module):
         self._bessel_weights = init_bessel
         if self.trainable:
             if rngs is None:
-                raise ValueError("rngs is required for trainable BesselBasis")
+                raise ValueError('rngs is required for trainable BesselBasis')
             self.bessel_weights = nnx.Param(init_bessel)
         else:
             self.bessel_weights = None
@@ -111,8 +111,8 @@ class BesselBasis(nnx.Module):
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}(r_max={self.r_max}, "
-            f"num_basis={self.num_basis}, trainable={self.trainable})"
+            f'{self.__class__.__name__}(r_max={self.r_max}, '
+            f'num_basis={self.num_basis}, trainable={self.trainable})'
         )
 
 
@@ -135,7 +135,7 @@ class ChebychevBasis(nnx.Module):
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}(r_max={self.r_max}, num_basis={self.num_basis})"
+            f'{self.__class__.__name__}(r_max={self.r_max}, num_basis={self.num_basis})'
         )
 
 
@@ -164,7 +164,7 @@ class GaussianBasis(nnx.Module):
         self._gaussian_weights = init_gaussians
         if self.trainable:
             if rngs is None:
-                raise ValueError("rngs is required for trainable GaussianBasis")
+                raise ValueError('rngs is required for trainable GaussianBasis')
             self.gaussian_weights = nnx.Param(init_gaussians)
         else:
             self.gaussian_weights = None
@@ -213,7 +213,7 @@ class PolynomialCutoff(nnx.Module):
         return envelope * (x < r_max)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(p={self.p}, r_max={self.r_max})"
+        return f'{self.__class__.__name__}(p={self.p}, r_max={self.r_max})'
 
 
 @nxx_auto_import_from_torch(allow_missing_mapper=True)
@@ -237,7 +237,7 @@ class ZBLBasis(nnx.Module):
         self.r_max = r_max
         if self.r_max is not None:
             logging.warning(
-                "r_max is deprecated. r_max is determined from the covalent radii."
+                'r_max is deprecated. r_max is determined from the covalent radii.'
             )
 
         self._c = jnp.array(
@@ -250,7 +250,7 @@ class ZBLBasis(nnx.Module):
         )
         if self.trainable:
             if rngs is None:
-                raise ValueError("rngs is required for trainable ZBLBasis")
+                raise ValueError('rngs is required for trainable ZBLBasis')
             self.a_exp = nnx.Param(jnp.array(0.300, dtype=default_dtype()))
             self.a_prefactor = nnx.Param(jnp.array(0.4543, dtype=default_dtype()))
         else:
@@ -265,7 +265,7 @@ class ZBLBasis(nnx.Module):
         atomic_numbers: jnp.ndarray,
         node_attrs_index: jnp.ndarray | None = None,
     ) -> jnp.ndarray:
-        _validate_edge_aligned_inputs(x, edge_index, module_name="ZBLBasis")
+        _validate_edge_aligned_inputs(x, edge_index, module_name='ZBLBasis')
         sender, receiver = edge_index
 
         if node_attrs_index is None:
@@ -312,7 +312,7 @@ class ZBLBasis(nnx.Module):
         return jnp.squeeze(v_zbl, axis=-1)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(c={self._c})"
+        return f'{self.__class__.__name__}(c={self._c})'
 
 
 @nxx_auto_import_from_torch(allow_missing_mapper=True)
@@ -343,7 +343,7 @@ class AgnesiTransform(nnx.Module):
         )
         if self.trainable:
             if rngs is None:
-                raise ValueError("rngs is required for trainable AgnesiTransform")
+                raise ValueError('rngs is required for trainable AgnesiTransform')
             self.a_param = nnx.Param(jnp.array(self.a, dtype=default_dtype()))
             self.q_param = nnx.Param(jnp.array(self.q, dtype=default_dtype()))
             self.p_param = nnx.Param(jnp.array(self.p, dtype=default_dtype()))
@@ -360,7 +360,7 @@ class AgnesiTransform(nnx.Module):
         atomic_numbers: jnp.ndarray,
         node_attrs_index: jnp.ndarray | None = None,
     ) -> jnp.ndarray:
-        _validate_edge_aligned_inputs(x, edge_index, module_name="AgnesiTransform")
+        _validate_edge_aligned_inputs(x, edge_index, module_name='AgnesiTransform')
         sender, receiver = edge_index
 
         if node_attrs_index is None:
@@ -394,8 +394,8 @@ class AgnesiTransform(nnx.Module):
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}(a={float(self.a):.4f}, "
-            f"q={float(self.q):.4f}, p={float(self.p):.4f})"
+            f'{self.__class__.__name__}(a={float(self.a):.4f}, '
+            f'q={float(self.q):.4f}, p={float(self.p):.4f})'
         )
 
 
@@ -418,7 +418,7 @@ class SoftTransform(nnx.Module):
         self._covalent_radii = jnp.array(ase.data.covalent_radii, dtype=default_dtype())
         if self.trainable:
             if rngs is None:
-                raise ValueError("rngs is required for trainable SoftTransform")
+                raise ValueError('rngs is required for trainable SoftTransform')
             self.alpha_param = nnx.Param(jnp.array(self.alpha, dtype=default_dtype()))
         else:
             self.alpha_param = None
@@ -448,7 +448,7 @@ class SoftTransform(nnx.Module):
         atomic_numbers: jnp.ndarray,
         node_attrs_index: jnp.ndarray | None = None,
     ) -> jnp.ndarray:
-        _validate_edge_aligned_inputs(x, edge_index, module_name="SoftTransform")
+        _validate_edge_aligned_inputs(x, edge_index, module_name='SoftTransform')
         dtype = x.dtype
         r_0 = self.compute_r_0(
             node_attrs, edge_index, atomic_numbers, node_attrs_index=node_attrs_index
@@ -466,8 +466,8 @@ class SoftTransform(nnx.Module):
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}(alpha={self.alpha:.4f}, "
-            f"trainable={self.trainable})"
+            f'{self.__class__.__name__}(alpha={self.alpha:.4f}, '
+            f'trainable={self.trainable})'
         )
 
 
@@ -478,7 +478,7 @@ class _RadialSequential(nnx.Module):
     def __init__(self, channels: Sequence[int], *, rngs: nnx.Rngs) -> None:
         self.channels = tuple(channels)
         if len(self.channels) < 2:
-            raise ValueError("channels must have length >= 2 for RadialMLP")
+            raise ValueError('channels must have length >= 2 for RadialMLP')
 
         self.layers = nnx.Dict()
         self._layer_order: list[tuple[str, str | None]] = []
@@ -492,7 +492,7 @@ class _RadialSequential(nnx.Module):
                 use_bias=True,
                 rngs=rngs,
             )
-            self._layer_order.append(("linear", key))
+            self._layer_order.append(('linear', key))
             layer_idx += 1
             if idx != last_idx:
                 key = str(layer_idx)
@@ -505,19 +505,19 @@ class _RadialSequential(nnx.Module):
                     epsilon=1e-5,
                     rngs=rngs,
                 )
-                self._layer_order.append(("norm", key))
+                self._layer_order.append(('norm', key))
                 layer_idx += 1
-                self._layer_order.append(("act", None))
+                self._layer_order.append(('act', None))
                 layer_idx += 1
 
     def __call__(self, inputs: jnp.ndarray) -> jnp.ndarray:
         x = inputs
         for kind, key in self._layer_order:
-            if kind == "act":
+            if kind == 'act':
                 x = jax.nn.silu(x)
                 continue
             if key is None:
-                raise ValueError("Missing layer key for radial sequential block")
+                raise ValueError('Missing layer key for radial sequential block')
             x = self.layers[key](x)
         return x
 
@@ -537,12 +537,12 @@ class RadialMLP(nnx.Module):
 
 
 __all__ = [
-    "AgnesiTransform",
-    "BesselBasis",
-    "ChebychevBasis",
-    "GaussianBasis",
-    "PolynomialCutoff",
-    "RadialMLP",
-    "SoftTransform",
-    "ZBLBasis",
+    'AgnesiTransform',
+    'BesselBasis',
+    'ChebychevBasis',
+    'GaussianBasis',
+    'PolynomialCutoff',
+    'RadialMLP',
+    'SoftTransform',
+    'ZBLBasis',
 ]

@@ -16,11 +16,12 @@ try:
     import cuequivariance_jax  # noqa: F401
 except Exception as exc:  # pragma: no cover - environment dependent
     pytest.skip(
-        f"cuequivariance_jax is unavailable in this environment: {exc}",
+        f'cuequivariance_jax is unavailable in this environment: {exc}',
         allow_module_level=True,
     )
 
 from flax import nnx
+
 from mace_model.jax.adapters.e3nn import Irreps
 from mace_model.jax.modules.blocks import NonLinearReadoutBlock as JaxReferenceReadout
 from mace_model.torch.adapters.e3nn import o3
@@ -28,32 +29,32 @@ from mace_model.torch.modules.blocks import NonLinearReadoutBlock as TorchLocalR
 
 _LOCAL_JAX_BLOCKS = (
     Path(__file__).resolve().parents[1]
-    / "src"
-    / "mace_model"
-    / "jax"
-    / "modules"
-    / "blocks.py"
+    / 'src'
+    / 'mace_model'
+    / 'jax'
+    / 'modules'
+    / 'blocks.py'
 )
 _LOCAL_JAX_ADAPTER = (
     Path(__file__).resolve().parents[1]
-    / "src"
-    / "mace_model"
-    / "jax"
-    / "adapters"
-    / "nnx"
-    / "torch.py"
+    / 'src'
+    / 'mace_model'
+    / 'jax'
+    / 'adapters'
+    / 'nnx'
+    / 'torch.py'
 )
-_LOCAL_JAX_BACKENDS = _LOCAL_JAX_BLOCKS.with_name("backends.py")
+_LOCAL_JAX_BACKENDS = _LOCAL_JAX_BLOCKS.with_name('backends.py')
 _LOCAL_JAX_ROOT = _LOCAL_JAX_BLOCKS.parent.parent
 _LOCAL_JAX_MODULES = _LOCAL_JAX_BLOCKS.parent
-_ALIAS_ROOT = "mace_local_jax"
-_ALIAS_MODULES = f"{_ALIAS_ROOT}.modules"
+_ALIAS_ROOT = 'mace_local_jax'
+_ALIAS_MODULES = f'{_ALIAS_ROOT}.modules'
 
 
 def _load_local_module(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
-        raise RuntimeError(f"Failed to load local module {name} from {path}")
+        raise RuntimeError(f'Failed to load local module {name} from {path}')
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
     spec.loader.exec_module(module)
@@ -71,15 +72,15 @@ if _ALIAS_MODULES not in sys.modules:
     sys.modules[_ALIAS_MODULES] = modules_pkg
 
 _load_local_module(
-    f"{_ALIAS_MODULES}.backends",
+    f'{_ALIAS_MODULES}.backends',
     _LOCAL_JAX_BACKENDS,
 )
 _LOCAL_JAX_MODULE = _load_local_module(
-    f"{_ALIAS_MODULES}.blocks",
+    f'{_ALIAS_MODULES}.blocks',
     _LOCAL_JAX_BLOCKS,
 )
 _LOCAL_ADAPTER_MODULE = _load_local_module(
-    f"{_ALIAS_ROOT}.nnx_torch_adapter",
+    f'{_ALIAS_ROOT}.nnx_torch_adapter',
     _LOCAL_JAX_ADAPTER,
 )
 init_from_torch = _LOCAL_ADAPTER_MODULE.init_from_torch
@@ -88,7 +89,7 @@ JaxLocalReadout = _LOCAL_JAX_MODULE.NonLinearReadoutBlock
 
 
 def _to_numpy(x):
-    return np.asarray(x.array if hasattr(x, "array") else x)
+    return np.asarray(x.array if hasattr(x, 'array') else x)
 
 
 def _make_jax_input(array: np.ndarray) -> jnp.ndarray:
@@ -100,13 +101,13 @@ def _apply_with_layout(graphdef, state, x_ir, *, heads=None):
         return graphdef.apply(state)(x_ir, heads=heads)
 
 
-@pytest.mark.parametrize("num_heads", [1, 2])
+@pytest.mark.parametrize('num_heads', [1, 2])
 def test_jax_matches_local_jax_reference(num_heads: int):
     rng = np.random.default_rng(1)
 
-    irreps_in = Irreps("8x0e")
-    mlp_irreps = Irreps("6x0e")
-    irrep_out = Irreps("2x0e")
+    irreps_in = Irreps('8x0e')
+    mlp_irreps = Irreps('6x0e')
+    irrep_out = Irreps('2x0e')
 
     donor_torch = TorchLocalReadout(
         irreps_in=o3.Irreps(str(irreps_in)),
@@ -162,9 +163,9 @@ def test_jax_matches_local_jax_reference(num_heads: int):
 def test_torch_and_jax_match_after_weight_transfer():
     rng = np.random.default_rng(2)
 
-    irreps_in_torch = o3.Irreps("8x0e")
-    mlp_irreps_torch = o3.Irreps("6x0e")
-    irrep_out_torch = o3.Irreps("2x0e")
+    irreps_in_torch = o3.Irreps('8x0e')
+    mlp_irreps_torch = o3.Irreps('6x0e')
+    irrep_out_torch = o3.Irreps('2x0e')
 
     irreps_in_jax = Irreps(str(irreps_in_torch))
     mlp_irreps_jax = Irreps(str(mlp_irreps_torch))

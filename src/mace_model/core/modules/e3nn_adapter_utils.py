@@ -33,13 +33,13 @@ def make_irrep(l: Any, p: int | None = None):
     if p is None:
         if isinstance(l, cue.Irrep):
             return l
-        if hasattr(l, "l") and hasattr(l, "p"):
+        if hasattr(l, 'l') and hasattr(l, 'p'):
             return cue.O3(int(l.l), int(l.p))
         if isinstance(l, (tuple, list)) and len(l) == 2:
             return cue.O3(int(l[0]), int(l[1]))
         parsed = make_irreps(l)
         if len(parsed) != 1 or parsed[0].mul != 1:
-            raise ValueError(f"Cannot coerce {l!r} to a single irrep.")
+            raise ValueError(f'Cannot coerce {l!r} to a single irrep.')
         return parsed[0].ir
     return cue.O3(int(l), int(p))
 
@@ -59,7 +59,7 @@ def compile_mode(mode: str):
     """Attach the e3nn compile-mode marker used by the local shims."""
 
     def decorator(obj):
-        setattr(obj, "_e3nn_compile_mode", mode)
+        setattr(obj, '_e3nn_compile_mode', mode)
         return obj
 
     return decorator
@@ -69,17 +69,17 @@ def activation_key(f: Callable | None) -> str | None:
     """Return a stable backend-agnostic identifier for an activation callable."""
     if f is None:
         return None
-    key = getattr(f, "_normalize2mom_key", None)
+    key = getattr(f, '_normalize2mom_key', None)
     if isinstance(key, str):
         return key
     if isinstance(f, partial):
         return activation_key(f.func)
-    name = getattr(f, "__name__", None)
+    name = getattr(f, '__name__', None)
     if name is None:
-        name = getattr(getattr(f, "__class__", None), "__name__", None)
+        name = getattr(getattr(f, '__class__', None), '__name__', None)
     if not name:
         return None
-    return str(name).replace("<lambda>", "lambda").lower()
+    return str(name).replace('<lambda>', 'lambda').lower()
 
 
 def normalize2mom_identifier(identifier: str | Callable | None) -> str | None:
@@ -100,8 +100,8 @@ def estimate_silu_normalize2mom_const(
 ) -> float:
     """Estimate the normalize2mom constant for supported scalar activations."""
     key = normalize2mom_identifier(identifier)
-    if key not in {"silu", "swish"}:
-        raise ValueError(f"Unsupported normalize2mom identifier: {key}")
+    if key not in {'silu', 'swish'}:
+        raise ValueError(f'Unsupported normalize2mom identifier: {key}')
     rng = np.random.default_rng(seed)
     values = rng.normal(size=samples).astype(dtype)
     silu = values / (1.0 + np.exp(-values))
@@ -115,11 +115,11 @@ def validate_extract_instructions(
     """Validate that each instruction tuple matches its target irreps length."""
     if len(irreps_outs) != len(instructions):
         raise ValueError(
-            "Number of output irreps must match number of instruction sets."
+            'Number of output irreps must match number of instruction sets.'
         )
     for ir_out, ins in zip(irreps_outs, instructions):
         if len(ir_out) != len(ins):
-            raise ValueError("Instruction length must match irreps length.")
+            raise ValueError('Instruction length must match irreps length.')
 
 
 def build_extract_slices(
@@ -140,7 +140,7 @@ def build_extract_slices(
 
 def validate_layout_str(layout_str: str) -> str:
     """Validate the local layout marker used by the adapter shims."""
-    if layout_str not in {"mul_ir", "ir_mul"}:
+    if layout_str not in {'mul_ir', 'ir_mul'}:
         raise ValueError(
             f"layout_str must be either 'mul_ir' or 'ir_mul'; got {layout_str!r}."
         )
@@ -166,8 +166,8 @@ def infer_activation_irreps_out(
     """Infer the output irreps after scalar activations are applied."""
     if len(irreps_in) != len(acts):
         raise ValueError(
-            "Irreps in and number of activation functions does not match: "
-            f"{len(acts)}, ({irreps_in}, {acts})"
+            'Irreps in and number of activation functions does not match: '
+            f'{len(acts)}, ({irreps_in}, {acts})'
         )
 
     irreps_out = []
@@ -177,8 +177,8 @@ def infer_activation_irreps_out(
             continue
         if ir.l != 0:
             raise ValueError(
-                "Activation: cannot apply an activation function to a non-scalar input. "
-                f"{irreps_in} {acts}"
+                'Activation: cannot apply an activation function to a non-scalar input. '
+                f'{irreps_in} {acts}'
             )
         irreps_out.append((mul, (0, parity_fn(ir, act))))
     return make_irreps(irreps_out)
@@ -217,13 +217,13 @@ def build_gate_plan(
     irreps_gated = irreps_gated.simplify()
 
     if any(ir.l > 0 for _, ir in irreps_scalars):
-        raise ValueError(f"Scalars must be l=0 irreps, got {irreps_scalars}")
+        raise ValueError(f'Scalars must be l=0 irreps, got {irreps_scalars}')
     if any(ir.l > 0 for _, ir in irreps_gates):
-        raise ValueError(f"Gate irreps must be l=0 irreps, got {irreps_gates}")
+        raise ValueError(f'Gate irreps must be l=0 irreps, got {irreps_gates}')
     if len(irreps_gates) != len(irreps_gated):
         raise ValueError(
-            f"Mismatch: {len(irreps_gated)} irreps in gated, "
-            f"{len(irreps_gates)} in gates"
+            f'Mismatch: {len(irreps_gated)} irreps in gated, '
+            f'{len(irreps_gates)} in gates'
         )
 
     gate_blocks = []
@@ -232,7 +232,7 @@ def build_gate_plan(
         gate_mul, gate_ir = gate_irrep
         if gate_mul != gated_mul or gate_ir.dim != 1:
             raise ValueError(
-                "Gate multiplicities must match gated multiplicities and stay scalar."
+                'Gate multiplicities must match gated multiplicities and stay scalar.'
             )
         gate_blocks.append(
             GateBlockSpec(
@@ -284,7 +284,7 @@ def apply_gate_blocks(
         gated_offset += spec.gated_size
         gate_offset += spec.gate_size
 
-        if layout_str == "ir_mul":
+        if layout_str == 'ir_mul':
             gated_block = gated_block.reshape(
                 *leading_shape, spec.gated_ir_dim, spec.gated_mul
             )
@@ -322,14 +322,14 @@ def build_spherical_harmonics_plan(
     require_unique_sorted: bool = False,
 ) -> SphericalHarmonicsPlan:
     """Validate spherical-harmonics metadata shared by both backends."""
-    if irreps_in not in (make_irreps("1x1o"), make_irreps("1x1e")):
+    if irreps_in not in (make_irreps('1x1o'), make_irreps('1x1e')):
         raise ValueError(
-            f"irreps_in must be either 1x1o or 1x1e; received {irreps_in!s}"
+            f'irreps_in must be either 1x1o or 1x1e; received {irreps_in!s}'
         )
-    if normalization not in {"integral", "component", "norm"}:
+    if normalization not in {'integral', 'component', 'norm'}:
         raise ValueError(
             "normalization must be 'integral', 'component', or 'norm'; "
-            f"got {normalization!r}"
+            f'got {normalization!r}'
         )
 
     input_parity = irreps_in[0].ir.p
@@ -337,18 +337,18 @@ def build_spherical_harmonics_plan(
     for mul, ir in irreps_out:
         if ir.p != input_parity**ir.l:
             raise ValueError(
-                "Output parity mismatch in SphericalHarmonics: "
-                f"l={ir.l}, p={ir.p}, expected {input_parity**ir.l}"
+                'Output parity mismatch in SphericalHarmonics: '
+                f'l={ir.l}, p={ir.p}, expected {input_parity**ir.l}'
             )
         degrees.extend([ir.l] * mul)
 
     if require_unique_sorted and degrees != sorted(set(degrees)):
         raise ValueError(
-            "Cue spherical harmonics only supports unique, sorted degrees."
+            'Cue spherical harmonics only supports unique, sorted degrees.'
         )
 
     norm_factors = ()
-    if normalization == "norm":
+    if normalization == 'norm':
         factors = []
         for l_value in degrees:
             factors.extend([float(np.sqrt(2 * l_value + 1))] * (2 * l_value + 1))
@@ -374,8 +374,8 @@ def apply_spherical_harmonics_normalization(
     asarray: Callable[..., Any],
 ) -> Any:
     """Apply the shared e3nn spherical-harmonics output normalization."""
-    if plan.normalization == "integral":
+    if plan.normalization == 'integral':
         return array / np.sqrt(4.0 * np.pi)
-    if plan.normalization == "norm":
+    if plan.normalization == 'norm':
         return array / asarray(plan.norm_factors, dtype=array.dtype)
     return array

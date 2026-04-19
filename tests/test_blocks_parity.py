@@ -18,11 +18,12 @@ try:
     import cuequivariance_jax  # noqa: F401
 except Exception as exc:  # pragma: no cover - environment dependent
     pytest.skip(
-        f"cuequivariance_jax is unavailable in this environment: {exc}",
+        f'cuequivariance_jax is unavailable in this environment: {exc}',
         allow_module_level=True,
     )
 
 from flax import nnx
+
 from mace_model.jax.adapters.e3nn import Irreps, IrrepsArray
 from mace_model.jax.modules.backends import _ReshapeIrreps as jax_reshape_irreps
 from mace_model.jax.modules.blocks import (
@@ -131,32 +132,32 @@ TorchReferenceScaleShift = TorchLocalScaleShift
 
 _LOCAL_JAX_BLOCKS = (
     Path(__file__).resolve().parents[1]
-    / "src"
-    / "mace_model"
-    / "jax"
-    / "modules"
-    / "blocks.py"
+    / 'src'
+    / 'mace_model'
+    / 'jax'
+    / 'modules'
+    / 'blocks.py'
 )
 _LOCAL_JAX_ADAPTER = (
     Path(__file__).resolve().parents[1]
-    / "src"
-    / "mace_model"
-    / "jax"
-    / "adapters"
-    / "nnx"
-    / "torch.py"
+    / 'src'
+    / 'mace_model'
+    / 'jax'
+    / 'adapters'
+    / 'nnx'
+    / 'torch.py'
 )
-_LOCAL_JAX_BACKENDS = _LOCAL_JAX_BLOCKS.with_name("backends.py")
+_LOCAL_JAX_BACKENDS = _LOCAL_JAX_BLOCKS.with_name('backends.py')
 _LOCAL_JAX_ROOT = _LOCAL_JAX_BLOCKS.parent.parent
 _LOCAL_JAX_MODULES = _LOCAL_JAX_BLOCKS.parent
-_ALIAS_ROOT = "mace_local_jax_blocks_parity"
-_ALIAS_MODULES = f"{_ALIAS_ROOT}.modules"
+_ALIAS_ROOT = 'mace_local_jax_blocks_parity'
+_ALIAS_MODULES = f'{_ALIAS_ROOT}.modules'
 
 
 def _load_local_module(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
-        raise RuntimeError(f"Failed to load local module {name} from {path}")
+        raise RuntimeError(f'Failed to load local module {name} from {path}')
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
     spec.loader.exec_module(module)
@@ -174,15 +175,15 @@ if _ALIAS_MODULES not in sys.modules:
     sys.modules[_ALIAS_MODULES] = modules_pkg
 
 _load_local_module(
-    f"{_ALIAS_MODULES}.backends",
+    f'{_ALIAS_MODULES}.backends',
     _LOCAL_JAX_BACKENDS,
 )
 _LOCAL_JAX_MODULE = _load_local_module(
-    f"{_ALIAS_MODULES}.blocks",
+    f'{_ALIAS_MODULES}.blocks',
     _LOCAL_JAX_BLOCKS,
 )
 _LOCAL_ADAPTER_MODULE = _load_local_module(
-    f"{_ALIAS_ROOT}.nnx_torch_adapter",
+    f'{_ALIAS_ROOT}.nnx_torch_adapter',
     _LOCAL_JAX_ADAPTER,
 )
 init_from_torch = _LOCAL_ADAPTER_MODULE.init_from_torch
@@ -219,7 +220,7 @@ JaxLocalRealAgnosticResidualNonLinearInteraction = (
 def _to_numpy(x):
     if isinstance(x, torch.Tensor):
         return x.detach().cpu().numpy()
-    return np.asarray(x.array if hasattr(x, "array") else x)
+    return np.asarray(x.array if hasattr(x, 'array') else x)
 
 
 def _to_reference_irreps(irreps):
@@ -227,7 +228,7 @@ def _to_reference_irreps(irreps):
 
 
 def _as_irreps_array(irreps: Irreps, array: jnp.ndarray) -> IrrepsArray:
-    if hasattr(IrrepsArray, "from_array"):
+    if hasattr(IrrepsArray, 'from_array'):
         return IrrepsArray.from_array(irreps, array)
     return IrrepsArray(irreps, array)
 
@@ -303,10 +304,10 @@ def _make_interaction_inputs(
 
 
 RADIAL_CASES = [
-    ("bessel", "None", True),
-    ("bessel", "None", False),
-    ("gaussian", "Agnesi", True),
-    ("chebyshev", "Soft", True),
+    ('bessel', 'None', True),
+    ('bessel', 'None', False),
+    ('gaussian', 'Agnesi', True),
+    ('chebyshev', 'Soft', True),
 ]
 
 TORCH_INTERACTION_CASES = [
@@ -364,7 +365,7 @@ CROSS_BACKEND_JAX_INTERACTION_CASES = [
 ]
 
 
-@pytest.mark.parametrize("radial_type,distance_transform,apply_cutoff", RADIAL_CASES)
+@pytest.mark.parametrize('radial_type,distance_transform,apply_cutoff', RADIAL_CASES)
 def test_torch_radial_embedding_matches_reference(
     radial_type: str, distance_transform: str, apply_cutoff: bool
 ):
@@ -410,7 +411,7 @@ def test_torch_radial_embedding_matches_reference(
     _assert_optional_allclose(out_uni[1], out_ref[1], rtol=1e-6, atol=1e-6)
 
 
-@pytest.mark.parametrize("radial_type,distance_transform,apply_cutoff", RADIAL_CASES)
+@pytest.mark.parametrize('radial_type,distance_transform,apply_cutoff', RADIAL_CASES)
 def test_jax_radial_embedding_matches_reference(
     radial_type: str, distance_transform: str, apply_cutoff: bool
 ):
@@ -474,16 +475,16 @@ def test_torch_and_jax_radial_embedding_match():
         r_max=3.0,
         num_bessel=6,
         num_polynomial_cutoff=5,
-        radial_type="bessel",
-        distance_transform="None",
+        radial_type='bessel',
+        distance_transform='None',
         apply_cutoff=False,
     ).float()
     jax_model = JaxLocalRadialEmbedding(
         r_max=3.0,
         num_bessel=6,
         num_polynomial_cutoff=5,
-        radial_type="bessel",
-        distance_transform="None",
+        radial_type='bessel',
+        distance_transform='None',
         apply_cutoff=False,
         rngs=nnx.Rngs(0),
     )
@@ -512,7 +513,7 @@ def test_torch_and_jax_radial_embedding_match():
     _assert_optional_allclose(out_jax[1], out_torch[1], rtol=1e-5, atol=1e-5)
 
 
-@pytest.mark.parametrize("multi_head", [False, True])
+@pytest.mark.parametrize('multi_head', [False, True])
 def test_torch_scale_shift_matches_reference(multi_head: bool):
     rng = np.random.default_rng(83)
     x = torch.tensor(rng.normal(size=(9,)).astype(np.float32))
@@ -539,7 +540,7 @@ def test_torch_scale_shift_matches_reference(multi_head: bool):
     )
 
 
-@pytest.mark.parametrize("multi_head", [False, True])
+@pytest.mark.parametrize('multi_head', [False, True])
 def test_jax_scale_shift_matches_reference(multi_head: bool):
     rng = np.random.default_rng(84)
     x_np = rng.normal(size=(9,)).astype(np.float32)
@@ -596,8 +597,8 @@ def test_torch_and_jax_scale_shift_match():
 
 def test_torch_and_jax_equivariant_product_basis_match_after_weight_transfer():
     rng = np.random.default_rng(88)
-    node_irreps_torch = o3.Irreps("4x0e + 4x1o")
-    target_irreps_torch = o3.Irreps("4x0e + 4x1o")
+    node_irreps_torch = o3.Irreps('4x0e + 4x1o')
+    target_irreps_torch = o3.Irreps('4x0e + 4x1o')
     node_irreps_jax = Irreps(str(node_irreps_torch))
     target_irreps_jax = Irreps(str(target_irreps_torch))
 
@@ -658,7 +659,7 @@ def test_torch_and_jax_equivariant_product_basis_match_after_weight_transfer():
 
 
 @pytest.mark.parametrize(
-    "torch_local_cls,jax_local_cls",
+    'torch_local_cls,jax_local_cls',
     CROSS_BACKEND_JAX_INTERACTION_CASES,
     ids=[torch_cls.__name__ for torch_cls, _ in CROSS_BACKEND_JAX_INTERACTION_CASES],
 )
@@ -669,12 +670,12 @@ def test_torch_and_jax_interaction_blocks_match_after_weight_transfer(
     rng = np.random.default_rng(89)
     num_elements = 4
     mul = 2
-    node_attrs_irreps_torch = o3.Irreps(f"{num_elements}x0e")
-    node_feats_irreps_torch = o3.Irreps(f"{mul}x0e + {mul}x1o")
-    edge_attrs_irreps_torch = o3.Irreps("1x0e + 1x1o + 1x2e")
-    edge_feats_irreps_torch = o3.Irreps("5x0e")
-    target_irreps_torch = o3.Irreps(f"{mul}x0e + {mul}x1o")
-    hidden_irreps_torch = o3.Irreps(f"{mul}x0e + {mul}x1o")
+    node_attrs_irreps_torch = o3.Irreps(f'{num_elements}x0e')
+    node_feats_irreps_torch = o3.Irreps(f'{mul}x0e + {mul}x1o')
+    edge_attrs_irreps_torch = o3.Irreps('1x0e + 1x1o + 1x2e')
+    edge_feats_irreps_torch = o3.Irreps('5x0e')
+    target_irreps_torch = o3.Irreps(f'{mul}x0e + {mul}x1o')
+    hidden_irreps_torch = o3.Irreps(f'{mul}x0e + {mul}x1o')
 
     node_attrs_irreps_jax = Irreps(str(node_attrs_irreps_torch))
     node_feats_irreps_jax = Irreps(str(node_feats_irreps_torch))
@@ -751,8 +752,8 @@ def test_torch_and_jax_interaction_blocks_match_after_weight_transfer(
 
 def test_jax_linear_node_embedding_matches_reference():
     rng = np.random.default_rng(91)
-    irreps_in = Irreps("8x0e")
-    irreps_out = Irreps("6x0e")
+    irreps_in = Irreps('8x0e')
+    irreps_out = Irreps('6x0e')
 
     donor_torch = TorchReferenceLinearNodeEmbedding(
         irreps_in=_to_reference_irreps(irreps_in),
@@ -786,8 +787,8 @@ def test_jax_linear_node_embedding_matches_reference():
 
 def test_torch_and_jax_linear_node_embedding_match_after_weight_transfer():
     rng = np.random.default_rng(92)
-    irreps_in_torch = o3.Irreps("8x0e")
-    irreps_out_torch = o3.Irreps("6x0e")
+    irreps_in_torch = o3.Irreps('8x0e')
+    irreps_out_torch = o3.Irreps('6x0e')
     irreps_in_jax = Irreps(str(irreps_in_torch))
     irreps_out_jax = Irreps(str(irreps_out_torch))
 
@@ -814,10 +815,10 @@ def test_torch_and_jax_linear_node_embedding_match_after_weight_transfer():
     )
 
 
-@pytest.mark.parametrize("dipole_only", [False, True])
+@pytest.mark.parametrize('dipole_only', [False, True])
 def test_jax_linear_dipole_readout_matches_reference(dipole_only: bool):
     rng = np.random.default_rng(94)
-    irreps_in = Irreps("8x0e + 4x1o")
+    irreps_in = Irreps('8x0e + 4x1o')
 
     donor_torch = TorchReferenceLinearDipoleReadout(
         irreps_in=_to_reference_irreps(irreps_in),
@@ -852,7 +853,7 @@ def test_jax_linear_dipole_readout_matches_reference(dipole_only: bool):
 
 def test_torch_and_jax_linear_dipole_readout_match_after_weight_transfer():
     rng = np.random.default_rng(95)
-    irreps_in_torch = o3.Irreps("8x0e + 4x1o")
+    irreps_in_torch = o3.Irreps('8x0e + 4x1o')
     irreps_in_jax = Irreps(str(irreps_in_torch))
 
     torch_model = TorchLocalLinearDipoleReadout(
@@ -879,16 +880,16 @@ def test_torch_and_jax_linear_dipole_readout_match_after_weight_transfer():
     )
 
 
-@pytest.mark.parametrize("dipole_only", [False, True])
+@pytest.mark.parametrize('dipole_only', [False, True])
 def test_jax_non_linear_dipole_readout_matches_torch_after_weight_transfer(
     dipole_only: bool,
 ):
     rng = np.random.default_rng(97)
-    irreps_in = Irreps("8x0e + 4x1o")
+    irreps_in = Irreps('8x0e + 4x1o')
     if dipole_only:
-        mlp_irreps = Irreps("4x1o")
+        mlp_irreps = Irreps('4x1o')
     else:
-        mlp_irreps = Irreps("4x0e + 4x1o")
+        mlp_irreps = Irreps('4x0e + 4x1o')
 
     donor_torch = TorchReferenceNonLinearDipoleReadout(
         irreps_in=_to_reference_irreps(irreps_in),
@@ -920,8 +921,8 @@ def test_jax_non_linear_dipole_readout_matches_torch_after_weight_transfer(
 
 def test_torch_and_jax_non_linear_dipole_readout_match_after_weight_transfer():
     rng = np.random.default_rng(98)
-    irreps_in_torch = o3.Irreps("8x0e + 4x1o")
-    mlp_irreps_torch = o3.Irreps("4x0e + 4x1o")
+    irreps_in_torch = o3.Irreps('8x0e + 4x1o')
+    mlp_irreps_torch = o3.Irreps('4x0e + 4x1o')
     irreps_in_jax = Irreps(str(irreps_in_torch))
     mlp_irreps_jax = Irreps(str(mlp_irreps_torch))
 
@@ -955,7 +956,7 @@ def test_torch_and_jax_non_linear_dipole_readout_match_after_weight_transfer():
 
 def test_jax_linear_dipole_polar_readout_matches_reference():
     rng = np.random.default_rng(100)
-    irreps_in = Irreps("8x0e + 4x1o + 2x2e")
+    irreps_in = Irreps('8x0e + 4x1o + 2x2e')
 
     donor_torch = TorchReferenceLinearDipolePolarReadout(
         irreps_in=_to_reference_irreps(irreps_in),
@@ -990,7 +991,7 @@ def test_jax_linear_dipole_polar_readout_matches_reference():
 
 def test_torch_and_jax_linear_dipole_polar_readout_match_after_weight_transfer():
     rng = np.random.default_rng(110)
-    irreps_in_torch = o3.Irreps("8x0e + 4x1o + 2x2e")
+    irreps_in_torch = o3.Irreps('8x0e + 4x1o + 2x2e')
     irreps_in_jax = Irreps(str(irreps_in_torch))
 
     torch_model = TorchLocalLinearDipolePolarReadout(
@@ -1019,8 +1020,8 @@ def test_torch_and_jax_linear_dipole_polar_readout_match_after_weight_transfer()
 
 def test_jax_non_linear_dipole_polar_readout_matches_reference():
     rng = np.random.default_rng(112)
-    irreps_in = Irreps("8x0e + 4x1o + 2x2e")
-    mlp_irreps = Irreps("4x0e + 4x1o")
+    irreps_in = Irreps('8x0e + 4x1o + 2x2e')
+    mlp_irreps = Irreps('4x0e + 4x1o')
 
     donor_torch = TorchReferenceNonLinearDipolePolarReadout(
         irreps_in=_to_reference_irreps(irreps_in),
@@ -1061,8 +1062,8 @@ def test_jax_non_linear_dipole_polar_readout_matches_reference():
 
 def test_torch_and_jax_non_linear_dipole_polar_readout_match_after_weight_transfer():
     rng = np.random.default_rng(113)
-    irreps_in_torch = o3.Irreps("8x0e + 4x1o + 2x2e")
-    mlp_irreps_torch = o3.Irreps("4x0e + 4x1o")
+    irreps_in_torch = o3.Irreps('8x0e + 4x1o + 2x2e')
+    mlp_irreps_torch = o3.Irreps('4x0e + 4x1o')
     irreps_in_jax = Irreps(str(irreps_in_torch))
     mlp_irreps_jax = Irreps(str(mlp_irreps_torch))
 
@@ -1094,11 +1095,11 @@ def test_torch_and_jax_non_linear_dipole_polar_readout_match_after_weight_transf
     )
 
 
-@pytest.mark.parametrize("with_heads", [False, True])
+@pytest.mark.parametrize('with_heads', [False, True])
 def test_jax_linear_readout_matches_reference(with_heads: bool):
     rng = np.random.default_rng(102)
-    irreps_in = Irreps("8x0e")
-    irrep_out = Irreps("2x0e")
+    irreps_in = Irreps('8x0e')
+    irrep_out = Irreps('2x0e')
 
     donor_torch = TorchReferenceLinearReadout(
         irreps_in=_to_reference_irreps(irreps_in),
@@ -1137,8 +1138,8 @@ def test_jax_linear_readout_matches_reference(with_heads: bool):
 
 def test_torch_and_jax_linear_readout_match_after_weight_transfer():
     rng = np.random.default_rng(103)
-    irreps_in_torch = o3.Irreps("8x0e")
-    irrep_out_torch = o3.Irreps("2x0e")
+    irreps_in_torch = o3.Irreps('8x0e')
+    irrep_out_torch = o3.Irreps('2x0e')
 
     irreps_in_jax = Irreps(str(irreps_in_torch))
     irrep_out_jax = Irreps(str(irrep_out_torch))
@@ -1175,12 +1176,12 @@ def test_torch_and_jax_linear_readout_match_after_weight_transfer():
     )
 
 
-@pytest.mark.parametrize("num_heads", [1, 2])
+@pytest.mark.parametrize('num_heads', [1, 2])
 def test_jax_non_linear_bias_readout_matches_reference(num_heads: int):
     rng = np.random.default_rng(105)
-    irreps_in = Irreps("8x0e")
-    mlp_irreps = Irreps("6x0e")
-    irrep_out = Irreps("2x0e")
+    irreps_in = Irreps('8x0e')
+    mlp_irreps = Irreps('6x0e')
+    irrep_out = Irreps('2x0e')
 
     donor_torch = TorchReferenceNonLinearBiasReadout(
         irreps_in=_to_reference_irreps(irreps_in),
@@ -1232,9 +1233,9 @@ def test_jax_non_linear_bias_readout_matches_reference(num_heads: int):
 
 def test_torch_and_jax_non_linear_bias_readout_match_for_single_head():
     rng = np.random.default_rng(106)
-    irreps_in_torch = o3.Irreps("8x0e")
-    mlp_irreps_torch = o3.Irreps("6x0e")
-    irrep_out_torch = o3.Irreps("2x0e")
+    irreps_in_torch = o3.Irreps('8x0e')
+    mlp_irreps_torch = o3.Irreps('6x0e')
+    irrep_out_torch = o3.Irreps('2x0e')
 
     irreps_in_jax = Irreps(str(irreps_in_torch))
     mlp_irreps_jax = Irreps(str(mlp_irreps_torch))

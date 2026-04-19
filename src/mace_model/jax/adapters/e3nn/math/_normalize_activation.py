@@ -46,12 +46,12 @@ def register_normalize2mom_const(
     _CONST_OVERRIDES[key] = float_value
 
     for fn in _REGISTERED_FUNCTIONS.get(key, []):
-        holder = getattr(fn, "_normalize2mom_const_holder", None)
+        holder = getattr(fn, '_normalize2mom_const_holder', None)
         if holder is None:
             continue
-        current = holder["value"]
-        holder["value"] = jnp.asarray(float_value, dtype=current.dtype)
-        fn._normalize2mom_const = holder["value"]  # type: ignore[attr-defined]
+        current = holder['value']
+        holder['value'] = jnp.asarray(float_value, dtype=current.dtype)
+        fn._normalize2mom_const = holder['value']  # type: ignore[attr-defined]
 
 
 def moment(
@@ -115,18 +115,18 @@ def normalize2mom(
         else jnp.asarray(compute_const(key), dtype=dtype)
     )
 
-    const_holder: dict[str, jnp.ndarray] = {"value": initial_const}
+    const_holder: dict[str, jnp.ndarray] = {'value': initial_const}
 
     # When ``normalize2mom`` is invoked while tracing (e.g. inside a ``jax.jit``),
     # ``const`` will be a tracer and therefore cannot be converted to a Python
     # ``float``. We retain the scalar as a JAX array in that situation so the
     # caller can safely stage it out as part of the larger computation.
     def _normalized(x: jnp.ndarray) -> jnp.ndarray:
-        scale = const_holder["value"].astype(x.dtype)
+        scale = const_holder['value'].astype(x.dtype)
         return f(x) * scale
 
     _normalized._normalize2mom_const_holder = const_holder  # type: ignore[attr-defined]
-    _normalized._normalize2mom_const = const_holder["value"]  # type: ignore[attr-defined]
+    _normalized._normalize2mom_const = const_holder['value']  # type: ignore[attr-defined]
     _normalized._normalize2mom_original = f  # type: ignore[attr-defined]
 
     if identifier is not None:

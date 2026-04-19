@@ -21,4 +21,4 @@ def Linear(
     )
 
 
-__all__ = ["Linear"]
+__all__ = ['Linear']

@@ -32,7 +32,7 @@ class Gate:
         act_gates: Sequence[Callable | None],
         irreps_gated,
         normalize_act: bool = True,
-        layout_str: str = "mul_ir",
+        layout_str: str = 'mul_ir',
     ) -> None:
         self.act_scalars = tuple(act_scalars)
         self.act_gates = tuple(act_gates)
@@ -71,9 +71,9 @@ class Gate:
 
     def __call__(self, features: IrrepsArray | jnp.ndarray):
         if isinstance(features, IrrepsArray):
-            if self.layout_str != "mul_ir":
+            if self.layout_str != 'mul_ir':
                 raise ValueError(
-                    "Gate expects mul_ir layout when passing an IrrepsArray."
+                    'Gate expects mul_ir layout when passing an IrrepsArray.'
                 )
             array = features.array
             return_irreps = True
@@ -81,7 +81,7 @@ class Gate:
             array = features
             if array.shape[-1] != self.irreps_in.dim:
                 raise ValueError(
-                    f"Invalid input shape: expected last dim {self.irreps_in.dim}, got {array.shape[-1]}"
+                    f'Invalid input shape: expected last dim {self.irreps_in.dim}, got {array.shape[-1]}'
                 )
             return_irreps = False
 

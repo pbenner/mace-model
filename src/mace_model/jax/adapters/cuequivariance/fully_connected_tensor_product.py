@@ -64,7 +64,7 @@ class FullyConnectedTensorProduct(nnx.Module):
         # Prepare cue descriptors and cache Irreps metadata for evaluation.
         if self.internal_weights and not self.shared_weights:
             raise ValueError(
-                "FullyConnectedTensorProduct requires shared_weights=True when internal_weights=True"
+                'FullyConnectedTensorProduct requires shared_weights=True when internal_weights=True'
             )
         self._shared_weights = self.shared_weights
         self._internal_weights = self.internal_weights
@@ -88,14 +88,14 @@ class FullyConnectedTensorProduct(nnx.Module):
         self.weight_numel = descriptor.polynomial.operands[0].size
         descriptor_out_irreps = Irreps(str(descriptor.outputs[0].irreps))
         self.descriptor_out_dim = descriptor_out_irreps.dim
-        layout_code = 0 if self._layout_str == "mul_ir" else 1
+        layout_code = 0 if self._layout_str == 'mul_ir' else 1
         self.layout_config = ConfigVar(
             jnp.asarray(layout_code, dtype=jnp.int32),
             is_mutable=False,
         )
         if self._internal_weights:
             if rngs is None:
-                raise ValueError("rngs is required when internal_weights=True")
+                raise ValueError('rngs is required when internal_weights=True')
             self.weight = nnx.Param(
                 jax.random.normal(
                     rngs(),
@@ -113,7 +113,7 @@ class FullyConnectedTensorProduct(nnx.Module):
             ``(1, weight_numel)`` array stored in the Flax parameter tree.
         """
         if self.weight is None:
-            raise ValueError("Internal weights are not initialized for FCTP.")
+            raise ValueError('Internal weights are not initialized for FCTP.')
         return self.weight
 
     def _input_rep(
@@ -138,27 +138,27 @@ class FullyConnectedTensorProduct(nnx.Module):
             data = array
         else:
             raise ValueError(
-                "FullyConnectedTensorProduct does not support layout "
-                f"{self._api_layout!r}."
+                'FullyConnectedTensorProduct does not support layout '
+                f'{self._api_layout!r}.'
             )
         return cuex.RepArray(irreps_cue, data, cue.ir_mul)
 
     @staticmethod
     def _resolve_layout(layout_obj: object) -> tuple[cue.IrrepsLayout, str]:
         if isinstance(layout_obj, str):
-            if layout_obj not in {"mul_ir", "ir_mul"}:
+            if layout_obj not in {'mul_ir', 'ir_mul'}:
                 raise ValueError(
-                    "FullyConnectedTensorProduct received unsupported layout string "
+                    'FullyConnectedTensorProduct received unsupported layout string '
                     f"'{layout_obj}'."
                 )
             return getattr(cue, layout_obj), layout_obj
         if layout_obj == cue.mul_ir:
-            return layout_obj, "mul_ir"
+            return layout_obj, 'mul_ir'
         if layout_obj == cue.ir_mul:
-            return layout_obj, "ir_mul"
+            return layout_obj, 'ir_mul'
         raise ValueError(
-            "FullyConnectedTensorProduct received an unknown layout object; expected "
-            "cue.mul_ir or cue.ir_mul."
+            'FullyConnectedTensorProduct received an unknown layout object; expected '
+            'cue.mul_ir or cue.ir_mul.'
         )
 
     def _resolve_weight_rep(
@@ -184,13 +184,13 @@ class FullyConnectedTensorProduct(nnx.Module):
         if self._internal_weights:
             if weights is not None:
                 raise ValueError(
-                    "Weights must be None when internal weights are used in FullyConnectedTensorProduct"
+                    'Weights must be None when internal weights are used in FullyConnectedTensorProduct'
                 )
             weight_array = self._weight_param().astype(dtype)
         else:
             if weights is None:
                 raise ValueError(
-                    "Weights must be provided when internal weights are not used"
+                    'Weights must be provided when internal weights are not used'
                 )
             weight_array = self._normalise_external_weights(
                 weights, dtype=dtype, batch_size=batch_size
@@ -223,31 +223,31 @@ class FullyConnectedTensorProduct(nnx.Module):
         if weights.ndim == 1:
             if weights.shape[0] != self.weight_numel:
                 raise ValueError(
-                    f"Expected weights last dimension {self.weight_numel}, got {weights.shape[-1]}"
+                    f'Expected weights last dimension {self.weight_numel}, got {weights.shape[-1]}'
                 )
             weights = weights[jnp.newaxis, :]
         elif weights.ndim == 2:
             if weights.shape[-1] != self.weight_numel:
                 raise ValueError(
-                    f"Expected weights last dimension {self.weight_numel}, got {weights.shape[-1]}"
+                    f'Expected weights last dimension {self.weight_numel}, got {weights.shape[-1]}'
                 )
         else:
             raise ValueError(
-                "Weights must have rank 1 or 2 when internal weights are not used"
+                'Weights must have rank 1 or 2 when internal weights are not used'
             )
 
         leading = weights.shape[0]
         if self._shared_weights:
             if leading not in (1, batch_size):
                 raise ValueError(
-                    "Shared weights require leading dimension 1 or equal to the batch size"
+                    'Shared weights require leading dimension 1 or equal to the batch size'
                 )
             if leading == 1 and batch_size != 1:
                 weights = jnp.broadcast_to(weights, (batch_size, self.weight_numel))
         else:
             if leading != batch_size:
                 raise ValueError(
-                    "Unshared weights require leading dimension equal to the batch size"
+                    'Unshared weights require leading dimension equal to the batch size'
                 )
 
         return weights
@@ -293,7 +293,7 @@ class FullyConnectedTensorProduct(nnx.Module):
                     dtype,
                 )
             ],
-            method="naive",
+            method='naive',
             math_dtype=dtype,
         )
 
@@ -305,7 +305,7 @@ class FullyConnectedTensorProduct(nnx.Module):
 def _fctp_import_from_torch(cls, torch_module, variables):
     """Copy Torch fully connected tensor product weights into NNX variables."""
     params = variables
-    expected_layout = params.get("layout_config", None)
+    expected_layout = params.get('layout_config', None)
 
     def _decode_layout(val):
         if isinstance(val, jnp.ndarray):
@@ -313,9 +313,9 @@ def _fctp_import_from_torch(cls, torch_module, variables):
                 val_int = int(val)
             except Exception:
                 return None
-            return "mul_ir" if val_int == 0 else "ir_mul"
+            return 'mul_ir' if val_int == 0 else 'ir_mul'
         if isinstance(val, (int, np.integer)):
-            return "mul_ir" if int(val) == 0 else "ir_mul"
+            return 'mul_ir' if int(val) == 0 else 'ir_mul'
         return val
 
     def _layout_str_from_obj(layout_obj) -> str | None:
@@ -323,17 +323,17 @@ def _fctp_import_from_torch(cls, torch_module, variables):
             return None
         if isinstance(layout_obj, str):
             return layout_obj
-        for attr in ("layout_str", "name", "__name__"):
+        for attr in ('layout_str', 'name', '__name__'):
             val = getattr(layout_obj, attr, None)
             if val is not None:
                 return str(val)
         return str(layout_obj)
 
     expected_layout = _decode_layout(expected_layout)
-    torch_layout_str = _layout_str_from_obj(getattr(torch_module, "layout", None))
+    torch_layout_str = _layout_str_from_obj(getattr(torch_module, 'layout', None))
     if torch_layout_str is None:
-        descriptor = getattr(torch_module, "descriptor", None) or getattr(
-            torch_module, "_descriptor", None
+        descriptor = getattr(torch_module, 'descriptor', None) or getattr(
+            torch_module, '_descriptor', None
         )
         if descriptor is not None:
             try:
@@ -341,25 +341,25 @@ def _fctp_import_from_torch(cls, torch_module, variables):
             except Exception:
                 torch_layout_str = None
     if torch_layout_str is None:
-        torch_layout_str = "mul_ir"
+        torch_layout_str = 'mul_ir'
 
     if expected_layout is not None and str(expected_layout) != str(torch_layout_str):
         logging.warning(
-            "JAX FullyConnectedTensorProduct layout %r differs from Torch layout %r; importing weights without conversion.",
+            'JAX FullyConnectedTensorProduct layout %r differs from Torch layout %r; importing weights without conversion.',
             expected_layout,
             torch_layout_str,
         )
 
     if (
-        getattr(torch_module, "internal_weights", False)
-        and getattr(torch_module, "weight_numel", 0) > 0
+        getattr(torch_module, 'internal_weights', False)
+        and getattr(torch_module, 'weight_numel', 0) > 0
     ):
         weight_np = torch_module.weight.detach().cpu().numpy()
         if weight_np.ndim == 1:
             weight_np = weight_np.reshape(1, -1)
-        existing = params.get("weight")
+        existing = params.get('weight')
         dtype = existing.dtype if existing is not None else weight_np.dtype
-        params["weight"] = jnp.asarray(weight_np, dtype=dtype)
+        params['weight'] = jnp.asarray(weight_np, dtype=dtype)
 
     return params
 
@@ -367,9 +367,9 @@ def _fctp_import_from_torch(cls, torch_module, variables):
 FullyConnectedTensorProduct.import_from_torch = classmethod(_fctp_import_from_torch)
 
 
-@nxx_register_import_mapper("e3nn.o3._tensor_product._sub.FullyConnectedTensorProduct")
+@nxx_register_import_mapper('e3nn.o3._tensor_product._sub.FullyConnectedTensorProduct')
 @nxx_register_import_mapper(
-    "cuequivariance_torch.operations.fully_connected_tensor_product.FullyConnectedTensorProduct"
+    'cuequivariance_torch.operations.fully_connected_tensor_product.FullyConnectedTensorProduct'
 )
 def _map_fctp(module, variables, scope) -> None:
     """Import mapper invoked by the generic Torch→Flax importer.

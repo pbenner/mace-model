@@ -56,41 +56,41 @@ class MACEModelInit:
     ) -> None:
         """Store the constructor arguments shared by Torch and JAX MACE models."""
         attrs: dict[str, Any] = {
-            "r_max_value": float(r_max),
-            "num_bessel": int(num_bessel),
-            "num_polynomial_cutoff": int(num_polynomial_cutoff),
-            "max_ell": int(max_ell),
-            "interaction_cls": interaction_cls,
-            "interaction_cls_first": interaction_cls_first,
-            "num_elements": int(num_elements),
-            "hidden_irreps": hidden_irreps,
+            'r_max_value': float(r_max),
+            'num_bessel': int(num_bessel),
+            'num_polynomial_cutoff': int(num_polynomial_cutoff),
+            'max_ell': int(max_ell),
+            'interaction_cls': interaction_cls,
+            'interaction_cls_first': interaction_cls_first,
+            'num_elements': int(num_elements),
+            'hidden_irreps': hidden_irreps,
             mlp_attr_name: mlp_irreps,
-            "atomic_energies": atomic_energies,
-            "avg_num_neighbors": float(avg_num_neighbors),
-            "correlation": correlation,
-            "gate": gate,
-            "pair_repulsion": bool(pair_repulsion),
-            "apply_cutoff": bool(apply_cutoff),
-            "use_reduced_cg": bool(use_reduced_cg),
-            "use_so3": bool(use_so3),
-            "use_agnostic_product": bool(use_agnostic_product),
-            "use_last_readout_only": bool(use_last_readout_only),
-            "use_embedding_readout": bool(use_embedding_readout),
-            "distance_transform": str(distance_transform),
-            "edge_irreps": edge_irreps,
+            'atomic_energies': atomic_energies,
+            'avg_num_neighbors': float(avg_num_neighbors),
+            'correlation': correlation,
+            'gate': gate,
+            'pair_repulsion': bool(pair_repulsion),
+            'apply_cutoff': bool(apply_cutoff),
+            'use_reduced_cg': bool(use_reduced_cg),
+            'use_so3': bool(use_so3),
+            'use_agnostic_product': bool(use_agnostic_product),
+            'use_last_readout_only': bool(use_last_readout_only),
+            'use_embedding_readout': bool(use_embedding_readout),
+            'distance_transform': str(distance_transform),
+            'edge_irreps': edge_irreps,
             radial_mlp_attr_name: radial_mlp,
-            "radial_type": radial_type,
-            "heads": heads,
-            "cueq_config": cueq_config,
-            "embedding_specs": embedding_specs,
-            "readout_cls": readout_cls,
-            "readout_use_higher_irrep_invariants": bool(
+            'radial_type': radial_type,
+            'heads': heads,
+            'cueq_config': cueq_config,
+            'embedding_specs': embedding_specs,
+            'readout_cls': readout_cls,
+            'readout_use_higher_irrep_invariants': bool(
                 readout_use_higher_irrep_invariants
             ),
-            "readout_invariant_eps": float(readout_invariant_eps),
+            'readout_invariant_eps': float(readout_invariant_eps),
         }
         if keep_r_max_attr:
-            attrs["r_max"] = r_max
+            attrs['r_max'] = r_max
         if extra_attrs is not None:
             attrs.update(dict(extra_attrs))
         for name, value in attrs.items():
@@ -99,7 +99,7 @@ class MACEModelInit:
     @staticmethod
     def as_heads(heads: Sequence[str] | None) -> tuple[str, ...]:
         if heads is None:
-            return ("Default",)
+            return ('Default',)
         return tuple(heads)
 
     @staticmethod
@@ -111,20 +111,20 @@ class MACEModelInit:
         values = tuple(int(value) for value in correlation)
         if len(values) != int(num_interactions):
             raise ValueError(
-                "Length of correlation list must match num_interactions "
-                f"(expected {num_interactions}, got {len(values)})"
+                'Length of correlation list must match num_interactions '
+                f'(expected {num_interactions}, got {len(values)})'
             )
         return values
 
     @staticmethod
     def is_residual_interaction(interaction_cls_first: type[Any]) -> bool:
-        return "Residual" in getattr(
-            interaction_cls_first, "__name__", str(interaction_cls_first)
+        return 'Residual' in getattr(
+            interaction_cls_first, '__name__', str(interaction_cls_first)
         )
 
     @staticmethod
     def make_parity_mixed_irreps(max_ell: int, make_irreps: Any) -> Any:
-        repr_str = "+".join([f"1x{ell}e+1x{ell}o" for ell in range(max_ell + 1)])
+        repr_str = '+'.join([f'1x{ell}e+1x{ell}o' for ell in range(max_ell + 1)])
         return make_irreps(repr_str)
 
     @staticmethod
@@ -140,10 +140,10 @@ class MACEModelInit:
         except (TypeError, ValueError):
             return kwargs
 
-        if "use_higher_irrep_invariants" in signature.parameters:
-            kwargs["use_higher_irrep_invariants"] = bool(use_higher_irrep_invariants)
-        if "invariant_eps" in signature.parameters:
-            kwargs["invariant_eps"] = float(invariant_eps)
+        if 'use_higher_irrep_invariants' in signature.parameters:
+            kwargs['use_higher_irrep_invariants'] = bool(use_higher_irrep_invariants)
+        if 'invariant_eps' in signature.parameters:
+            kwargs['invariant_eps'] = float(invariant_eps)
         return kwargs
 
     @staticmethod
@@ -161,7 +161,7 @@ class MACEModelInit:
 
     @staticmethod
     def make_head_output_irreps(num_heads: int, make_irreps: Any) -> Any:
-        return make_irreps(f"{int(num_heads)}x0e")
+        return make_irreps(f'{int(num_heads)}x0e')
 
     @staticmethod
     def coerce_irreps(value: Any, make_irreps: Any) -> Any:
@@ -210,12 +210,12 @@ class MACEModelInit:
             collapse_hidden_irreps_value=collapse_hidden_irreps_value,
         )
         return (
-            layout["node_attr_irreps"],
-            layout["node_feats_irreps"],
-            layout["sh_irreps"],
-            layout["interaction_irreps"],
-            layout["interaction_irreps_first"],
-            layout["hidden_irreps_out_first"],
+            layout['node_attr_irreps'],
+            layout['node_feats_irreps'],
+            layout['sh_irreps'],
+            layout['interaction_irreps'],
+            layout['interaction_irreps_first'],
+            layout['hidden_irreps_out_first'],
         )
 
     def initialize_embeddings(
@@ -299,7 +299,7 @@ class MACEModelInit:
             build_embedding_readout=build_embedding_readout,
         )
         self.radial_embedding = build_radial_embedding()
-        edge_feats_irreps = make_irreps(f"{self.radial_embedding.out_dim}x0e")
+        edge_feats_irreps = make_irreps(f'{self.radial_embedding.out_dim}x0e')
         if self.pair_repulsion:
             self.pair_repulsion_fn = build_pair_repulsion()
         self.atomic_energies_fn = build_atomic_energies()
@@ -352,12 +352,12 @@ class MACEModelInit:
             hidden_irreps_out_first = collapse_hidden_irreps_value(hidden_irreps)
 
         return {
-            "node_attr_irreps": node_attr_irreps,
-            "node_feats_irreps": node_feats_irreps,
-            "sh_irreps": sh_irreps,
-            "interaction_irreps": interaction_irreps,
-            "interaction_irreps_first": interaction_irreps_first,
-            "hidden_irreps_out_first": hidden_irreps_out_first,
+            'node_attr_irreps': node_attr_irreps,
+            'node_feats_irreps': node_feats_irreps,
+            'sh_irreps': sh_irreps,
+            'interaction_irreps': interaction_irreps,
+            'interaction_irreps_first': interaction_irreps_first,
+            'hidden_irreps_out_first': hidden_irreps_out_first,
         }
 
     @staticmethod
@@ -375,4 +375,4 @@ class MACEModelInit:
         return _make_hidden_irreps_out
 
 
-__all__ = ["MACEModelInit"]
+__all__ = ['MACEModelInit']

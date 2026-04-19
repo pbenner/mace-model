@@ -36,7 +36,7 @@ def SymmetricContraction(
         original_mace=(not use_reduced_cg),
         dtype=torch.get_default_dtype(),
         math_dtype=torch.get_default_dtype(),
-        method="naive",
+        method='naive',
     )
     module.original_forward = module.forward
 
@@ -73,7 +73,7 @@ def torch_target_design_matrix(
     probe_indices: list[int] | tuple[int, ...] = (0,),
 ) -> np.ndarray:
     """Evaluate a local cue-backed Torch module on all its basis vectors."""
-    if not hasattr(target_module, "weight"):
+    if not hasattr(target_module, 'weight'):
         raise ValueError("Target Torch symmetric-contraction module lacks 'weight'.")
 
     torch_inputs = torch.tensor(inputs_np, dtype=target_module.weight.dtype)
@@ -264,16 +264,16 @@ def native_full_to_canonical_weight(
             )
         except Exception as instance_exc:
             raise RuntimeError(
-                "Failed to compute exact native full-CG -> canonical basis "
-                "mapping for symmetric-contraction weights. "
-                f"(cached_transform_error={type(cached_exc).__name__}: {cached_exc}; "
-                f"instance_transform_error={type(instance_exc).__name__}: {instance_exc})"
+                'Failed to compute exact native full-CG -> canonical basis '
+                'mapping for symmetric-contraction weights. '
+                f'(cached_transform_error={type(cached_exc).__name__}: {cached_exc}; '
+                f'instance_transform_error={type(instance_exc).__name__}: {instance_exc})'
             ) from instance_exc
-    return np.einsum("ab,zbu->zau", transform, native_weight, optimize=True)
+    return np.einsum('ab,zbu->zau', transform, native_weight, optimize=True)
 
 
 __all__ = [
-    "SymmetricContraction",
-    "native_full_to_canonical_weight",
-    "torch_target_design_matrix",
+    'SymmetricContraction',
+    'native_full_to_canonical_weight',
+    'torch_target_design_matrix',
 ]

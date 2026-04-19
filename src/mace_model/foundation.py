@@ -21,7 +21,7 @@ def load_foundation_torch_model(
     *,
     source: str,
     model: str | None = None,
-    device: str = "cpu",
+    device: str = 'cpu',
     default_dtype: str | None = None,
 ):
     del default_dtype
@@ -36,7 +36,7 @@ def download_foundation_model(
     source: str,
     model: str | None = None,
     head: str | None = None,
-    device: str = "cpu",
+    device: str = 'cpu',
     default_dtype: str | None = None,
 ) -> FoundationResult:
     del default_dtype
@@ -57,8 +57,8 @@ def _default_output_path(
     source: str,
     model: str | None,
 ) -> Path:
-    model_tag = (model or "default").replace("/", "-")
-    return Path(f"{source}-{model_tag}-{backend}")
+    model_tag = (model or 'default').replace('/', '-')
+    return Path(f'{source}-{model_tag}-{backend}')
 
 
 def save_foundation_model(
@@ -71,17 +71,17 @@ def save_foundation_model(
     if output is None:
         output = _default_output_path(
             backend=result.backend,
-            source=source or "foundation",
+            source=source or 'foundation',
             model=model,
         )
     return save_converted_model(result, output)
 
 
 __all__ = [
-    "FoundationResult",
-    "SUPPORTED_FOUNDATION_SOURCES",
-    "download_foundation_model",
-    "get_mace_mp_names",
-    "load_foundation_torch_model",
-    "save_foundation_model",
+    'FoundationResult',
+    'SUPPORTED_FOUNDATION_SOURCES',
+    'download_foundation_model',
+    'get_mace_mp_names',
+    'load_foundation_torch_model',
+    'save_foundation_model',
 ]

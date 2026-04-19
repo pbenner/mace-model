@@ -19,6 +19,13 @@ dependencies = [
     "tomli>=2; python_version < '3.11'",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pre-commit",
+    "ruff==0.15.11",
+    "pytest",
+]
+
 [project.scripts]
 mace-model-init = "mace_model.cli:main"
 mace-model-convert = "mace_model.convert_cli:main"
@@ -33,3 +40,74 @@ include = ["mace_model*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+required-version = "==0.15.11"
+include = ["src/**/*.py", "tests/**/*.py"]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "dependencies",
+]
+line-length = 88
+indent-width = 4
+src = ["src"]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "PL",
+    "F",
+    "UP",
+    "I",
+]
+ignore = [
+    "F401",
+    "E501",
+    "E701",
+    "E731",
+    "E741",
+    "E402",
+    "UP006",
+    "UP035",
+    "UP037",
+    "UP045",
+    "PLR0911",
+    "PLR0912",
+    "PLR0913",
+    "PLR0915",
+    "PLR2004",
+    "PLW0127",
+    "PLW0603",
+    "PLW2901",
+    "PLR1714",
+    "PLR5501",
+    "PLC0415",
+]
+fixable = ["ALL"]
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

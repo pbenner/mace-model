@@ -20,11 +20,12 @@ try:
     import cuequivariance_jax  # noqa: F401
 except Exception as exc:  # pragma: no cover - environment dependent
     pytest.skip(
-        f"cuequivariance_jax is unavailable in this environment: {exc}",
+        f'cuequivariance_jax is unavailable in this environment: {exc}',
         allow_module_level=True,
     )
 
 from flax import nnx
+
 from mace_model.core.data.neighborhood import get_neighborhood
 from mace_model.core.data.utils import (
     AtomicNumberTable,
@@ -45,24 +46,24 @@ from mace_model.torch.modules.utils import prepare_graph as prepare_graph_torch
 
 _LOCAL_JAX_BLOCKS = (
     Path(__file__).resolve().parents[1]
-    / "src"
-    / "mace_model"
-    / "jax"
-    / "modules"
-    / "blocks.py"
+    / 'src'
+    / 'mace_model'
+    / 'jax'
+    / 'modules'
+    / 'blocks.py'
 )
-_LOCAL_JAX_MODELS = _LOCAL_JAX_BLOCKS.with_name("models.py")
-_LOCAL_JAX_BACKENDS = _LOCAL_JAX_BLOCKS.with_name("backends.py")
+_LOCAL_JAX_MODELS = _LOCAL_JAX_BLOCKS.with_name('models.py')
+_LOCAL_JAX_BACKENDS = _LOCAL_JAX_BLOCKS.with_name('backends.py')
 _LOCAL_JAX_ROOT = _LOCAL_JAX_BLOCKS.parent.parent
 _LOCAL_JAX_MODULES = _LOCAL_JAX_BLOCKS.parent
-_ALIAS_ROOT = "mace_local_jax_model_parity"
-_ALIAS_MODULES = f"{_ALIAS_ROOT}.modules"
+_ALIAS_ROOT = 'mace_local_jax_model_parity'
+_ALIAS_MODULES = f'{_ALIAS_ROOT}.modules'
 
 
 def _load_local_module(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
-        raise RuntimeError(f"Failed to load local module {name} from {path}")
+        raise RuntimeError(f'Failed to load local module {name} from {path}')
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
     spec.loader.exec_module(module)
@@ -80,15 +81,15 @@ if _ALIAS_MODULES not in sys.modules:
     sys.modules[_ALIAS_MODULES] = modules_pkg
 
 _load_local_module(
-    f"{_ALIAS_MODULES}.backends",
+    f'{_ALIAS_MODULES}.backends',
     _LOCAL_JAX_BACKENDS,
 )
 _LOCAL_JAX_BLOCKS_MODULE = _load_local_module(
-    f"{_ALIAS_MODULES}.blocks",
+    f'{_ALIAS_MODULES}.blocks',
     _LOCAL_JAX_BLOCKS,
 )
 _LOCAL_JAX_MODELS_MODULE = _load_local_module(
-    f"{_ALIAS_MODULES}.models",
+    f'{_ALIAS_MODULES}.models',
     _LOCAL_JAX_MODELS,
 )
 
@@ -102,7 +103,7 @@ JaxLocalScaleShiftMACE = _LOCAL_JAX_MODELS_MODULE.ScaleShiftMACE
 def _to_numpy(value):
     if isinstance(value, torch.Tensor):
         return value.detach().cpu().numpy()
-    if hasattr(value, "array"):
+    if hasattr(value, 'array'):
         return np.asarray(value.array)
     return np.asarray(value)
 
@@ -114,7 +115,7 @@ def _assert_max_abs_diff(actual, expected, *, max_abs: float) -> None:
         actual_np = _align_to_reference(actual_np, expected_np)
     diff = np.abs(actual_np - expected_np)
     observed = float(diff.max()) if diff.size else 0.0
-    assert observed < max_abs, f"max |Δ|={observed:.6f}, limit={max_abs:.6f}"
+    assert observed < max_abs, f'max |Δ|={observed:.6f}, limit={max_abs:.6f}'
 
 
 def _align_to_reference(
@@ -125,16 +126,16 @@ def _align_to_reference(
         return candidate
     if candidate.size != reference.size or candidate.ndim != reference.ndim:
         raise AssertionError(
-            "Unable to align arrays with shapes "
-            f"{candidate.shape} and {reference.shape}."
+            'Unable to align arrays with shapes '
+            f'{candidate.shape} and {reference.shape}.'
         )
     for perm in itertools.permutations(range(candidate.ndim)):
         permuted_shape = tuple(candidate.shape[idx] for idx in perm)
         if permuted_shape == reference.shape:
             return np.transpose(candidate, perm)
     raise AssertionError(
-        "Unable to find a permutation aligning shapes "
-        f"{candidate.shape} and {reference.shape}."
+        'Unable to find a permutation aligning shapes '
+        f'{candidate.shape} and {reference.shape}.'
     )
 
 
@@ -152,7 +153,7 @@ def _init_model_from_torch(module: nnx.Module, torch_module):
     pure = _state_to_pure_dict(state)
     updated = module.__class__.import_from_torch(torch_module, pure)
     if updated is not None:
-        updated.pop("_normalize2mom_consts_var", None)
+        updated.pop('_normalize2mom_consts_var', None)
         nnx.replace_by_pure_dict(state, updated)
         module = nnx.merge(graphdef, state)
     return module, state
@@ -175,7 +176,7 @@ def _make_structures():
     ]
 
     for idx, (repeat, strain) in enumerate(zip(repeats, strains, strict=False)):
-        atoms = bulk("NaCl", "rocksalt", a=5.64).repeat(repeat)
+        atoms = bulk('NaCl', 'rocksalt', a=5.64).repeat(repeat)
         atoms.positions += (0.03 + 0.01 * idx) * rng.normal(size=atoms.positions.shape)
         if np.any(strain):
             deformation = np.identity(3) + strain
@@ -209,14 +210,14 @@ def _graph_from_atoms(
     )
     num_nodes = int(len(config.atomic_numbers))
     return {
-        "positions": np.asarray(config.positions, dtype=np.float32),
-        "node_attrs": _one_hot(np.asarray(species_index, dtype=np.int32), len(z_table)),
-        "edge_index": np.asarray(edge_index, dtype=np.int64),
-        "shifts": np.asarray(shifts, dtype=np.float32),
-        "unit_shifts": np.asarray(unit_shifts, dtype=np.float32),
-        "cell": np.asarray(cell, dtype=np.float32),
-        "head": np.asarray(0, dtype=np.int64),
-        "num_nodes": num_nodes,
+        'positions': np.asarray(config.positions, dtype=np.float32),
+        'node_attrs': _one_hot(np.asarray(species_index, dtype=np.int32), len(z_table)),
+        'edge_index': np.asarray(edge_index, dtype=np.int64),
+        'shifts': np.asarray(shifts, dtype=np.float32),
+        'unit_shifts': np.asarray(unit_shifts, dtype=np.float32),
+        'cell': np.asarray(cell, dtype=np.float32),
+        'head': np.asarray(0, dtype=np.int64),
+        'num_nodes': num_nodes,
     }
 
 
@@ -238,42 +239,42 @@ def _make_batch(r_max: float) -> dict[str, torch.Tensor]:
     node_offset = 0
 
     for graph_index, graph in enumerate(graphs):
-        num_nodes = int(graph["num_nodes"])
-        positions.append(graph["positions"])
-        node_attrs.append(graph["node_attrs"])
-        edge_index.append(graph["edge_index"] + node_offset)
-        shifts.append(graph["shifts"])
-        unit_shifts.append(graph["unit_shifts"])
-        cells.append(graph["cell"])
+        num_nodes = int(graph['num_nodes'])
+        positions.append(graph['positions'])
+        node_attrs.append(graph['node_attrs'])
+        edge_index.append(graph['edge_index'] + node_offset)
+        shifts.append(graph['shifts'])
+        unit_shifts.append(graph['unit_shifts'])
+        cells.append(graph['cell'])
         batch.append(np.full((num_nodes,), graph_index, dtype=np.int64))
         ptr.append(ptr[-1] + num_nodes)
-        heads.append(int(graph["head"]))
+        heads.append(int(graph['head']))
         node_offset += num_nodes
 
     return {
-        "positions": torch.tensor(
+        'positions': torch.tensor(
             np.concatenate(positions, axis=0),
             dtype=torch.get_default_dtype(),
         ),
-        "node_attrs": torch.tensor(
+        'node_attrs': torch.tensor(
             np.concatenate(node_attrs, axis=0),
             dtype=torch.get_default_dtype(),
         ),
-        "edge_index": torch.tensor(
+        'edge_index': torch.tensor(
             np.concatenate(edge_index, axis=1), dtype=torch.long
         ),
-        "shifts": torch.tensor(
+        'shifts': torch.tensor(
             np.concatenate(shifts, axis=0),
             dtype=torch.get_default_dtype(),
         ),
-        "unit_shifts": torch.tensor(
+        'unit_shifts': torch.tensor(
             np.concatenate(unit_shifts, axis=0),
             dtype=torch.get_default_dtype(),
         ),
-        "cell": torch.tensor(np.stack(cells, axis=0), dtype=torch.get_default_dtype()),
-        "batch": torch.tensor(np.concatenate(batch, axis=0), dtype=torch.long),
-        "ptr": torch.tensor(ptr, dtype=torch.long),
-        "head": torch.tensor(heads, dtype=torch.long),
+        'cell': torch.tensor(np.stack(cells, axis=0), dtype=torch.get_default_dtype()),
+        'batch': torch.tensor(np.concatenate(batch, axis=0), dtype=torch.long),
+        'ptr': torch.tensor(ptr, dtype=torch.long),
+        'head': torch.tensor(heads, dtype=torch.long),
     }
 
 
@@ -288,7 +289,7 @@ def _to_jax_data(data: dict[str, torch.Tensor]) -> dict[str, jnp.ndarray]:
             converted[key] = value
             continue
         array = value.detach().cpu().numpy()
-        if key in {"edge_index", "batch", "ptr", "head"}:
+        if key in {'edge_index', 'batch', 'ptr', 'head'}:
             converted[key] = jnp.asarray(array, dtype=jnp.int32)
         else:
             converted[key] = jnp.asarray(array)
@@ -296,8 +297,8 @@ def _to_jax_data(data: dict[str, torch.Tensor]) -> dict[str, jnp.ndarray]:
 
 
 def _estimate_avg_num_neighbors(data: dict[str, torch.Tensor]) -> float:
-    n_nodes = int(data["positions"].shape[0])
-    n_edges = int(data["edge_index"].shape[1])
+    n_nodes = int(data['positions'].shape[0])
+    n_edges = int(data['edge_index'].shape[1])
     return float(n_edges / max(n_nodes, 1))
 
 
@@ -312,8 +313,8 @@ def _make_torch_model(avg_num_neighbors: float) -> TorchLocalScaleShiftMACE:
         interaction_cls=TorchLocalRealAgnosticResidualInteraction,
         num_interactions=2,
         num_elements=2,
-        hidden_irreps=o3.Irreps("16x0e + 16x1o"),
-        MLP_irreps=o3.Irreps("8x0e"),
+        hidden_irreps=o3.Irreps('16x0e + 16x1o'),
+        MLP_irreps=o3.Irreps('8x0e'),
         atomic_energies=np.asarray([-1.25, -2.0], dtype=np.float32),
         avg_num_neighbors=avg_num_neighbors,
         atomic_numbers=[11, 17],
@@ -326,10 +327,10 @@ def _make_torch_model(avg_num_neighbors: float) -> TorchLocalScaleShiftMACE:
         use_agnostic_product=False,
         use_last_readout_only=False,
         use_embedding_readout=False,
-        distance_transform="None",
+        distance_transform='None',
         edge_irreps=None,
         radial_MLP=[16],
-        radial_type="bessel",
+        radial_type='bessel',
         heads=None,
         cueq_config=None,
         embedding_specs=None,
@@ -350,8 +351,8 @@ def _make_jax_model(avg_num_neighbors: float) -> JaxLocalScaleShiftMACE:
         interaction_cls=JaxLocalRealAgnosticResidualInteraction,
         num_interactions=2,
         num_elements=2,
-        hidden_irreps=Irreps("16x0e + 16x1o"),
-        MLP_irreps=Irreps("8x0e"),
+        hidden_irreps=Irreps('16x0e + 16x1o'),
+        MLP_irreps=Irreps('8x0e'),
         atomic_energies=np.asarray([-1.25, -2.0], dtype=np.float32),
         avg_num_neighbors=avg_num_neighbors,
         atomic_numbers=(11, 17),
@@ -364,10 +365,10 @@ def _make_jax_model(avg_num_neighbors: float) -> JaxLocalScaleShiftMACE:
         use_agnostic_product=False,
         use_last_readout_only=False,
         use_embedding_readout=False,
-        distance_transform="None",
+        distance_transform='None',
         edge_irreps=None,
         radial_MLP=[16],
-        radial_type="bessel",
+        radial_type='bessel',
         heads=None,
         cueq_config=None,
         embedding_specs=None,
@@ -389,8 +390,8 @@ def _collect_torch_intermediates(
         compute_displacement=False,
         lammps_mliap=False,
     )
-    node_attrs = torch_data["node_attrs"]
-    edge_index = torch_data["edge_index"]
+    node_attrs = torch_data['node_attrs']
+    edge_index = torch_data['edge_index']
 
     node_feats = model.node_embedding(node_attrs)
     edge_attrs = model.spherical_harmonics(ctx.vectors)
@@ -431,8 +432,8 @@ def _collect_jax_intermediates(
     data: dict[str, jnp.ndarray],
 ) -> tuple[list[np.ndarray], list[np.ndarray]]:
     ctx = prepare_graph_jax(data)
-    node_attrs = data["node_attrs"]
-    edge_index = data["edge_index"]
+    node_attrs = data['node_attrs']
+    edge_index = data['edge_index']
     node_attrs_index = model._resolve_node_attrs_index(data, node_attrs)
 
     node_feats = model.node_embedding(node_attrs)
@@ -520,34 +521,34 @@ class TestModelParity:
         cls = self.__class__
 
         _assert_max_abs_diff(
-            cls.jax_outputs["energy"],
-            cls.torch_outputs["energy"],
+            cls.jax_outputs['energy'],
+            cls.torch_outputs['energy'],
             max_abs=2e-2,
         )
         _assert_max_abs_diff(
-            cls.jax_outputs["forces"],
-            cls.torch_outputs["forces"],
+            cls.jax_outputs['forces'],
+            cls.torch_outputs['forces'],
             max_abs=5e-2,
         )
         _assert_max_abs_diff(
-            cls.jax_outputs["stress"],
-            cls.torch_outputs["stress"],
+            cls.jax_outputs['stress'],
+            cls.torch_outputs['stress'],
             max_abs=5e-2,
         )
         _assert_max_abs_diff(
-            cls.jax_outputs["node_energy"],
-            cls.torch_outputs["node_energy"],
+            cls.jax_outputs['node_energy'],
+            cls.torch_outputs['node_energy'],
             max_abs=2e-2,
         )
         _assert_max_abs_diff(
-            cls.jax_outputs["interaction_energy"],
-            cls.torch_outputs["interaction_energy"],
+            cls.jax_outputs['interaction_energy'],
+            cls.torch_outputs['interaction_energy'],
             max_abs=2e-2,
         )
 
         _assert_max_abs_diff(
-            cls.jax_outputs["node_feats"],
-            cls.torch_outputs["node_feats"],
+            cls.jax_outputs['node_feats'],
+            cls.torch_outputs['node_feats'],
             max_abs=5e-2,
         )
 
@@ -599,11 +600,11 @@ class TestModelParity:
 
         _assert_max_abs_diff(
             torch_concat,
-            cls.torch_outputs["node_feats"],
+            cls.torch_outputs['node_feats'],
             max_abs=1e-6,
         )
         _assert_max_abs_diff(
             jax_concat,
-            _align_to_reference(cls.jax_outputs["node_feats"], torch_concat),
+            _align_to_reference(cls.jax_outputs['node_feats'], torch_concat),
             max_abs=1e-6,
         )

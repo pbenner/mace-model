@@ -25,7 +25,7 @@ class Activation:
         acts: Sequence[Callable | None],
         *,
         normalize_act: bool = True,
-        layout_str: str = "mul_ir",
+        layout_str: str = 'mul_ir',
     ) -> None:
         self.irreps_in = Irreps(irreps_in)
         self.layout_str = validate_layout_str(layout_str)
@@ -33,14 +33,14 @@ class Activation:
         def _to_jax_act(act: Callable | None) -> Callable | None:
             if act is None:
                 return None
-            if hasattr(act, "__name__"):
+            if hasattr(act, '__name__'):
                 name = act.__name__.lower()
-                if name in ("silu", "swish"):
+                if name in ('silu', 'swish'):
                     return jax.nn.silu
-            cls_name = getattr(getattr(act, "__class__", None), "__name__", "").lower()
-            if cls_name in ("silu", "swish"):
+            cls_name = getattr(getattr(act, '__class__', None), '__name__', '').lower()
+            if cls_name in ('silu', 'swish'):
                 return jax.nn.silu
-            wrapped = getattr(act, "f", None)
+            wrapped = getattr(act, 'f', None)
             if wrapped is not None and wrapped is not act:
                 mapped = _to_jax_act(wrapped)
                 if mapped is not None:
@@ -50,12 +50,12 @@ class Activation:
         def _maybe_get_const(act):
             if act is None:
                 return None, None
-            const = getattr(act, "_normalize2mom_const", None)
+            const = getattr(act, '_normalize2mom_const', None)
             if const is None:
-                const = getattr(act, "cst", None)
-            orig = getattr(act, "_normalize2mom_original", None)
+                const = getattr(act, 'cst', None)
+            orig = getattr(act, '_normalize2mom_original', None)
             if orig is None:
-                orig = getattr(act, "f", None)
+                orig = getattr(act, 'f', None)
             return const, orig
 
         processed_acts: list[Callable | None] = []
@@ -78,7 +78,7 @@ class Activation:
             p_out = cue_activation.function_parity(act)
             if p_out == 0:
                 raise ValueError(
-                    "Activation parity is violated: odd scalar input requires an even or odd activation."
+                    'Activation parity is violated: odd scalar input requires an even or odd activation.'
                 )
             return p_out
 
@@ -95,7 +95,7 @@ class Activation:
             moved = True
         if array.shape[-1] != self.irreps_in.dim:
             raise ValueError(
-                f"Invalid input shape: expected last dimension {self.irreps_in.dim}, got {array.shape[-1]}"
+                f'Invalid input shape: expected last dimension {self.irreps_in.dim}, got {array.shape[-1]}'
             )
 
         segments = []
@@ -106,7 +106,7 @@ class Activation:
             if act is not None:
                 if ir.l != 0:
                     raise ValueError(
-                        "Activation can only apply non-linearities to scalar irreps."
+                        'Activation can only apply non-linearities to scalar irreps.'
                     )
                 segment = act(segment)
             segments.append(segment)

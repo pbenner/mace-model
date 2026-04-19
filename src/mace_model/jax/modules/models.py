@@ -61,23 +61,23 @@ def _prepare_normalize2mom_consts(
     consts: dict[str, float] | None,
 ) -> dict[str, float]:
     if consts is None:
-        silu_value = estimate_normalize2mom_const("silu")
-        consts = {"silu": silu_value, "swish": silu_value}
+        silu_value = estimate_normalize2mom_const('silu')
+        consts = {'silu': silu_value, 'swish': silu_value}
     else:
         consts = dict(consts)
-        if "silu" not in consts:
-            silu_value = estimate_normalize2mom_const("silu")
-            consts["silu"] = silu_value
-            consts.setdefault("swish", silu_value)
-        if "swish" not in consts:
-            consts["swish"] = consts["silu"]
+        if 'silu' not in consts:
+            silu_value = estimate_normalize2mom_const('silu')
+            consts['silu'] = silu_value
+            consts.setdefault('swish', silu_value)
+        if 'swish' not in consts:
+            consts['swish'] = consts['silu']
     cleaned: dict[str, float] = {}
     for key, val in consts.items():
         try:
             scalar_val = float(np.asarray(val))
         except Exception as exc:
             raise ValueError(
-                f"normalize2mom_consts for {key} must be a concrete float."
+                f'normalize2mom_consts for {key} must be a concrete float.'
             ) from exc
         register_normalize2mom_const(key, scalar_val)
         cleaned[key] = scalar_val
@@ -101,8 +101,8 @@ class MACE(MACEModel, nnx.Module):
         atomic_numbers: tuple[int, ...],
         num_interactions: int = 3,
         num_elements: int = 1,
-        hidden_irreps: Irreps = Irreps("1x0e"),
-        MLP_irreps: Irreps = Irreps("1x0e"),
+        hidden_irreps: Irreps = Irreps('1x0e'),
+        MLP_irreps: Irreps = Irreps('1x0e'),
         avg_num_neighbors: float = 1.0,
         correlation: int | Sequence[int] = 1,
         gate: Callable | None = None,
@@ -117,14 +117,14 @@ class MACE(MACEModel, nnx.Module):
         replacement_use_species_conditioning: bool = True,
         attn_num_heads: int = 4,
         attn_head_dim: int = 16,
-        attn_gate_mode: str = "scalar",
+        attn_gate_mode: str = 'scalar',
         use_last_readout_only: bool = False,
         use_embedding_readout: bool = False,
         collapse_hidden_irreps: bool = True,
-        distance_transform: str = "None",
+        distance_transform: str = 'None',
         edge_irreps: Irreps | None = None,
         radial_MLP: Sequence[int] | None = None,
-        radial_type: str = "bessel",
+        radial_type: str = 'bessel',
         heads: Sequence[str] | None = None,
         cueq_config: dict[str, Any] | None = None,
         embedding_specs: dict[str, Any] | None = None,
@@ -165,20 +165,20 @@ class MACE(MACEModel, nnx.Module):
             readout_cls=readout_cls,
             readout_use_higher_irrep_invariants=readout_use_higher_irrep_invariants,
             readout_invariant_eps=readout_invariant_eps,
-            mlp_attr_name="MLP_irreps",
-            radial_mlp_attr_name="radial_MLP",
+            mlp_attr_name='MLP_irreps',
+            radial_mlp_attr_name='radial_MLP',
             keep_r_max_attr=True,
             extra_attrs={
-                "replace_symmetric_contraction": bool(replace_symmetric_contraction),
-                "replacement_hidden_irreps": replacement_hidden_irreps,
-                "replacement_depth": max(1, int(replacement_depth)),
-                "replacement_use_species_conditioning": bool(
+                'replace_symmetric_contraction': bool(replace_symmetric_contraction),
+                'replacement_hidden_irreps': replacement_hidden_irreps,
+                'replacement_depth': max(1, int(replacement_depth)),
+                'replacement_use_species_conditioning': bool(
                     replacement_use_species_conditioning
                 ),
-                "attn_num_heads": max(1, int(attn_num_heads)),
-                "attn_head_dim": max(1, int(attn_head_dim)),
-                "attn_gate_mode": str(attn_gate_mode),
-                "collapse_hidden_irreps": bool(collapse_hidden_irreps),
+                'attn_num_heads': max(1, int(attn_num_heads)),
+                'attn_head_dim': max(1, int(attn_head_dim)),
+                'attn_gate_mode': str(attn_gate_mode),
+                'collapse_hidden_irreps': bool(collapse_hidden_irreps),
             },
         )
 
@@ -252,27 +252,27 @@ class MACE(MACEModel, nnx.Module):
         include_edge_irreps: bool = False,
     ) -> dict[str, Any]:
         kwargs = {
-            "attn_num_heads": self.attn_num_heads,
-            "attn_head_dim": self.attn_head_dim,
-            "attn_gate_mode": self.attn_gate_mode,
-            "rngs": rngs,
+            'attn_num_heads': self.attn_num_heads,
+            'attn_head_dim': self.attn_head_dim,
+            'attn_gate_mode': self.attn_gate_mode,
+            'rngs': rngs,
         }
         if include_edge_irreps:
-            kwargs["edge_irreps"] = edge_irreps
+            kwargs['edge_irreps'] = edge_irreps
         return kwargs
 
     def _product_kwargs(self, *, rngs: nnx.Rngs) -> dict[str, Any]:
         return {
-            "replace_symmetric_contraction": self.replace_symmetric_contraction,
-            "replacement_hidden_irreps": self._replacement_hidden_irreps,
-            "replacement_depth": self.replacement_depth,
-            "replacement_use_species_conditioning": self.replacement_use_species_conditioning,
-            "rngs": rngs,
+            'replace_symmetric_contraction': self.replace_symmetric_contraction,
+            'replacement_hidden_irreps': self._replacement_hidden_irreps,
+            'replacement_depth': self.replacement_depth,
+            'replacement_use_species_conditioning': self.replacement_use_species_conditioning,
+            'rngs': rngs,
         }
 
     @staticmethod
     def _module_kwargs(*, rngs: nnx.Rngs) -> dict[str, nnx.Rngs]:
-        return {"rngs": rngs}
+        return {'rngs': rngs}
 
     def _pair_node_energy(
         self,
@@ -384,10 +384,10 @@ class MACE(MACEModel, nnx.Module):
         self.spherical_harmonics = SphericalHarmonics(
             sh_irreps,
             normalize=True,
-            normalization="component",
-            layout_str=getattr(self.cueq_config, "layout_str", "mul_ir")
+            normalization='component',
+            layout_str=getattr(self.cueq_config, 'layout_str', 'mul_ir')
             if self.cueq_config is not None
-            else "mul_ir",
+            else 'mul_ir',
         )
         self.edge_attrs_irreps = sh_irreps
 
@@ -444,20 +444,20 @@ class MACE(MACEModel, nnx.Module):
         node_attrs: jnp.ndarray,
     ) -> jnp.ndarray | None:
         need_node_attrs_index = self.pair_repulsion or self.distance_transform in {
-            "Agnesi",
-            "Soft",
+            'Agnesi',
+            'Soft',
         }
-        if self.cueq_config is not None and getattr(self.cueq_config, "enabled", False):
+        if self.cueq_config is not None and getattr(self.cueq_config, 'enabled', False):
             need_node_attrs_index = need_node_attrs_index or bool(
-                getattr(self.cueq_config, "optimize_all", False)
-                or getattr(self.cueq_config, "optimize_symmetric", False)
+                getattr(self.cueq_config, 'optimize_all', False)
+                or getattr(self.cueq_config, 'optimize_symmetric', False)
             )
-        node_attrs_index = data.get("node_attrs_index")
+        node_attrs_index = data.get('node_attrs_index')
         if node_attrs_index is None:
-            node_attrs_index = data.get("node_type")
+            node_attrs_index = data.get('node_type')
         if node_attrs_index is None:
-            node_attrs_index = data.get("species")
-        if node_attrs_index is not None and getattr(node_attrs_index, "ndim", 1) != 1:
+            node_attrs_index = data.get('species')
+        if node_attrs_index is not None and getattr(node_attrs_index, 'ndim', 1) != 1:
             node_attrs_index = None
         if node_attrs_index is None and need_node_attrs_index:
             node_attrs_index = jnp.argmax(node_attrs, axis=1)
@@ -470,22 +470,22 @@ class MACE(MACEModel, nnx.Module):
         if self.cueq_config is None:
             return edge_attrs
 
-        layout_str = getattr(self.cueq_config, "layout_str", "mul_ir")
-        if layout_str != "ir_mul" or not getattr(self.cueq_config, "enabled", False):
+        layout_str = getattr(self.cueq_config, 'layout_str', 'mul_ir')
+        if layout_str != 'ir_mul' or not getattr(self.cueq_config, 'enabled', False):
             return edge_attrs
 
-        group = getattr(self.cueq_config, "group", None)
+        group = getattr(self.cueq_config, 'group', None)
         if group is None:
             return mul_ir_to_ir_dict(
                 self.edge_attrs_irreps,
                 edge_attrs,
-                layout_str="ir_mul",
+                layout_str='ir_mul',
             )
         return mul_ir_to_ir_dict(
             self.edge_attrs_irreps,
             edge_attrs,
             group=group,
-            layout_str="ir_mul",
+            layout_str='ir_mul',
         )
 
     def _forward_core(
@@ -500,12 +500,12 @@ class MACE(MACEModel, nnx.Module):
         ctx = prepare_graph(
             data,
             lammps_mliap=lammps_mliap,
-            lammps_class=data.get("lammps_class", lammps_class),
+            lammps_class=data.get('lammps_class', lammps_class),
         )
         lammps_class, lammps_natoms, n_real = self.resolve_lammps_runtime(ctx)
-        batch = data["batch"]
-        edge_index = data["edge_index"]
-        node_attrs = data["node_attrs"]
+        batch = data['batch']
+        edge_index = data['edge_index']
+        node_attrs = data['node_attrs']
         node_attrs_index = self._resolve_node_attrs_index(data, node_attrs)
         pair_node_energy_fn = partial(
             self._pair_node_energy,
@@ -706,4 +706,4 @@ class ScaleShiftMACE(MACE):
         )
 
 
-__all__ = ["MACE", "ScaleShiftMACE"]
+__all__ = ['MACE', 'ScaleShiftMACE']

@@ -78,7 +78,7 @@ def _mask_head(x: torch.Tensor, head: torch.Tensor, num_heads: int) -> torch.Ten
     return x * mask
 
 
-@define_backend(name="torch")
+@define_backend(name='torch')
 class _TorchBackendSpec:
     @staticmethod
     def make_irreps(value):
@@ -155,23 +155,23 @@ class _TorchBackendSpec:
         embedders = torch.nn.ModuleDict()
         for name in feature_names:
             spec = specs[name]
-            emb_dim = int(spec["emb_dim"])
-            use_bias = bool(spec.get("use_bias", True))
+            emb_dim = int(spec['emb_dim'])
+            use_bias = bool(spec.get('use_bias', True))
 
-            if spec["type"] == "categorical":
+            if spec['type'] == 'categorical':
                 embedders[name] = torch.nn.Embedding(
-                    int(spec["num_classes"]),
+                    int(spec['num_classes']),
                     emb_dim,
                 )
-            elif spec["type"] == "continuous":
-                in_dim = int(spec.get("in_dim", 1))
+            elif spec['type'] == 'continuous':
+                in_dim = int(spec.get('in_dim', 1))
                 embedders[name] = torch.nn.Sequential(
                     torch.nn.Linear(in_dim, emb_dim, bias=use_bias),
                     torch.nn.SiLU(),
                     torch.nn.Linear(emb_dim, emb_dim, bias=use_bias),
                 )
             else:
-                raise ValueError(f"Unknown type {spec['type']} for feature {name}")
+                raise ValueError(f'Unknown type {spec["type"]} for feature {name}')
         return embedders
 
     @staticmethod
@@ -348,7 +348,7 @@ class _TorchBackendSpec:
     @staticmethod
     def make_atomic_energies(module, atomic_energies):
         module.register_buffer(
-            "atomic_energies",
+            'atomic_energies',
             torch.tensor(atomic_energies, dtype=torch.get_default_dtype()),
         )
         return module.atomic_energies

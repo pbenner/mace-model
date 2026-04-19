@@ -37,7 +37,7 @@ def convert_torch_to_jax(
     pure = state_to_pure_dict(state)
     updated = jax_model.__class__.import_from_torch(torch_model, pure)
     if updated is not None:
-        updated.pop("_normalize2mom_consts_var", None)
+        updated.pop('_normalize2mom_consts_var', None)
         nnx.replace_by_pure_dict(state, updated)
         jax_model = nnx.merge(graphdef, state)
     variables = state_to_serializable_dict(state)
@@ -45,13 +45,13 @@ def convert_torch_to_jax(
 
 
 __all__ = [
-    "build_model",
-    "coerce_irreps",
-    "normalize_atomic_config",
-    "prepare_template_data",
-    "_as_irreps",
-    "_build_jax_model",
-    "_normalize_atomic_config",
-    "_prepare_template_data",
-    "convert_torch_to_jax",
+    'build_model',
+    'coerce_irreps',
+    'normalize_atomic_config',
+    'prepare_template_data',
+    '_as_irreps',
+    '_build_jax_model',
+    '_normalize_atomic_config',
+    '_prepare_template_data',
+    'convert_torch_to_jax',
 ]

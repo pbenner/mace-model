@@ -31,9 +31,9 @@ from .utility import (
 @dataclasses.dataclass
 class CuEquivarianceConfig:
     enabled: bool = False
-    layout: str = "mul_ir"
-    layout_str: str = "mul_ir"
-    group: str = "O3"
+    layout: str = 'mul_ir'
+    layout_str: str = 'mul_ir'
+    group: str = 'O3'
     optimize_all: bool = False
     optimize_linear: bool = False
     optimize_channelwise: bool = False
@@ -45,8 +45,8 @@ class CuEquivarianceConfig:
         if isinstance(self.layout, str):
             self.layout_str = self.layout
         else:
-            self.layout_str = getattr(self.layout, "name", None) or getattr(
-                self.layout, "__name__", None
+            self.layout_str = getattr(self.layout, 'name', None) or getattr(
+                self.layout, '__name__', None
             )
             if self.layout_str is None:
                 self.layout_str = str(self.layout)
@@ -57,7 +57,7 @@ class OEQConfig:
     enabled: bool = False
     optimize_all: bool = False
     optimize_channelwise: bool = False
-    conv_fusion: Optional[str] = "atomic"
+    conv_fusion: Optional[str] = 'atomic'
 
 
 def Linear(
@@ -67,17 +67,17 @@ def Linear(
     internal_weights: bool = True,
     cueq_config: CuEquivarianceConfig | None = None,
 ):
-    group_value = getattr(cueq_config, "group", None) if cueq_config else None
-    _validate_cue_group(group_value, context="Linear")
+    group_value = getattr(cueq_config, 'group', None) if cueq_config else None
+    _validate_cue_group(group_value, context='Linear')
     group = _resolve_cue_group(cueq_config) if cueq_config else None
-    layout = getattr(cueq_config, "layout", "mul_ir") if cueq_config else "mul_ir"
+    layout = getattr(cueq_config, 'layout', 'mul_ir') if cueq_config else 'mul_ir'
     linear_kwargs = dict(
         shared_weights=shared_weights,
         internal_weights=internal_weights,
         layout=layout,
     )
     if group is not None:
-        linear_kwargs["group"] = group
+        linear_kwargs['group'] = group
     return _CueLinear(irreps_in, irreps_out, **linear_kwargs)
 
 
@@ -92,11 +92,11 @@ def TensorProduct(
     oeq_config: OEQConfig | None = None,
 ):
     del oeq_config
-    group_value = getattr(cueq_config, "group", None) if cueq_config else None
-    _validate_cue_group(group_value, context="TensorProduct")
+    group_value = getattr(cueq_config, 'group', None) if cueq_config else None
+    _validate_cue_group(group_value, context='TensorProduct')
     group = _resolve_cue_group(cueq_config) if cueq_config else None
     conv_fusion = (
-        bool(getattr(cueq_config, "conv_fusion", False)) if cueq_config else False
+        bool(getattr(cueq_config, 'conv_fusion', False)) if cueq_config else False
     )
     tp_kwargs = dict(
         instructions=instructions,
@@ -104,10 +104,10 @@ def TensorProduct(
         internal_weights=internal_weights,
         conv_fusion=conv_fusion,
     )
-    if cueq_config is not None and getattr(cueq_config, "layout", None) is not None:
-        tp_kwargs["layout"] = getattr(cueq_config, "layout")
+    if cueq_config is not None and getattr(cueq_config, 'layout', None) is not None:
+        tp_kwargs['layout'] = getattr(cueq_config, 'layout')
     if group is not None:
-        tp_kwargs["group"] = group
+        tp_kwargs['group'] = group
     return _CueTensorProduct(irreps_in1, irreps_in2, irreps_out, **tp_kwargs)
 
 
@@ -119,17 +119,17 @@ def FullyConnectedTensorProduct(
     internal_weights: bool = True,
     cueq_config: CuEquivarianceConfig | None = None,
 ):
-    group_value = getattr(cueq_config, "group", None) if cueq_config else None
-    _validate_cue_group(group_value, context="FullyConnectedTensorProduct")
+    group_value = getattr(cueq_config, 'group', None) if cueq_config else None
+    _validate_cue_group(group_value, context='FullyConnectedTensorProduct')
     group = _resolve_cue_group(cueq_config) if cueq_config else None
     fctp_kwargs = dict(
         shared_weights=shared_weights,
         internal_weights=internal_weights,
     )
-    if cueq_config is not None and getattr(cueq_config, "layout", None) is not None:
-        fctp_kwargs["layout"] = getattr(cueq_config, "layout")
+    if cueq_config is not None and getattr(cueq_config, 'layout', None) is not None:
+        fctp_kwargs['layout'] = getattr(cueq_config, 'layout')
     if group is not None:
-        fctp_kwargs["group"] = group
+        fctp_kwargs['group'] = group
     return _CueFullyConnectedTensorProduct(
         irreps_in1,
         irreps_in2,
@@ -148,9 +148,9 @@ def SymmetricContractionWrapper(
     use_reduced_cg: bool = True,
 ):
     del oeq_config
-    group_value = getattr(cueq_config, "group", None) if cueq_config else None
+    group_value = getattr(cueq_config, 'group', None) if cueq_config else None
     if cueq_config is not None:
-        _validate_cue_group(group_value, context="SymmetricContraction")
+        _validate_cue_group(group_value, context='SymmetricContraction')
     group = _resolve_cue_group(cueq_config) if cueq_config else None
     sc_kwargs = dict(
         correlation=correlation,
@@ -159,19 +159,19 @@ def SymmetricContractionWrapper(
         layout=_cue_layout(cueq_config),
     )
     if group is not None:
-        sc_kwargs["group"] = group
+        sc_kwargs['group'] = group
     return _CueSymmetricContraction(irreps_in, irreps_out, **sc_kwargs)
 
 
 __all__ = [
-    "CuEquivarianceConfig",
-    "OEQConfig",
-    "Linear",
-    "TensorProduct",
-    "FullyConnectedTensorProduct",
-    "SymmetricContractionWrapper",
-    "TransposeIrrepsLayoutWrapper",
-    "native_full_to_canonical_weight",
-    "torch_target_design_matrix",
-    "scatter_sum",
+    'CuEquivarianceConfig',
+    'OEQConfig',
+    'Linear',
+    'TensorProduct',
+    'FullyConnectedTensorProduct',
+    'SymmetricContractionWrapper',
+    'TransposeIrrepsLayoutWrapper',
+    'native_full_to_canonical_weight',
+    'torch_target_design_matrix',
+    'scatter_sum',
 ]

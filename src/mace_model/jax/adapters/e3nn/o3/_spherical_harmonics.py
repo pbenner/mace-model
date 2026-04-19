@@ -26,17 +26,17 @@ from ..irreps import Irreps
 class SphericalHarmonics(nnx.Module):
     irreps_out: int | Sequence[int] | str | Any
     normalize: bool
-    normalization: str = "integral"
+    normalization: str = 'integral'
     irreps_in: Any = None
 
     def __init__(
         self,
         irreps_out: int | Sequence[int] | str | Any,
         normalize: bool,
-        normalization: str = "integral",
+        normalization: str = 'integral',
         irreps_in: Any = None,
         *,
-        layout_str: str = "mul_ir",
+        layout_str: str = 'mul_ir',
     ) -> None:
         self.irreps_out = irreps_out
         self.normalize = normalize
@@ -46,12 +46,12 @@ class SphericalHarmonics(nnx.Module):
 
         self._plan = build_spherical_harmonics_plan(
             Irreps(self.irreps_out),
-            Irreps("1o" if self.irreps_in is None else self.irreps_in),
+            Irreps('1o' if self.irreps_in is None else self.irreps_in),
             self.normalization,
         )
         if self._plan.lmax > 11:
             raise NotImplementedError(
-                f"spherical_harmonics maximum l implemented is 11, got {self._plan.lmax}"
+                f'spherical_harmonics maximum l implemented is 11, got {self._plan.lmax}'
             )
 
     def __call__(self, x: jnp.ndarray) -> jnp.ndarray:
@@ -73,6 +73,6 @@ class SphericalHarmonics(nnx.Module):
             self._plan,
             asarray=jnp.asarray,
         )
-        if self.layout_str == "ir_mul":
+        if self.layout_str == 'ir_mul':
             return ir_mul_to_mul_ir(array, self._plan.canonical_irreps_out)
         return array

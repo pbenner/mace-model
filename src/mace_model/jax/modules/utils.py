@@ -77,12 +77,12 @@ def get_outputs(
               flags were traced these masks are JAX booleans aligned with the
               returned arrays.
     """
-    positions = data["positions"]
-    cell = data["cell"]
-    unit_shifts = data["unit_shifts"]
-    edge_index = data["edge_index"]
-    batch = data["batch"]
-    num_graphs = int(jnp.size(data["ptr"]) - 1)
+    positions = data['positions']
+    cell = data['cell']
+    unit_shifts = data['unit_shifts']
+    edge_index = data['edge_index']
+    batch = data['batch']
+    num_graphs = int(jnp.size(data['ptr']) - 1)
 
     displacement = jnp.zeros((num_graphs, 3, 3), dtype=positions.dtype)
 
@@ -91,14 +91,14 @@ def get_outputs(
         """Return total energy and per-graph energies for a symmetric displacement."""
         symmetric_displacement = 0.5 * (disp + jnp.swapaxes(disp, -1, -2))
         deformed_positions = pos + jnp.einsum(
-            "be,bec->bc", pos, symmetric_displacement[batch]
+            'be,bec->bc', pos, symmetric_displacement[batch]
         )
         cell_reshaped = cell.reshape(-1, 3, 3)
         cell_reshaped = cell_reshaped + jnp.matmul(
             cell_reshaped, symmetric_displacement
         )
         shifts = jnp.einsum(
-            "be,bec->bc",
+            'be,bec->bc',
             unit_shifts,
             cell_reshaped[batch[edge_index[0]]],
         )
@@ -253,23 +253,23 @@ def prepare_graph(
     lammps_mliap: bool = False,
     lammps_class: Any | None = None,
 ) -> GraphContext:
-    batch = jnp.asarray(data["batch"], dtype=jnp.int32)
+    batch = jnp.asarray(data['batch'], dtype=jnp.int32)
 
-    if "head" in data:
-        heads = jnp.asarray(data["head"], dtype=jnp.int32)
+    if 'head' in data:
+        heads = jnp.asarray(data['head'], dtype=jnp.int32)
         node_heads = heads[batch]
     else:
         node_heads = jnp.zeros_like(batch)
 
     if lammps_mliap:
-        node_attrs = jnp.asarray(data["node_attrs"])
+        node_attrs = jnp.asarray(data['node_attrs'])
         n_real = int(node_attrs.shape[0])
-        natoms = data.get("natoms", (n_real, 0))
+        natoms = data.get('natoms', (n_real, 0))
         if isinstance(natoms, tuple):
             n_ghosts = int(natoms[1]) if len(natoms) > 1 else 0
         else:
             n_ghosts = int(natoms) if natoms else 0
-        vectors = jnp.asarray(data["vectors"], dtype=default_dtype())
+        vectors = jnp.asarray(data['vectors'], dtype=default_dtype())
         lengths = jnp.linalg.norm(vectors, axis=-1, keepdims=True)
         num_graphs = 2  # match torch behaviour: real and ghost graph
 
@@ -279,7 +279,7 @@ def prepare_graph(
         num_atoms_arange = jnp.arange(n_real, dtype=jnp.int32)
         node_heads = node_heads[:n_real]
         lammps_cls = (
-            lammps_class if lammps_class is not None else data.get("lammps_class")
+            lammps_class if lammps_class is not None else data.get('lammps_class')
         )
         ikw = InteractionKwargs(lammps_cls, (n_real, n_ghosts))
 
@@ -296,13 +296,13 @@ def prepare_graph(
             interaction_kwargs=ikw,
         )
 
-    positions = jnp.asarray(data["positions"], dtype=default_dtype())
-    cell = jnp.asarray(data["cell"], dtype=positions.dtype)
-    shifts = jnp.asarray(data["shifts"], dtype=positions.dtype)
-    edge_index = jnp.asarray(data["edge_index"], dtype=jnp.int32)
+    positions = jnp.asarray(data['positions'], dtype=default_dtype())
+    cell = jnp.asarray(data['cell'], dtype=positions.dtype)
+    shifts = jnp.asarray(data['shifts'], dtype=positions.dtype)
+    edge_index = jnp.asarray(data['edge_index'], dtype=jnp.int32)
 
     num_atoms_arange = jnp.arange(positions.shape[0], dtype=jnp.int32)
-    num_graphs = int(data["ptr"].shape[0] - 1)
+    num_graphs = int(data['ptr'].shape[0] - 1)
     displacement = jnp.zeros((num_graphs, 3, 3), dtype=positions.dtype)
 
     vectors, lengths = get_edge_vectors_and_lengths(
@@ -346,21 +346,21 @@ def add_output_interface(cls=None):
                 **model_kwargs,
             )
 
-            energy_arr = raw_out["energy"] if isinstance(raw_out, dict) else raw_out
+            energy_arr = raw_out['energy'] if isinstance(raw_out, dict) else raw_out
 
             def energy_fn(positions, shifts=None):
                 # Replace the positions in `data` with `pos` before recomputing
                 new_data = dict(data)
-                new_data["positions"] = positions
+                new_data['positions'] = positions
 
                 if shifts is not None:
-                    new_data["shifts"] = shifts
+                    new_data['shifts'] = shifts
 
                 out = self._energy_fn(
                     new_data,
                     **model_kwargs,
                 )
-                return out["energy"] if isinstance(out, dict) else out
+                return out['energy'] if isinstance(out, dict) else out
 
             total_energy, forces, stress, has_force, has_stress = get_outputs(
                 energy_fn=energy_fn,
@@ -370,7 +370,7 @@ def add_output_interface(cls=None):
             )
 
             result = (
-                dict(raw_out) if isinstance(raw_out, dict) else {"energy": energy_arr}
+                dict(raw_out) if isinstance(raw_out, dict) else {'energy': energy_arr}
             )
             try:
                 force_flag = bool(has_force)
@@ -378,27 +378,27 @@ def add_output_interface(cls=None):
             except TracerBoolConversionError:
                 result.update(
                     {
-                        "energy": total_energy,
-                        "forces": forces,
-                        "stress": stress,
-                        "forces_mask": has_force,
-                        "stress_mask": has_stress,
+                        'energy': total_energy,
+                        'forces': forces,
+                        'stress': stress,
+                        'forces_mask': has_force,
+                        'stress_mask': has_stress,
                     }
                 )
             else:
                 result.update(
                     {
-                        "energy": total_energy,
-                        "forces": forces if force_flag else None,
-                        "stress": stress if stress_flag else None,
+                        'energy': total_energy,
+                        'forces': forces if force_flag else None,
+                        'stress': stress if stress_flag else None,
                     }
                 )
             return result
 
         # Move __call__ to _energy_fn
-        setattr(cls, "_energy_fn", getattr(cls, "__call__"))
+        setattr(cls, '_energy_fn', getattr(cls, '__call__'))
         # Attach the new __call__
-        setattr(cls, "__call__", __call__)
+        setattr(cls, '__call__', __call__)
         return cls
 
     # Allow decorator to be used with or without parentheses

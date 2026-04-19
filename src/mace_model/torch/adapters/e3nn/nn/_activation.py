@@ -26,7 +26,7 @@ class Activation(torch.nn.Module):
                 return 1
             if (a1 + a2).abs().max() < 1e-5:
                 return -1
-            raise ValueError("Activation: parity is violated for odd scalar input.")
+            raise ValueError('Activation: parity is violated for odd scalar input.')
 
         self.irreps_out = o3.Irreps(
             infer_activation_irreps_out(self.irreps_in, acts, _activation_parity)

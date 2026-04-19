@@ -50,7 +50,7 @@ class Gate(torch.nn.Module):
             gated,
             self.act_gates(gates),
             self._gate_blocks,
-            layout_str="mul_ir",
+            layout_str='mul_ir',
             concatenate=lambda parts: torch.cat(parts, dim=-1),
         )
         return torch.cat([scalars, gated_out], dim=-1)

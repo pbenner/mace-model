@@ -107,13 +107,13 @@ class LinearReadoutBlock(CoreLinearReadoutBlock, nnx.Module):
     """
 
     irreps_in: Irreps
-    irrep_out: Irreps = Irreps("0e")
+    irrep_out: Irreps = Irreps('0e')
     cueq_config: CuEquivarianceConfig | None = None
 
     def __init__(
         self,
         irreps_in: Irreps,
-        irrep_out: Irreps = Irreps("0e"),
+        irrep_out: Irreps = Irreps('0e'),
         cueq_config: CuEquivarianceConfig | None = None,
         *,
         rngs: nnx.Rngs,
@@ -204,7 +204,7 @@ class NonLinearReadoutBlock(CoreNonLinearReadoutBlock, nnx.Module):
     irreps_in: Irreps
     MLP_irreps: Irreps
     gate: Callable | None
-    irrep_out: Irreps = Irreps("0e")
+    irrep_out: Irreps = Irreps('0e')
     num_heads: int = 1
     cueq_config: CuEquivarianceConfig | None = None
 
@@ -213,7 +213,7 @@ class NonLinearReadoutBlock(CoreNonLinearReadoutBlock, nnx.Module):
         irreps_in: Irreps,
         MLP_irreps: Irreps,
         gate: Callable | None,
-        irrep_out: Irreps = Irreps("0e"),
+        irrep_out: Irreps = Irreps('0e'),
         num_heads: int = 1,
         cueq_config: CuEquivarianceConfig | None = None,
         *,
@@ -242,7 +242,7 @@ class NonLinearBiasReadoutBlock(CoreNonLinearBiasReadoutBlock, nnx.Module):
     irreps_in: Irreps
     MLP_irreps: Irreps
     gate: Callable | None
-    irrep_out: Irreps = Irreps("0e")
+    irrep_out: Irreps = Irreps('0e')
     num_heads: int = 1
     cueq_config: CuEquivarianceConfig | None = None
 
@@ -251,7 +251,7 @@ class NonLinearBiasReadoutBlock(CoreNonLinearBiasReadoutBlock, nnx.Module):
         irreps_in: Irreps,
         MLP_irreps: Irreps,
         gate: Callable | None,
-        irrep_out: Irreps = Irreps("0e"),
+        irrep_out: Irreps = Irreps('0e'),
         num_heads: int = 1,
         cueq_config: CuEquivarianceConfig | None = None,
         *,
@@ -346,8 +346,8 @@ class RadialEmbeddingBlock(CoreRadialEmbeddingBlock, nnx.Module):
     r_max: float
     num_bessel: int
     num_polynomial_cutoff: int
-    radial_type: str = "bessel"
-    distance_transform: str = "None"
+    radial_type: str = 'bessel'
+    distance_transform: str = 'None'
     apply_cutoff: bool = True
 
     def __init__(
@@ -355,8 +355,8 @@ class RadialEmbeddingBlock(CoreRadialEmbeddingBlock, nnx.Module):
         r_max: float,
         num_bessel: int,
         num_polynomial_cutoff: int,
-        radial_type: str = "bessel",
-        distance_transform: str = "None",
+        radial_type: str = 'bessel',
+        distance_transform: str = 'None',
         apply_cutoff: bool = True,
         *,
         rngs: nnx.Rngs | None = None,
@@ -551,8 +551,8 @@ class EquivariantProductBasisBlock(CoreEquivariantProductBasisBlock, nnx.Module)
         del replacement_use_species_conditioning
         if replace_symmetric_contraction:
             raise NotImplementedError(
-                "Unified JAX EquivariantProductBasisBlock does not support "
-                "replace_symmetric_contraction yet."
+                'Unified JAX EquivariantProductBasisBlock does not support '
+                'replace_symmetric_contraction yet.'
             )
         self.init(
             node_feats_irreps=node_feats_irreps,
@@ -584,23 +584,23 @@ class EquivariantProductBasisBlock(CoreEquivariantProductBasisBlock, nnx.Module)
 
 
 __all__ = [
-    "AtomicEnergiesBlock",
-    "EquivariantProductBasisBlock",
-    "InteractionBlock",
-    "LinearDipolePolarReadoutBlock",
-    "LinearDipoleReadoutBlock",
-    "LinearNodeEmbeddingBlock",
-    "LinearReadoutBlock",
-    "NonLinearBiasReadoutBlock",
-    "NonLinearDipolePolarReadoutBlock",
-    "NonLinearDipoleReadoutBlock",
-    "NonLinearReadoutBlock",
-    "RadialEmbeddingBlock",
-    "RealAgnosticAttResidualInteractionBlock",
-    "RealAgnosticDensityInteractionBlock",
-    "RealAgnosticDensityResidualInteractionBlock",
-    "RealAgnosticInteractionBlock",
-    "RealAgnosticResidualInteractionBlock",
-    "RealAgnosticResidualNonLinearInteractionBlock",
-    "ScaleShiftBlock",
+    'AtomicEnergiesBlock',
+    'EquivariantProductBasisBlock',
+    'InteractionBlock',
+    'LinearDipolePolarReadoutBlock',
+    'LinearDipoleReadoutBlock',
+    'LinearNodeEmbeddingBlock',
+    'LinearReadoutBlock',
+    'NonLinearBiasReadoutBlock',
+    'NonLinearDipolePolarReadoutBlock',
+    'NonLinearDipoleReadoutBlock',
+    'NonLinearReadoutBlock',
+    'RadialEmbeddingBlock',
+    'RealAgnosticAttResidualInteractionBlock',
+    'RealAgnosticDensityInteractionBlock',
+    'RealAgnosticDensityResidualInteractionBlock',
+    'RealAgnosticInteractionBlock',
+    'RealAgnosticResidualInteractionBlock',
+    'RealAgnosticResidualNonLinearInteractionBlock',
+    'ScaleShiftBlock',
 ]

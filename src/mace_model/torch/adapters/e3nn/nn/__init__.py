@@ -5,4 +5,4 @@ from ._gate import Gate
 
 Layer = _Layer
 
-__all__ = ["Activation", "Extract", "FullyConnectedNet", "Gate", "Layer", "_Layer"]
+__all__ = ['Activation', 'Extract', 'FullyConnectedNet', 'Gate', 'Layer', '_Layer']

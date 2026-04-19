@@ -8,7 +8,7 @@ import torch
 
 from mace_model.torch.adapters.e3nn import o3
 
-_SUPPORTED_CUE_GROUPS = {"O3", "O3_e3nn"}
+_SUPPORTED_CUE_GROUPS = {'O3', 'O3_e3nn'}
 
 
 def _group_name(group_value: object | None) -> str | None:
@@ -16,17 +16,17 @@ def _group_name(group_value: object | None) -> str | None:
         return None
     if isinstance(group_value, str):
         return group_value
-    return getattr(group_value, "__name__", None) or str(group_value)
+    return getattr(group_value, '__name__', None) or str(group_value)
 
 
 def _resolve_cue_group(cueq_config) -> object:
     if cueq_config is None:
         return cue.O3
-    group_value = getattr(cueq_config, "group", None)
+    group_value = getattr(cueq_config, 'group', None)
     if group_value is None:
         return cue.O3
     if isinstance(group_value, str):
-        if group_value == "O3_e3nn":
+        if group_value == 'O3_e3nn':
             return cue.O3
         try:
             return getattr(cue, group_value)
@@ -44,7 +44,7 @@ def _validate_cue_group(group_value: object | None, *, context: str) -> None:
     if name not in _SUPPORTED_CUE_GROUPS:
         raise ValueError(
             f"{context} only supports the 'O3' or 'O3_e3nn' groups; "
-            f"received {group_value!r}."
+            f'received {group_value!r}.'
         )
 
 
@@ -57,7 +57,7 @@ def _normalize_cue_layout(layout: object):
 def _cue_layout(cueq_config) -> object:
     if cueq_config is None:
         return cue.mul_ir
-    layout = getattr(cueq_config, "layout", cue.mul_ir)
+    layout = getattr(cueq_config, 'layout', cue.mul_ir)
     return _normalize_cue_layout(layout)
 
 
@@ -110,16 +110,16 @@ class TransposeIrrepsLayoutWrapper(torch.nn.Module):
         for mul, dim in zip(muls, dims):
             field = x[:, ix : ix + mul * dim]
             ix += mul * dim
-            if self.source == "mul_ir" and self.target == "ir_mul":
+            if self.source == 'mul_ir' and self.target == 'ir_mul':
                 field = field.reshape(x.shape[0], mul, dim).transpose(1, 2)
-            elif self.source == "ir_mul" and self.target == "mul_ir":
+            elif self.source == 'ir_mul' and self.target == 'mul_ir':
                 field = field.reshape(x.shape[0], dim, mul).transpose(1, 2)
             else:
                 raise ValueError(
-                    f"Unsupported irreps layout transpose {self.source!r} -> {self.target!r}."
+                    f'Unsupported irreps layout transpose {self.source!r} -> {self.target!r}.'
                 )
             fields.append(field.reshape(x.shape[0], mul * dim))
         return torch.cat(fields, dim=-1)
 
 
-__all__ = ["TransposeIrrepsLayoutWrapper"]
+__all__ = ['TransposeIrrepsLayoutWrapper']

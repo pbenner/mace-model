@@ -12,26 +12,26 @@ Positions = np.ndarray
 Cell = np.ndarray
 Pbc = tuple[bool, bool, bool]
 
-DEFAULT_CONFIG_TYPE = "Default"
+DEFAULT_CONFIG_TYPE = 'Default'
 DEFAULT_CONFIG_TYPE_WEIGHTS = {DEFAULT_CONFIG_TYPE: 1.0}
 
 
 class DefaultKeys(Enum):
-    ENERGY = "REF_energy"
-    FORCES = "REF_forces"
-    STRESS = "REF_stress"
-    VIRIALS = "REF_virials"
-    DIPOLE = "dipole"
-    POLARIZABILITY = "polarizability"
-    HEAD = "head"
-    CHARGES = "REF_charges"
-    TOTAL_CHARGE = "total_charge"
-    TOTAL_SPIN = "total_spin"
-    ELEC_TEMP = "elec_temp"
+    ENERGY = 'REF_energy'
+    FORCES = 'REF_forces'
+    STRESS = 'REF_stress'
+    VIRIALS = 'REF_virials'
+    DIPOLE = 'dipole'
+    POLARIZABILITY = 'polarizability'
+    HEAD = 'head'
+    CHARGES = 'REF_charges'
+    TOTAL_CHARGE = 'total_charge'
+    TOTAL_SPIN = 'total_spin'
+    ELEC_TEMP = 'elec_temp'
 
     @staticmethod
     def keydict() -> dict[str, str]:
-        return {f"{member.name.lower()}_key": member.value for member in DefaultKeys}
+        return {f'{member.name.lower()}_key': member.value for member in DefaultKeys}
 
 
 class AtomicNumberTable:
@@ -42,7 +42,7 @@ class AtomicNumberTable:
         return len(self.zs)
 
     def __str__(self) -> str:
-        return f"AtomicNumberTable: {tuple(self.zs)}"
+        return f'AtomicNumberTable: {tuple(self.zs)}'
 
     def index_to_z(self, index: int) -> int:
         return self.zs[index]
@@ -86,7 +86,7 @@ class KeySpecification:
         arrays_keys = {}
         for key, value in DefaultKeys.keydict().items():
             name = key[:-4]
-            if name in {"forces", "charges"}:
+            if name in {'forces', 'charges'}:
                 arrays_keys[name] = value
             else:
                 info_keys[name] = value
@@ -103,14 +103,14 @@ class Configuration:
     pbc: Optional[Pbc] = None
     weight: float = 1.0
     config_type: str = DEFAULT_CONFIG_TYPE
-    head: str = "Default"
+    head: str = 'Default'
 
 
 def config_from_atoms(
     atoms,
     key_specification: KeySpecification = KeySpecification(),
     config_type_weights: Optional[dict[str, float]] = None,
-    head_name: str = "Default",
+    head_name: str = 'Default',
 ) -> Configuration:
     if config_type_weights is None:
         config_type_weights = DEFAULT_CONFIG_TYPE_WEIGHTS
@@ -120,8 +120,8 @@ def config_from_atoms(
     )
     pbc = tuple(atoms.get_pbc().tolist())
     cell = np.array(atoms.get_cell())
-    config_type = atoms.info.get("config_type", DEFAULT_CONFIG_TYPE)
-    weight = atoms.info.get("config_weight", 1.0) * config_type_weights.get(
+    config_type = atoms.info.get('config_type', DEFAULT_CONFIG_TYPE)
+    weight = atoms.info.get('config_weight', 1.0) * config_type_weights.get(
         config_type,
         1.0,
     )
@@ -129,7 +129,7 @@ def config_from_atoms(
     properties = {}
     property_weights = {}
     for name in list(key_specification.arrays_keys) + list(key_specification.info_keys):
-        property_weights[name] = atoms.info.get(f"config_{name}_weight", 1.0)
+        property_weights[name] = atoms.info.get(f'config_{name}_weight', 1.0)
 
     for name, atoms_key in key_specification.info_keys.items():
         properties[name] = atoms.info.get(atoms_key, None)

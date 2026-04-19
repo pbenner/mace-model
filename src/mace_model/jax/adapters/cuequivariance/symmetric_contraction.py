@@ -91,8 +91,8 @@ class SymmetricContraction(nnx.Module):
     correlation: int
     num_elements: int
     use_reduced_cg: bool = True
-    input_layout: str = "mul_ir"
-    output_layout: str = "mul_ir"
+    input_layout: str = 'mul_ir'
+    output_layout: str = 'mul_ir'
     group: object = cue.O3
 
     def __init__(
@@ -102,8 +102,8 @@ class SymmetricContraction(nnx.Module):
         correlation: int,
         num_elements: int,
         use_reduced_cg: bool = True,
-        input_layout: str = "mul_ir",
-        output_layout: str = "mul_ir",
+        input_layout: str = 'mul_ir',
+        output_layout: str = 'mul_ir',
         group: object = cue.O3,
         *,
         rngs: nnx.Rngs | None = None,
@@ -125,22 +125,22 @@ class SymmetricContraction(nnx.Module):
         self.group = group
 
         if self.correlation <= 0:
-            raise ValueError("correlation must be a positive integer")
+            raise ValueError('correlation must be a positive integer')
         if self.num_elements <= 0:
-            raise ValueError("num_elements must be positive")
-        if self.input_layout not in {"mul_ir", "ir_mul"}:
+            raise ValueError('num_elements must be positive')
+        if self.input_layout not in {'mul_ir', 'ir_mul'}:
             raise ValueError(
                 "input_layout must be either 'mul_ir' or 'ir_mul'; "
-                f"got {self.input_layout!r}"
+                f'got {self.input_layout!r}'
             )
-        if self.output_layout not in {"mul_ir", "ir_mul"}:
+        if self.output_layout not in {'mul_ir', 'ir_mul'}:
             raise ValueError(
                 "output_layout must be either 'mul_ir' or 'ir_mul'; "
-                f"got {self.output_layout!r}"
+                f'got {self.output_layout!r}'
             )
 
-        input_layout_code = 0 if self.input_layout == "mul_ir" else 1
-        output_layout_code = 0 if self.output_layout == "mul_ir" else 1
+        input_layout_code = 0 if self.input_layout == 'mul_ir' else 1
+        output_layout_code = 0 if self.output_layout == 'mul_ir' else 1
         self.input_layout_config = ConfigVar(
             jnp.asarray(input_layout_code, dtype=jnp.int32),
             is_mutable=False,
@@ -159,7 +159,7 @@ class SymmetricContraction(nnx.Module):
         muls_out = {mul for mul, _ in irreps_out_o3}
         if len(muls_in) != 1 or len(muls_out) != 1 or muls_in != muls_out:
             raise ValueError(
-                "SymmetricContraction requires all input/output irreps to share the same multiplicity"
+                'SymmetricContraction requires all input/output irreps to share the same multiplicity'
             )
         self.mul = next(iter(muls_in))
 
@@ -191,7 +191,7 @@ class SymmetricContraction(nnx.Module):
 
         self.weight_param_shape = (self.num_elements, self.weight_basis_dim, self.mul)
         if rngs is None:
-            raise ValueError("rngs is required to initialize SymmetricContraction")
+            raise ValueError('rngs is required to initialize SymmetricContraction')
         self.weight = nnx.Param(
             jax.random.normal(
                 rngs(),
@@ -224,7 +224,7 @@ class SymmetricContraction(nnx.Module):
         jnp.ndarray
             Tensor guaranteed to be in ``mul_ir`` layout.
         """
-        if self.input_layout == "ir_mul":
+        if self.input_layout == 'ir_mul':
             return self._convert_ir_mul_to_mul_ir(x)
         return x
 
@@ -238,12 +238,12 @@ class SymmetricContraction(nnx.Module):
             width = mul_ir.ir.dim
             seg = x[:, offset : offset + width, :]
             if seg.shape[1] != width:
-                raise ValueError("Input feature dimension mismatch with irreps.")
+                raise ValueError('Input feature dimension mismatch with irreps.')
             segments.append(seg)
             offset += width
 
         if offset != x.shape[1]:
-            raise ValueError("Input feature dimension mismatch with irreps.")
+            raise ValueError('Input feature dimension mismatch with irreps.')
 
         return cuex.from_segments(
             self.irreps_in_cue,
@@ -273,7 +273,7 @@ class SymmetricContraction(nnx.Module):
         if self.projection is None:
             return basis_weights.astype(dtype)
         projection = jnp.asarray(self.projection, dtype=dtype)
-        return jnp.einsum("zau,ab->zbu", basis_weights.astype(dtype), projection)
+        return jnp.einsum('zau,ab->zbu', basis_weights.astype(dtype), projection)
 
     def _weight_rep_from_indices(
         self,
@@ -334,23 +334,23 @@ class SymmetricContraction(nnx.Module):
             expected = self.mul * self.feature_dim
             if array.shape[1] != expected:
                 raise ValueError(
-                    "Flattened features must have size "
-                    f"{expected}; received {array.shape[1]}"
+                    'Flattened features must have size '
+                    f'{expected}; received {array.shape[1]}'
                 )
-            if self.input_layout == "mul_ir":
+            if self.input_layout == 'mul_ir':
                 array = array.reshape(array.shape[0], self.mul, self.feature_dim)
-            elif self.input_layout == "ir_mul":
+            elif self.input_layout == 'ir_mul':
                 array = array.reshape(array.shape[0], self.feature_dim, self.mul)
             else:
-                raise ValueError(f"Unsupported input_layout {self.input_layout!r}")
+                raise ValueError(f'Unsupported input_layout {self.input_layout!r}')
         elif array.ndim != 3:
             raise ValueError(
-                "SymmetricContraction expects inputs with rank 2 or 3; "
-                f"got rank {array.ndim}"
+                'SymmetricContraction expects inputs with rank 2 or 3; '
+                f'got rank {array.ndim}'
             )
 
         weight_rep = self._weight_rep_from_indices(indices, dtype)
-        if self.input_layout == "ir_mul":
+        if self.input_layout == 'ir_mul':
             _validate_features_ir_mul(array, self.mul, self.feature_dim)
             x_rep = self._features_to_rep_ir_mul(array, dtype)
         else:
@@ -362,12 +362,12 @@ class SymmetricContraction(nnx.Module):
             self.descriptor,
             [weight_rep, x_rep],
             math_dtype=dtype,
-            method="naive",
+            method='naive',
         )
 
         out_ir_mul = out_rep.change_layout(cue.ir_mul).array
 
-        if self.output_layout == "ir_mul":
+        if self.output_layout == 'ir_mul':
             return out_ir_mul
         return ir_mul_to_mul_ir(
             out_ir_mul,
@@ -395,7 +395,7 @@ class SymmetricContraction(nnx.Module):
             width = mul_ir.ir.dim
             seg = x[:, :, offset : offset + width]
             if seg.shape[-1] != width:
-                raise ValueError("Input feature dimension mismatch with irreps.")
+                raise ValueError('Input feature dimension mismatch with irreps.')
             segments.append(jnp.swapaxes(seg, -2, -1))
             offset += width
 
@@ -415,12 +415,12 @@ class SymmetricContraction(nnx.Module):
             width = mul_ir.ir.dim
             seg = x[:, offset : offset + width, :]
             if seg.shape[1] != width:
-                raise ValueError("Input feature dimension mismatch with irreps.")
+                raise ValueError('Input feature dimension mismatch with irreps.')
             segments.append(jnp.swapaxes(seg, -1, -2))
             offset += width
 
         if offset != x.shape[1]:
-            raise ValueError("Input feature dimension mismatch with irreps.")
+            raise ValueError('Input feature dimension mismatch with irreps.')
 
         if not segments:
             return jnp.swapaxes(x, -1, -2)
@@ -442,8 +442,8 @@ def _validate_features(x: jnp.ndarray, mul: int, feature_dim: int) -> None:
     """
     if x.ndim != 3 or x.shape[1] != mul or x.shape[2] != feature_dim:
         raise ValueError(
-            "SymmetricContraction expects input with shape "
-            f"(batch, {mul}, {feature_dim}); got {tuple(x.shape)}"
+            'SymmetricContraction expects input with shape '
+            f'(batch, {mul}, {feature_dim}); got {tuple(x.shape)}'
         )
 
 
@@ -451,8 +451,8 @@ def _validate_features_ir_mul(x: jnp.ndarray, mul: int, feature_dim: int) -> Non
     """Ensure the feature tensor shape matches the expected ir_mul layout."""
     if x.ndim != 3 or x.shape[1] != feature_dim or x.shape[2] != mul:
         raise ValueError(
-            "SymmetricContraction expects input with shape "
-            f"(batch, {feature_dim}, {mul}); got {tuple(x.shape)}"
+            'SymmetricContraction expects input with shape '
+            f'(batch, {feature_dim}, {mul}); got {tuple(x.shape)}'
         )
 
 
@@ -496,21 +496,21 @@ def _select_weights(
 
     if selector.ndim == 2:
         if selector.shape[1] != num_elements:
-            raise ValueError("Mixing matrix must have second dimension num_elements")
+            raise ValueError('Mixing matrix must have second dimension num_elements')
         mix = jnp.asarray(selector, dtype=dtype)
         return mix @ weight_flat
 
-    raise ValueError("indices must be rank-1 (element ids) or rank-2 (mixing matrix)")
+    raise ValueError('indices must be rank-1 (element ids) or rank-2 (mixing matrix)')
 
 
 def _raise_invalid_indices(_: jnp.ndarray) -> None:
-    raise ValueError("indices out of range for the available elements")
+    raise ValueError('indices out of range for the available elements')
 
 
 def _symmetric_contraction_import_from_torch_with_layout(cls, torch_module, variables):
     """Wrapper around the auto-generated import that enforces layout parity."""
-    expected_input = variables.get("input_layout_config", None)
-    expected_output = variables.get("output_layout_config", None)
+    expected_input = variables.get('input_layout_config', None)
+    expected_output = variables.get('output_layout_config', None)
 
     def _decode_layout(val):
         if isinstance(val, jnp.ndarray):
@@ -518,9 +518,9 @@ def _symmetric_contraction_import_from_torch_with_layout(cls, torch_module, vari
                 val_int = int(val)
             except Exception:
                 return None
-            return "mul_ir" if val_int == 0 else "ir_mul"
+            return 'mul_ir' if val_int == 0 else 'ir_mul'
         if isinstance(val, (int, np.integer)):
-            return "mul_ir" if int(val) == 0 else "ir_mul"
+            return 'mul_ir' if int(val) == 0 else 'ir_mul'
         return val
 
     def _layout_str_from_obj(layout_obj) -> str | None:
@@ -528,7 +528,7 @@ def _symmetric_contraction_import_from_torch_with_layout(cls, torch_module, vari
             return None
         if isinstance(layout_obj, str):
             return layout_obj
-        for attr in ("layout_str", "name", "__name__"):
+        for attr in ('layout_str', 'name', '__name__'):
             val = getattr(layout_obj, attr, None)
             if val is not None:
                 return str(val)
@@ -537,11 +537,11 @@ def _symmetric_contraction_import_from_torch_with_layout(cls, torch_module, vari
     expected_input = _decode_layout(expected_input)
     expected_output = _decode_layout(expected_output)
 
-    torch_input = _layout_str_from_obj(getattr(torch_module, "input_layout", None))
-    torch_output = _layout_str_from_obj(getattr(torch_module, "output_layout", None))
+    torch_input = _layout_str_from_obj(getattr(torch_module, 'input_layout', None))
+    torch_output = _layout_str_from_obj(getattr(torch_module, 'output_layout', None))
     if torch_input is None or torch_output is None:
-        descriptor = getattr(torch_module, "descriptor", None) or getattr(
-            torch_module, "_descriptor", None
+        descriptor = getattr(torch_module, 'descriptor', None) or getattr(
+            torch_module, '_descriptor', None
         )
         if descriptor is not None:
             if torch_input is None:
@@ -556,19 +556,19 @@ def _symmetric_contraction_import_from_torch_with_layout(cls, torch_module, vari
                     torch_output = None
 
     if torch_input is None:
-        torch_input = "mul_ir"
+        torch_input = 'mul_ir'
     if torch_output is None:
-        torch_output = "mul_ir"
+        torch_output = 'mul_ir'
 
     if expected_input is not None and str(expected_input) != str(torch_input):
         logging.warning(
-            "JAX SymmetricContraction input layout %r differs from Torch layout %r; importing weights without conversion.",
+            'JAX SymmetricContraction input layout %r differs from Torch layout %r; importing weights without conversion.',
             expected_input,
             torch_input,
         )
     if expected_output is not None and str(expected_output) != str(torch_output):
         logging.warning(
-            "JAX SymmetricContraction output layout %r differs from Torch layout %r; importing weights without conversion.",
+            'JAX SymmetricContraction output layout %r differs from Torch layout %r; importing weights without conversion.',
             expected_output,
             torch_output,
         )
@@ -591,7 +591,7 @@ SymmetricContraction.import_from_torch = classmethod(
 
 
 @nxx_register_import_mapper(
-    "cuequivariance_torch.operations.symmetric_contraction.SymmetricContraction"
+    'cuequivariance_torch.operations.symmetric_contraction.SymmetricContraction'
 )
 def _import_cue_symmetric_contraction(module, variables, scope) -> None:
     """Import mapper that transfers weights from the cuEquivariance Torch module.
@@ -603,16 +603,16 @@ def _import_cue_symmetric_contraction(module, variables, scope) -> None:
     """
     target = _resolve_scope(variables, scope)
     weight = module.weight.detach().cpu().numpy()
-    existing = target.get("weight")
+    existing = target.get('weight')
     dtype = existing.dtype if existing is not None else weight.dtype
-    target["weight"] = jnp.asarray(weight, dtype=dtype)
+    target['weight'] = jnp.asarray(weight, dtype=dtype)
 
 
-@nxx_register_import_mapper("mace.modules.symmetric_contraction.SymmetricContraction")
+@nxx_register_import_mapper('mace.modules.symmetric_contraction.SymmetricContraction')
 def _import_native_symmetric_contraction(module, variables, scope) -> None:
     """Import mapper for native Torch MACE symmetric-contraction modules."""
     target = _resolve_scope(variables, scope)
-    weight = target.get("weight")
+    weight = target.get('weight')
     if weight is None:
         raise ValueError("Target JAX symmetric-contraction scope has no 'weight'.")
 
@@ -627,12 +627,14 @@ def _import_native_symmetric_contraction(module, variables, scope) -> None:
         target_template=target_template,
         target_design_matrix_fn=design_matrix_fn,
         target_basis_kind=target_basis_kind,
-        native_full_to_canonical_fn=lambda native_weight: native_full_to_canonical_weight(
-            module,
-            native_weight,
+        native_full_to_canonical_fn=lambda native_weight: (
+            native_full_to_canonical_weight(
+                module,
+                native_weight,
+            )
         ),
     )
-    target["weight"] = jnp.asarray(converted, dtype=weight.dtype)
+    target['weight'] = jnp.asarray(converted, dtype=weight.dtype)
 
 
 def _decode_layout_config(value, default: str) -> str:
@@ -642,7 +644,7 @@ def _decode_layout_config(value, default: str) -> str:
     if isinstance(value, np.ndarray):
         value = int(value.reshape(()))
     if isinstance(value, (int, np.integer)):
-        return "mul_ir" if int(value) == 0 else "ir_mul"
+        return 'mul_ir' if int(value) == 0 else 'ir_mul'
     if isinstance(value, str):
         return value
     return default
@@ -656,12 +658,12 @@ def _build_matching_jax_symmetric_contraction(
 ) -> tuple[nnx.GraphDef, dict, str]:
     """Construct a temporary JAX module that matches the target weight shape."""
     input_layout = _decode_layout_config(
-        target_scope.get("input_layout_config"),
-        "mul_ir",
+        target_scope.get('input_layout_config'),
+        'mul_ir',
     )
     output_layout = _decode_layout_config(
-        target_scope.get("output_layout_config"),
-        "mul_ir",
+        target_scope.get('output_layout_config'),
+        'mul_ir',
     )
     irreps_in = Irreps(str(torch_module.irreps_in))
     irreps_out = Irreps(str(torch_module.irreps_out))
@@ -681,19 +683,19 @@ def _build_matching_jax_symmetric_contraction(
         )
         graphdef, state = nnx.split(module)
         params = state_to_pure_dict(state)
-        if int(np.asarray(params["weight"]).shape[1]) == basis_dim:
-            target_basis_kind = "reduced" if use_reduced_cg else "canonical_full"
+        if int(np.asarray(params['weight']).shape[1]) == basis_dim:
+            target_basis_kind = 'reduced' if use_reduced_cg else 'canonical_full'
             return graphdef, _with_zero_weights(params), target_basis_kind
 
     raise ValueError(
-        "Failed to match the target JAX symmetric-contraction basis shape."
+        'Failed to match the target JAX symmetric-contraction basis shape.'
     )
 
 
 def _with_zero_weights(params: dict) -> dict:
     """Return a params pytree with all learnable weights zeroed."""
     params_mutable = dict(params)
-    params_mutable["weight"] = jnp.zeros_like(params_mutable["weight"])
+    params_mutable['weight'] = jnp.zeros_like(params_mutable['weight'])
     return params_mutable
 
 
@@ -704,7 +706,7 @@ def _canonical_design_matrix(
     indices: jnp.ndarray,
 ) -> np.ndarray:
     """Evaluate the temporary JAX module on all target basis vectors."""
-    weight_shape = np.asarray(params_zero["weight"]).shape
+    weight_shape = np.asarray(params_zero['weight']).shape
     basis_dim = int(weight_shape[1])
 
     outputs: list[np.ndarray] = []
@@ -713,7 +715,7 @@ def _canonical_design_matrix(
         weight[0, idx, 0] = 1.0
 
         params_idx = dict(params_zero)
-        params_idx["weight"] = jnp.asarray(weight)
+        params_idx['weight'] = jnp.asarray(weight)
         out, _ = graphdef.apply(params_idx)(inputs, indices)
         outputs.append(np.asarray(out).reshape(-1))
 
@@ -794,7 +796,7 @@ def _cached_full_cg_transform_from_native_jax(
     graphdef, state = nnx.split(jax_module)
     params = state_to_pure_dict(state)
     params_zero = _with_zero_weights(params)
-    batch = max(int(np.asarray(params_zero["weight"]).shape[1]), native_dim)
+    batch = max(int(np.asarray(params_zero['weight']).shape[1]), native_dim)
     rng = np.random.default_rng(0)
     inputs_np = rng.standard_normal((batch, mul, feature_dim)).astype(solve_dtype)
     canonical_matrix = _canonical_design_matrix(
@@ -827,7 +829,7 @@ def native_full_to_canonical_weight(
         str(irreps_out),
         correlation,
     ).astype(native_weight.dtype, copy=False)
-    return np.einsum("ab,zbu->zau", transform, native_weight, optimize=True)
+    return np.einsum('ab,zbu->zau', transform, native_weight, optimize=True)
 
 
 def _build_jax_target_design_matrix_fn(
@@ -846,8 +848,8 @@ def _build_jax_target_design_matrix_fn(
     )
 
     def _design_matrix(basis_dim: int, inputs_np: np.ndarray) -> np.ndarray:
-        if int(np.asarray(params_zero["weight"]).shape[1]) != basis_dim:
-            raise ValueError("Target JAX basis dimension mismatch during import.")
+        if int(np.asarray(params_zero['weight']).shape[1]) != basis_dim:
+            raise ValueError('Target JAX basis dimension mismatch during import.')
         inputs = jnp.asarray(inputs_np)
         indices = jnp.zeros((inputs_np.shape[0],), dtype=jnp.int32)
         return _canonical_design_matrix(graphdef, params_zero, inputs, indices)

@@ -34,7 +34,7 @@ class ConfigDict:
         return bool(self._data)
 
     def __repr__(self) -> str:  # pragma: no cover - trivial
-        return f"ConfigDict({self._data!r})"
+        return f'ConfigDict({self._data!r})'
 
 
 def _configdict_flatten(value: ConfigDict):

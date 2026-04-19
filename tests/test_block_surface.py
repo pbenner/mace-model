@@ -6,7 +6,7 @@ try:
     import cuequivariance_jax  # noqa: F401
 except Exception as exc:  # pragma: no cover - environment dependent
     pytest.skip(
-        f"cuequivariance_jax is unavailable in this environment: {exc}",
+        f'cuequivariance_jax is unavailable in this environment: {exc}',
         allow_module_level=True,
     )
 
@@ -20,48 +20,48 @@ from mace_model.torch.modules import models as torch_models
 from mace_model.torch.modules import radial as torch_radial
 
 TORCH_BLOCK_NAMES = [
-    "AtomicEnergiesBlock",
-    "EquivariantProductBasisBlock",
-    "InteractionBlock",
-    "LinearDipolePolarReadoutBlock",
-    "LinearDipoleReadoutBlock",
-    "LinearNodeEmbeddingBlock",
-    "LinearReadoutBlock",
-    "NonLinearBiasReadoutBlock",
-    "NonLinearDipolePolarReadoutBlock",
-    "NonLinearDipoleReadoutBlock",
-    "NonLinearReadoutBlock",
-    "RadialEmbeddingBlock",
-    "RealAgnosticAttResidualInteractionBlock",
-    "RealAgnosticDensityInteractionBlock",
-    "RealAgnosticDensityResidualInteractionBlock",
-    "RealAgnosticInteractionBlock",
-    "RealAgnosticResidualInteractionBlock",
-    "RealAgnosticResidualNonLinearInteractionBlock",
-    "ScaleShiftBlock",
+    'AtomicEnergiesBlock',
+    'EquivariantProductBasisBlock',
+    'InteractionBlock',
+    'LinearDipolePolarReadoutBlock',
+    'LinearDipoleReadoutBlock',
+    'LinearNodeEmbeddingBlock',
+    'LinearReadoutBlock',
+    'NonLinearBiasReadoutBlock',
+    'NonLinearDipolePolarReadoutBlock',
+    'NonLinearDipoleReadoutBlock',
+    'NonLinearReadoutBlock',
+    'RadialEmbeddingBlock',
+    'RealAgnosticAttResidualInteractionBlock',
+    'RealAgnosticDensityInteractionBlock',
+    'RealAgnosticDensityResidualInteractionBlock',
+    'RealAgnosticInteractionBlock',
+    'RealAgnosticResidualInteractionBlock',
+    'RealAgnosticResidualNonLinearInteractionBlock',
+    'ScaleShiftBlock',
 ]
 
 JAX_BLOCK_NAMES = TORCH_BLOCK_NAMES
 RADIAL_NAMES = [
-    "AgnesiTransform",
-    "BesselBasis",
-    "ChebychevBasis",
-    "GaussianBasis",
-    "PolynomialCutoff",
-    "RadialMLP",
-    "SoftTransform",
-    "ZBLBasis",
+    'AgnesiTransform',
+    'BesselBasis',
+    'ChebychevBasis',
+    'GaussianBasis',
+    'PolynomialCutoff',
+    'RadialMLP',
+    'SoftTransform',
+    'ZBLBasis',
 ]
 TORCH_MODEL_NAMES = [
-    "MACE",
-    "ScaleShiftMACE",
-    "AtomicDipolesMACE",
-    "AtomicDielectricMACE",
-    "EnergyDipolesMACE",
+    'MACE',
+    'ScaleShiftMACE',
+    'AtomicDipolesMACE',
+    'AtomicDielectricMACE',
+    'EnergyDipolesMACE',
 ]
 JAX_MODEL_NAMES = [
-    "MACE",
-    "ScaleShiftMACE",
+    'MACE',
+    'ScaleShiftMACE',
 ]
 
 
@@ -76,8 +76,8 @@ def test_jax_block_surface_exports_expected_symbols():
 
 
 def test_embedding_surface_exports_expected_symbols():
-    assert hasattr(torch_embeddings, "GenericJointEmbedding")
-    assert hasattr(jax_embeddings, "GenericJointEmbedding")
+    assert hasattr(torch_embeddings, 'GenericJointEmbedding')
+    assert hasattr(jax_embeddings, 'GenericJointEmbedding')
 
 
 def test_model_surface_exports_expected_symbols():

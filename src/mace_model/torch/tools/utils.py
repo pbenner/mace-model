@@ -21,4 +21,4 @@ class LAMMPS_MP(torch.autograd.Function):
         return gout, None
 
 
-__all__ = ["LAMMPS_MP"]
+__all__ = ['LAMMPS_MP']

@@ -15,7 +15,7 @@ def _unpack_mul_ir(mul_ir: Any) -> tuple[Any, Any]:
     Return (multiplicity, irrep) for both e3nn (tuple-like) and e3nn_jax (MulIrrep).
     """
 
-    if hasattr(mul_ir, "mul") and hasattr(mul_ir, "ir"):
+    if hasattr(mul_ir, 'mul') and hasattr(mul_ir, 'ir'):
         return mul_ir.mul, mul_ir.ir
     mul, ir = mul_ir
     return mul, ir
@@ -30,7 +30,7 @@ def _make_irreps_terms(
 
 def _make_zero_irrep(make_irreps: Callable[[Any], Any]) -> Any:
     """Return the scalar even irrep used as a gate carrier."""
-    _, zero_irrep = _unpack_mul_ir(next(iter(make_irreps("0e"))))
+    _, zero_irrep = _unpack_mul_ir(next(iter(make_irreps('0e'))))
     return zero_irrep
 
 
@@ -79,7 +79,7 @@ def tp_out_irreps_with_instructions(
                 if ir_out in target_irreps_value:
                     k = len(irreps_out_list)
                     irreps_out_list.append((mul, ir_out))
-                    instructions.append((i, j, k, "uvu", trainable))
+                    instructions.append((i, j, k, 'uvu', trainable))
 
     irreps_out = make_irreps(irreps_out_list)
     irreps_out, permut, _ = irreps_out.sort()
@@ -112,11 +112,11 @@ def _validate_flat_irreps_input(array: Any, *, total_dim: int) -> None:
     """Check that a flattened irrep tensor has the expected second dimension."""
     if array.ndim < 2:
         raise ValueError(
-            f"Expected tensor with at least 2 dimensions, got shape {array.shape}"
+            f'Expected tensor with at least 2 dimensions, got shape {array.shape}'
         )
     if array.shape[1] != total_dim:
         raise ValueError(
-            f"Last dimension mismatch: expected {total_dim}, got {array.shape[1]}"
+            f'Last dimension mismatch: expected {total_dim}, got {array.shape[1]}'
         )
 
 
@@ -135,12 +135,12 @@ def _reshape_irreps_tensor(
     for mul, dim in zip(muls, dims):
         field = array[:, ix : ix + mul * dim]
         ix += mul * dim
-        if layout_str == "ir_mul":
+        if layout_str == 'ir_mul':
             field = field.reshape(batch, dim, mul)
         else:
             field = field.reshape(batch, mul, dim)
         fields.append(field)
-    cat_axis = -2 if layout_str == "ir_mul" else -1
+    cat_axis = -2 if layout_str == 'ir_mul' else -1
     return concat_fields(fields, cat_axis)
 
 
@@ -162,7 +162,7 @@ class CachedIrrepsReshaper:
 
     @property
     def layout_str(self) -> str:
-        return self.cueq_config.layout_str if self.cueq_config is not None else "mul_ir"
+        return self.cueq_config.layout_str if self.cueq_config is not None else 'mul_ir'
 
     def reshape(
         self,
