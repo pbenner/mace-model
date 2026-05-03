@@ -4,7 +4,6 @@ import types
 from functools import cache
 
 import cuequivariance as cue
-import cuequivariance_torch as cuet
 import numpy as np
 import torch
 
@@ -14,6 +13,7 @@ from mace_model.core.modules.native_symmetric_weights import (
 )
 from mace_model.torch.adapters.e3nn import o3
 
+from ._compat import cuequivariance_torch as cuet
 from .utility import _cue_irreps
 
 

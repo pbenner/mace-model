@@ -113,7 +113,11 @@ def test_foundation_cli_exports_local_torch_model(tmp_path: Path):
     )
 
     assert exit_code == 0
-    state_dict = torch.load(output_dir / 'state_dict.pt', map_location='cpu')
+    state_dict = torch.load(
+        output_dir / 'state_dict.pt',
+        map_location='cpu',
+        weights_only=True,
+    )
     reference_state = original_model.state_dict()
     assert state_dict.keys() == reference_state.keys()
     for key in state_dict:

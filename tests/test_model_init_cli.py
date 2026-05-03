@@ -110,7 +110,11 @@ def test_build_and_save_torch_model_from_config(tmp_path: Path):
     config_saved = json.loads((output_dir / 'config.json').read_text())
     assert config_saved['model_class'] == 'ScaleShiftMACE'
 
-    state_dict = torch.load(output_dir / 'state_dict.pt', map_location='cpu')
+    state_dict = torch.load(
+        output_dir / 'state_dict.pt',
+        map_location='cpu',
+        weights_only=True,
+    )
     assert any(
         key.startswith('node_embedding.linear') and key.endswith('.weight')
         for key in state_dict

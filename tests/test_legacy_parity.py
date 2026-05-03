@@ -15,6 +15,26 @@ from mace_model.foundation import download_foundation_model
 
 add_safe_globals([slice])
 
+pytestmark = [
+    pytest.mark.filterwarnings(
+        'ignore:`torch\\.jit\\.script` is deprecated.*:DeprecationWarning'
+    ),
+    pytest.mark.filterwarnings(
+        'ignore:`torch\\.jit\\.save` is deprecated.*:DeprecationWarning'
+    ),
+    pytest.mark.filterwarnings(
+        'ignore:`torch\\.jit\\.load` is deprecated.*:DeprecationWarning'
+    ),
+    pytest.mark.filterwarnings(
+        'ignore:The TorchScript type system does not support instance-level '
+        'annotations.*:UserWarning'
+    ),
+    pytest.mark.filterwarnings(
+        "ignore:The TorchScript type system doesn't support instance-level "
+        'annotations.*:UserWarning'
+    ),
+]
+
 
 def _require_legacy_mace():
     legacy_repo = Path(__file__).resolve().parents[2] / 'mace'

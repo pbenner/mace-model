@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import cuequivariance as cue
-import cuequivariance_torch as cuet
 
 from mace_model.torch.adapters.e3nn import o3
 
+from ._compat import cuequivariance_torch as cuet
 from .utility import _cue_irreps
 
 

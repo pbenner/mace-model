@@ -455,7 +455,7 @@ def load_serialized_torch_model(path_arg: str | Path):
                 'Torch model directory must contain config.json and state_dict.pt.'
             )
         config = json.loads(config_path.read_text())
-        state_dict = torch.load(state_path, map_location='cpu')
+        state_dict = torch.load(state_path, map_location='cpu', weights_only=True)
         return _build_local_torch_model_from_config(config, state_dict)
 
     try:

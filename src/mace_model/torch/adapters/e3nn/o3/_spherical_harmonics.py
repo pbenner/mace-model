@@ -3,12 +3,14 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-import cuequivariance_torch as cuet
 import torch
 
 from mace_model.core.modules.e3nn_adapter_utils import (
     apply_spherical_harmonics_normalization,
     build_spherical_harmonics_plan,
+)
+from mace_model.torch.adapters.cuequivariance._compat import (
+    cuequivariance_torch as cuet,
 )
 
 from ..irreps import Irreps
