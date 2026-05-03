@@ -14,12 +14,6 @@ import jax.numpy as jnp
 import numpy as np
 from flax import nnx
 
-from mace_model.core.data.neighborhood import get_neighborhood
-from mace_model.core.data.utils import (
-    AtomicNumberTable,
-    Configuration,
-    atomic_numbers_to_indices,
-)
 from mace_model.jax.adapters.cuequivariance import CuEquivarianceConfig
 from mace_model.jax.adapters.e3nn import Irreps
 from mace_model.jax.adapters.nnx import resolve_gate_callable
@@ -226,10 +220,10 @@ def _readout(name_or_cls: Any):
     return _READOUT_CLASSES.get(name, NonLinearReadoutBlock)
 
 
-def _build_configuration(
+def _build_template_geometry(
     atomic_numbers: tuple[int, ...],
     r_max: float,
-) -> Configuration:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     node_numbers = atomic_numbers if len(atomic_numbers) > 1 else atomic_numbers * 2
     num_atoms = len(node_numbers)
     spacing = max(min(float(r_max) * 0.4, 1.0), 0.5)
@@ -239,17 +233,38 @@ def _build_configuration(
         positions[idx, 1] = spacing * (idx % 2)
 
     cell = np.eye(3, dtype=float) * (spacing * max(num_atoms, 1) * 4.0)
-    return Configuration(
-        atomic_numbers=np.asarray(node_numbers, dtype=int),
-        positions=positions,
-        properties={},
-        property_weights={},
-        cell=cell,
-        pbc=(False, False, False),
-        weight=1.0,
-        config_type='Default',
-        head='Default',
-    )
+    return np.asarray(node_numbers, dtype=np.int32), positions, cell
+
+
+def _template_edges(
+    positions: np.ndarray,
+    *,
+    cutoff: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    deltas = positions[None, :, :] - positions[:, None, :]
+    distances = np.linalg.norm(deltas, axis=-1)
+    edge_mask = (distances < float(cutoff)) & ~np.eye(positions.shape[0], dtype=bool)
+    sender, receiver = np.nonzero(edge_mask)
+    edge_index = np.stack((sender, receiver)).astype(np.int32)
+    shifts = np.zeros((edge_index.shape[1], 3), dtype=np.float32)
+    unit_shifts = np.zeros_like(shifts, dtype=np.float32)
+    return edge_index, shifts, unit_shifts
+
+
+def _atomic_numbers_to_indices(
+    atomic_numbers: np.ndarray,
+    allowed_atomic_numbers: tuple[int, ...],
+) -> np.ndarray:
+    z_to_index = {int(z): idx for idx, z in enumerate(allowed_atomic_numbers)}
+    try:
+        return np.asarray(
+            [z_to_index[int(z)] for z in atomic_numbers],
+            dtype=np.int32,
+        )
+    except KeyError as exc:
+        raise ValueError(
+            f'Atomic number {exc.args[0]} is not present in model atomic_numbers.'
+        ) from exc
 
 
 def _one_hot(indices: np.ndarray, num_classes: int) -> np.ndarray:
@@ -258,28 +273,29 @@ def _one_hot(indices: np.ndarray, num_classes: int) -> np.ndarray:
     return encoded
 
 
-def _configuration_to_jax_graph(
-    configuration: Configuration,
+def _template_geometry_to_jax_graph(
+    node_numbers: np.ndarray,
+    positions: np.ndarray,
+    cell: np.ndarray,
     *,
     atomic_numbers: tuple[int, ...],
     r_max: float,
 ) -> dict[str, jnp.ndarray]:
-    edge_index, shifts, unit_shifts, cell = get_neighborhood(
-        positions=np.asarray(configuration.positions, dtype=np.float32),
+    edge_index, shifts, unit_shifts = _template_edges(
+        np.asarray(positions, dtype=np.float32),
         cutoff=float(r_max),
-        pbc=configuration.pbc,
-        cell=configuration.cell,
     )
-    z_table = AtomicNumberTable(atomic_numbers)
-    species_index = atomic_numbers_to_indices(
-        np.asarray(configuration.atomic_numbers, dtype=np.int32),
-        z_table=z_table,
+    species_index = _atomic_numbers_to_indices(
+        np.asarray(node_numbers, dtype=np.int32),
+        atomic_numbers,
     )
-    node_attrs = _one_hot(np.asarray(species_index, dtype=np.int32), len(z_table))
+    node_attrs = _one_hot(
+        np.asarray(species_index, dtype=np.int32), len(atomic_numbers)
+    )
     num_nodes = int(node_attrs.shape[0])
 
     return {
-        'positions': jnp.asarray(configuration.positions, dtype=jnp.float32),
+        'positions': jnp.asarray(positions, dtype=jnp.float32),
         'node_attrs': jnp.asarray(node_attrs, dtype=jnp.float32),
         'edge_index': jnp.asarray(edge_index, dtype=jnp.int32),
         'shifts': jnp.asarray(shifts, dtype=jnp.float32),
@@ -293,9 +309,14 @@ def _configuration_to_jax_graph(
 
 def _prepare_template_data(config: dict[str, Any]) -> dict[str, jnp.ndarray]:
     atomic_numbers = tuple(int(z) for z in config['atomic_numbers'])
-    configuration = _build_configuration(atomic_numbers, float(config['r_max']))
-    return _configuration_to_jax_graph(
-        configuration,
+    node_numbers, positions, cell = _build_template_geometry(
+        atomic_numbers,
+        float(config['r_max']),
+    )
+    return _template_geometry_to_jax_graph(
+        node_numbers,
+        positions,
+        cell,
         atomic_numbers=atomic_numbers,
         r_max=float(config['r_max']),
     )

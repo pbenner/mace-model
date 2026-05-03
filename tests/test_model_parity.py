@@ -12,6 +12,7 @@ import numpy as np
 import pytest
 import torch
 from ase.build import bulk
+from ase.neighborlist import primitive_neighbor_list
 from torch.serialization import add_safe_globals
 
 add_safe_globals([slice])
@@ -26,12 +27,6 @@ except Exception as exc:  # pragma: no cover - environment dependent
 
 from flax import nnx
 
-from mace_model.core.data.neighborhood import get_neighborhood
-from mace_model.core.data.utils import (
-    AtomicNumberTable,
-    atomic_numbers_to_indices,
-    config_from_atoms,
-)
 from mace_model.jax.adapters.e3nn import Irreps
 from mace_model.jax.modules.utils import prepare_graph as prepare_graph_jax
 from mace_model.torch.adapters.e3nn import o3
@@ -193,24 +188,64 @@ def _one_hot(indices: np.ndarray, num_classes: int) -> np.ndarray:
     return encoded
 
 
-def _graph_from_atoms(
-    atoms, *, z_table: AtomicNumberTable, r_max: float
-) -> dict[str, np.ndarray]:
-    config = config_from_atoms(atoms)
-    config.pbc = [bool(x) for x in config.pbc]
-    edge_index, shifts, unit_shifts, cell = get_neighborhood(
-        positions=np.asarray(config.positions, dtype=np.float32),
-        cutoff=float(r_max),
-        pbc=config.pbc,
-        cell=config.cell,
+def _atomic_numbers_to_indices(
+    atomic_numbers: np.ndarray,
+    z_table: tuple[int, ...],
+) -> np.ndarray:
+    z_to_index = {int(z): idx for idx, z in enumerate(z_table)}
+    return np.asarray([z_to_index[int(z)] for z in atomic_numbers], dtype=np.int32)
+
+
+def _get_neighborhood(
+    positions: np.ndarray,
+    *,
+    cutoff: float,
+    pbc: tuple[bool, bool, bool],
+    cell: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    cell = np.asarray(cell, dtype=float).copy()
+    sender, receiver, unit_shifts = primitive_neighbor_list(
+        quantities='ijS',
+        pbc=pbc,
+        cell=cell,
+        positions=np.asarray(positions, dtype=float),
+        cutoff=float(cutoff),
+        self_interaction=True,
+        use_scaled_positions=False,
     )
-    species_index = atomic_numbers_to_indices(
-        np.asarray(config.atomic_numbers, dtype=np.int32),
+
+    true_self_edge = sender == receiver
+    true_self_edge &= np.all(unit_shifts == 0, axis=1)
+    keep_edge = ~true_self_edge
+    sender = sender[keep_edge]
+    receiver = receiver[keep_edge]
+    unit_shifts = unit_shifts[keep_edge]
+
+    edge_index = np.stack((sender, receiver))
+    shifts = np.dot(unit_shifts, cell)
+    return edge_index, shifts, unit_shifts, cell
+
+
+def _graph_from_atoms(
+    atoms, *, z_table: tuple[int, ...], r_max: float
+) -> dict[str, np.ndarray]:
+    positions = np.asarray(atoms.get_positions(), dtype=np.float32)
+    pbc = tuple(bool(value) for value in atoms.get_pbc())
+    cell = np.array(atoms.get_cell(), dtype=np.float32, copy=True)
+    atomic_numbers = np.asarray(atoms.get_atomic_numbers(), dtype=np.int32)
+    edge_index, shifts, unit_shifts, cell = _get_neighborhood(
+        positions=positions,
+        cutoff=float(r_max),
+        pbc=pbc,
+        cell=cell,
+    )
+    species_index = _atomic_numbers_to_indices(
+        atomic_numbers,
         z_table=z_table,
     )
-    num_nodes = int(len(config.atomic_numbers))
+    num_nodes = int(len(atomic_numbers))
     return {
-        'positions': np.asarray(config.positions, dtype=np.float32),
+        'positions': positions,
         'node_attrs': _one_hot(np.asarray(species_index, dtype=np.int32), len(z_table)),
         'edge_index': np.asarray(edge_index, dtype=np.int64),
         'shifts': np.asarray(shifts, dtype=np.float32),
@@ -222,7 +257,7 @@ def _graph_from_atoms(
 
 
 def _make_batch(r_max: float) -> dict[str, torch.Tensor]:
-    z_table = AtomicNumberTable([11, 17])
+    z_table = (11, 17)
     graphs = [
         _graph_from_atoms(atoms, z_table=z_table, r_max=r_max)
         for atoms in _make_structures()
