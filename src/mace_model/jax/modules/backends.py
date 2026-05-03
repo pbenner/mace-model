@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import jax
 import jax.nn as jnn
 import jax.numpy as jnp
-import numpy as np
 from flax import nnx
 
 from mace_model.core.modules.backends import define_backend
@@ -23,8 +21,7 @@ from mace_model.jax.adapters.cuequivariance.utility import (
 )
 from mace_model.jax.adapters.e3nn import Irrep, Irreps, IrrepsArray, nn
 
-from ..tools.dtype import default_dtype
-from ..tools.scatter import scatter_sum as jax_scatter_sum
+from . import _backend_ops as backend_ops
 from .radial import (
     AgnesiTransform,
     BesselBasis,
@@ -346,37 +343,12 @@ class _JaxBackendSpec:
             rngs=rngs,
         )
 
-    @staticmethod
-    def make_scale_shift(module, *, name, value):
-        del module, name
-        return nnx.Param(jnp.asarray(value, dtype=default_dtype()))
-
-    @staticmethod
-    def get_scale_shift(value):
-        return jax.lax.stop_gradient(value)
-
-    @staticmethod
-    def make_atomic_energies(module, atomic_energies):
-        del module
-        init_values = jnp.asarray(atomic_energies, dtype=default_dtype())
-        return nnx.Param(init_values)
-
-    @staticmethod
-    def get_atomic_energies(atomic_energies):
-        return jax.lax.stop_gradient(atomic_energies)
-
-    @staticmethod
-    def make_ones(*, node_feats, width):
-        return jnp.ones((node_feats.shape[0], int(width)), dtype=node_feats.dtype)
-
-    @staticmethod
-    def make_index_attrs(*, node_attrs, node_attrs_index):
-        if node_attrs_index is None:
-            return jnp.argmax(node_attrs, axis=1).astype(jnp.int32)
-        index_attrs = jnp.asarray(node_attrs_index, dtype=jnp.int32)
-        if index_attrs.ndim != 1:
-            return jnp.argmax(node_attrs, axis=1).astype(jnp.int32)
-        return index_attrs.reshape(-1)
+    make_scale_shift = staticmethod(backend_ops.make_scale_shift)
+    get_scale_shift = staticmethod(backend_ops.get_scale_shift)
+    make_atomic_energies = staticmethod(backend_ops.make_atomic_energies)
+    get_atomic_energies = staticmethod(backend_ops.get_atomic_energies)
+    make_ones = staticmethod(backend_ops.make_ones)
+    make_index_attrs = staticmethod(backend_ops.make_index_attrs)
 
     transpose_mul_ir = staticmethod(lambda x: jnp.transpose(x, (0, 2, 1)))
     atleast_1d = staticmethod(jnp.atleast_1d)
@@ -384,28 +356,20 @@ class _JaxBackendSpec:
     matmul = staticmethod(jnp.matmul)
     transpose = staticmethod(lambda x: x.T)
     mask_head = staticmethod(_mask_head)
-    cat = staticmethod(lambda values, dim=-1: jnp.concatenate(values, axis=dim))
-    stack = staticmethod(lambda values, dim=0: jnp.stack(values, axis=dim))
-    sum = staticmethod(lambda value, dim: jnp.sum(value, axis=dim))
-    to_numpy = staticmethod(np.asarray)
-    scatter_sum = staticmethod(
-        lambda src, index, dim=-1, dim_size=None, indices_are_sorted=False: (
-            jax_scatter_sum(
-                src=src,
-                index=index,
-                dim=dim,
-                dim_size=dim_size,
-                indices_are_sorted=indices_are_sorted,
-            )
-        )
-    )
+    cat = staticmethod(backend_ops.cat)
+    stack = staticmethod(backend_ops.stack)
+    sum = staticmethod(backend_ops.sum_values)
+    to_numpy = staticmethod(backend_ops.to_numpy)
+    scatter_sum = staticmethod(backend_ops.scatter_sum)
 
     @staticmethod
     def make_parameter(module, *, name, value, requires_grad=True):
-        del requires_grad
-        param = nnx.Param(jnp.asarray(value, dtype=default_dtype()))
-        setattr(module, name, param)
-        return param
+        return backend_ops.make_parameter(
+            module,
+            name=name,
+            value=value,
+            requires_grad=requires_grad,
+        )
 
     @staticmethod
     def make_irrep(l, p):
@@ -420,10 +384,10 @@ class _JaxBackendSpec:
         value[...] = updated
         return value
 
-    tanh = staticmethod(jnp.tanh)
-    silu = staticmethod(jnn.silu)
-    sigmoid = staticmethod(jnn.sigmoid)
-    make_zeros = staticmethod(jnp.zeros)
+    tanh = staticmethod(backend_ops.tanh)
+    silu = staticmethod(backend_ops.silu)
+    sigmoid = staticmethod(backend_ops.sigmoid)
+    make_zeros = staticmethod(backend_ops.make_zeros)
 
 
 JAX_BACKEND = _JaxBackendSpec

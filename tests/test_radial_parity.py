@@ -19,8 +19,13 @@ except Exception as exc:  # pragma: no cover - environment dependent
         allow_module_level=True,
     )
 
+from mace_model.torch.modules.radial import AgnesiTransform as TorchAgnesiTransform
 from mace_model.torch.modules.radial import BesselBasis as TorchBesselBasis
+from mace_model.torch.modules.radial import ChebychevBasis as TorchChebychevBasis
+from mace_model.torch.modules.radial import GaussianBasis as TorchGaussianBasis
+from mace_model.torch.modules.radial import PolynomialCutoff as TorchPolynomialCutoff
 from mace_model.torch.modules.radial import RadialMLP as TorchRadialMLP
+from mace_model.torch.modules.radial import SoftTransform as TorchSoftTransform
 from mace_model.torch.modules.radial import ZBLBasis as TorchZBLBasis
 
 _LOCAL_JAX_RADIAL = (
@@ -74,7 +79,12 @@ _LOCAL_ADAPTER_MODULE = _load_local_module(
 init_from_torch = _LOCAL_ADAPTER_MODULE.init_from_torch
 
 JaxBesselBasis = _LOCAL_JAX_MODULE.BesselBasis
+JaxChebychevBasis = _LOCAL_JAX_MODULE.ChebychevBasis
+JaxGaussianBasis = _LOCAL_JAX_MODULE.GaussianBasis
+JaxAgnesiTransform = _LOCAL_JAX_MODULE.AgnesiTransform
+JaxPolynomialCutoff = _LOCAL_JAX_MODULE.PolynomialCutoff
 JaxRadialMLP = _LOCAL_JAX_MODULE.RadialMLP
+JaxSoftTransform = _LOCAL_JAX_MODULE.SoftTransform
 JaxZBLBasis = _LOCAL_JAX_MODULE.ZBLBasis
 
 
@@ -94,6 +104,7 @@ def test_torch_and_jax_bessel_match_after_weight_transfer():
     jax_model, _ = init_from_torch(jax_model, torch_model)
 
     x_np = rng.uniform(0.1, 4.9, size=(8, 1)).astype(np.float32)
+    x_np[0, 0] = 0.0
     out_torch = torch_model(torch.tensor(x_np))
     graphdef, state = nnx.split(jax_model)
     out_jax, _ = graphdef.apply(state)(jnp.asarray(x_np))
@@ -103,6 +114,97 @@ def test_torch_and_jax_bessel_match_after_weight_transfer():
         rtol=1e-6,
         atol=1e-6,
     )
+
+
+def test_torch_and_jax_radial_scalar_formulas_match():
+    x_np = np.linspace(0.2, 2.6, 8, dtype=np.float32)[:, None]
+    node_attrs_np = np.eye(3, dtype=np.float32)[np.array([0, 1, 2, 0, 1])]
+    edge_index_np = np.array(
+        [[0, 1, 2, 3, 4, 0, 1, 2], [1, 2, 3, 4, 0, 2, 3, 4]],
+        dtype=np.int32,
+    )
+    atomic_numbers_np = np.array([1, 6, 8], dtype=np.int32)
+    node_attrs_index_np = np.argmax(node_attrs_np, axis=1).astype(np.int32)
+
+    torch_x = torch.tensor(x_np)
+    jax_x = jnp.asarray(x_np)
+
+    formula_cases = [
+        (
+            TorchChebychevBasis(r_max=3.0, num_basis=6).float(),
+            JaxChebychevBasis(r_max=3.0, num_basis=6),
+            (torch_x,),
+            (jax_x,),
+        ),
+        (
+            TorchGaussianBasis(r_max=3.0, num_basis=6).float(),
+            JaxGaussianBasis(r_max=3.0, num_basis=6),
+            (torch_x,),
+            (jax_x,),
+        ),
+        (
+            TorchPolynomialCutoff(r_max=3.0, p=5).float(),
+            JaxPolynomialCutoff(r_max=3.0, p=5),
+            (torch_x,),
+            (jax_x,),
+        ),
+        (
+            TorchAgnesiTransform().float(),
+            JaxAgnesiTransform(),
+            (
+                torch_x,
+                torch.tensor(node_attrs_np),
+                torch.tensor(edge_index_np, dtype=torch.int64),
+                torch.tensor(atomic_numbers_np, dtype=torch.int64),
+            ),
+            (
+                jax_x,
+                jnp.asarray(node_attrs_np),
+                jnp.asarray(edge_index_np, dtype=jnp.int32),
+                jnp.asarray(atomic_numbers_np, dtype=jnp.int32),
+                jnp.asarray(node_attrs_index_np, dtype=jnp.int32),
+            ),
+        ),
+        (
+            TorchSoftTransform().float(),
+            JaxSoftTransform(),
+            (
+                torch_x,
+                torch.tensor(node_attrs_np),
+                torch.tensor(edge_index_np, dtype=torch.int64),
+                torch.tensor(atomic_numbers_np, dtype=torch.int64),
+            ),
+            (
+                jax_x,
+                jnp.asarray(node_attrs_np),
+                jnp.asarray(edge_index_np, dtype=jnp.int32),
+                jnp.asarray(atomic_numbers_np, dtype=jnp.int32),
+                jnp.asarray(node_attrs_index_np, dtype=jnp.int32),
+            ),
+        ),
+    ]
+
+    for torch_model, jax_model, torch_args, jax_args in formula_cases:
+        out_torch = torch_model(*torch_args)
+        graphdef, state = nnx.split(jax_model)
+        out_jax, _ = graphdef.apply(state)(*jax_args)
+        np.testing.assert_allclose(
+            _to_numpy(out_jax),
+            out_torch.detach().cpu().numpy(),
+            rtol=1e-6,
+            atol=1e-6,
+        )
+
+
+def test_radial_core_validation_is_shared_by_backend_wrappers():
+    with pytest.raises(ValueError, match='BesselBasis requires num_basis >= 1'):
+        TorchBesselBasis(r_max=5.0, num_basis=0)
+    with pytest.raises(ValueError, match='ChebychevBasis requires num_basis >= 1'):
+        JaxChebychevBasis(r_max=5.0, num_basis=0)
+    with pytest.raises(ValueError, match='GaussianBasis requires num_basis >= 2'):
+        TorchGaussianBasis(r_max=5.0, num_basis=1)
+    with pytest.raises(ValueError, match='channels must have length >= 2'):
+        TorchRadialMLP([4])
 
 
 def test_torch_and_jax_radial_mlp_match_after_weight_transfer():

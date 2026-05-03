@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import numpy as np
 import torch
 
 from mace_model.core.modules.backends import define_backend
@@ -18,8 +17,8 @@ from mace_model.torch.adapters.cuequivariance import (
 from mace_model.torch.adapters.e3nn import nn, o3
 
 from ..tools.compile import simplify_if_compile
-from ..tools.scatter import scatter_sum
 from ..tools.utils import LAMMPS_MP
+from . import _backend_ops as backend_ops
 from .radial import (
     AgnesiTransform,
     BesselBasis,
@@ -303,72 +302,45 @@ class _TorchBackendSpec:
 
     @staticmethod
     def scatter_sum(src, index, dim=-1, dim_size=None, indices_are_sorted=False):
-        del indices_are_sorted
-        return scatter_sum(src=src, index=index, dim=dim, dim_size=dim_size)
+        return backend_ops.scatter_sum(
+            src=src,
+            index=index,
+            dim=dim,
+            dim_size=dim_size,
+            indices_are_sorted=indices_are_sorted,
+        )
 
-    stack = staticmethod(torch.stack)
-    sum = staticmethod(torch.sum)
+    stack = staticmethod(backend_ops.stack)
+    sum = staticmethod(backend_ops.sum_values)
 
     @staticmethod
     def make_irrep(l, p):
         return o3.Irrep(l, p)
 
     init_uniform_ = staticmethod(torch.nn.init.uniform_)
-    tanh = staticmethod(torch.tanh)
-    silu = staticmethod(torch.nn.functional.silu)
-    sigmoid = staticmethod(torch.sigmoid)
-    cat = staticmethod(lambda values, dim=-1: torch.cat(values, dim=dim))
-    make_zeros = staticmethod(torch.zeros)
+    tanh = staticmethod(backend_ops.tanh)
+    silu = staticmethod(backend_ops.silu)
+    sigmoid = staticmethod(backend_ops.sigmoid)
+    cat = staticmethod(backend_ops.cat)
+    make_zeros = staticmethod(backend_ops.make_zeros)
 
     @staticmethod
     def make_parameter(module, *, name, value, requires_grad=True):
-        module.register_parameter(
-            name,
-            torch.nn.Parameter(
-                torch.tensor(value, dtype=torch.get_default_dtype()),
-                requires_grad=requires_grad,
-            ),
+        return backend_ops.make_parameter(
+            module,
+            name=name,
+            value=value,
+            requires_grad=requires_grad,
         )
-        return getattr(module, name)
 
     lammps_mp_apply = staticmethod(LAMMPS_MP.apply)
 
-    @staticmethod
-    def make_scale_shift(module, *, name, value):
-        module.register_buffer(
-            name,
-            torch.tensor(value, dtype=torch.get_default_dtype()),
-        )
-        return getattr(module, name)
-
-    @staticmethod
-    def get_scale_shift(value):
-        return value
-
-    @staticmethod
-    def make_atomic_energies(module, atomic_energies):
-        module.register_buffer(
-            'atomic_energies',
-            torch.tensor(atomic_energies, dtype=torch.get_default_dtype()),
-        )
-        return module.atomic_energies
-
-    @staticmethod
-    def get_atomic_energies(atomic_energies):
-        return atomic_energies
-
-    @staticmethod
-    def make_ones(*, node_feats, width):
-        return torch.ones(
-            (node_feats.shape[0], int(width)),
-            dtype=node_feats.dtype,
-            device=node_feats.device,
-        )
-
-    @staticmethod
-    def make_index_attrs(*, node_attrs, node_attrs_index):
-        del node_attrs_index
-        return torch.nonzero(node_attrs)[:, 1].int()
+    make_scale_shift = staticmethod(backend_ops.make_scale_shift)
+    get_scale_shift = staticmethod(backend_ops.get_scale_shift)
+    make_atomic_energies = staticmethod(backend_ops.make_atomic_energies)
+    get_atomic_energies = staticmethod(backend_ops.get_atomic_energies)
+    make_ones = staticmethod(backend_ops.make_ones)
+    make_index_attrs = staticmethod(backend_ops.make_index_attrs)
 
     transpose_mul_ir = staticmethod(lambda x: torch.transpose(x, 1, 2))
     atleast_1d = staticmethod(torch.atleast_1d)
@@ -380,9 +352,7 @@ class _TorchBackendSpec:
 
     @staticmethod
     def to_numpy(value):
-        if isinstance(value, torch.Tensor):
-            return value.detach().cpu().numpy()
-        return np.asarray(value)
+        return backend_ops.to_numpy(value)
 
 
 TORCH_BACKEND = _TorchBackendSpec

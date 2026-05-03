@@ -50,15 +50,17 @@ def _ensure_letter_capacity(min_len: int = 1024) -> None:
         return
 
     alphabet = ascii_lowercase + ascii_uppercase + digits
-    if len(sp_operation.IVARS) < min_len:
-        repeats = (min_len - len(sp_operation.IVARS) + len(alphabet) - 1) // len(
-            alphabet
-        )
+    try:
+        ivars_len = len(sp_operation.IVARS)
+        ovars_len = len(sp_operation.OVARS)
+    except TypeError:
+        return
+
+    if ivars_len < min_len:
+        repeats = (min_len - ivars_len + len(alphabet) - 1) // len(alphabet)
         sp_operation.IVARS = sp_operation.IVARS + (alphabet * repeats)
-    if len(sp_operation.OVARS) < min_len:
-        repeats = (min_len - len(sp_operation.OVARS) + len(alphabet) - 1) // len(
-            alphabet
-        )
+    if ovars_len < min_len:
+        repeats = (min_len - ovars_len + len(alphabet) - 1) // len(alphabet)
         sp_operation.OVARS = sp_operation.OVARS + (alphabet * repeats)
 
 
