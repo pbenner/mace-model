@@ -213,8 +213,8 @@ def build_gate_plan(
 ) -> GatePlan:
     """Validate gate irreps and precompute the shared split/multiply plan."""
     irreps_scalars = irreps_scalars.simplify()
-    irreps_gates = irreps_gates.simplify()
-    irreps_gated = irreps_gated.simplify()
+    irreps_gates = make_irreps(irreps_gates)
+    irreps_gated = make_irreps(irreps_gated)
 
     if any(ir.l > 0 for _, ir in irreps_scalars):
         raise ValueError(f'Scalars must be l=0 irreps, got {irreps_scalars}')

@@ -55,6 +55,7 @@ RADIAL_NAMES = [
 TORCH_MODEL_NAMES = [
     'MACE',
     'ScaleShiftMACE',
+    'PolarMACE',
     'AtomicDipolesMACE',
     'AtomicDielectricMACE',
     'EnergyDipolesMACE',

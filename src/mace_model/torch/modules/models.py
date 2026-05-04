@@ -69,6 +69,7 @@ class MACE(MACEModel, torch.nn.Module):
         readout_cls: type[NonLinearReadoutBlock] = NonLinearReadoutBlock,
         readout_use_higher_irrep_invariants: bool = False,
         readout_invariant_eps: float = 1e-12,
+        keep_last_layer_irreps: bool = False,
     ) -> None:
         super().__init__()
         self.register_buffer(
@@ -119,6 +120,7 @@ class MACE(MACEModel, torch.nn.Module):
                 'use_edge_irreps_first': bool(use_edge_irreps_first),
                 'oeq_config': oeq_config,
                 'lammps_mliap': lammps_mliap,
+                'keep_last_layer_irreps': bool(keep_last_layer_irreps),
             },
         )
 
@@ -224,7 +226,7 @@ class MACE(MACEModel, torch.nn.Module):
             hidden_irreps=hidden_irreps,
             max_ell=self.max_ell,
             use_so3=self.use_so3,
-            collapse_hidden_irreps=True,
+            collapse_hidden_irreps=not self.keep_last_layer_irreps,
             make_irreps=o3.Irreps,
             make_irrep=o3.Irrep,
         )
@@ -250,6 +252,7 @@ class MACE(MACEModel, torch.nn.Module):
             build_radial_embedding=self._build_radial_embedding,
             build_pair_repulsion=self._build_pair_repulsion,
             build_atomic_energies=self._build_atomic_energies,
+            collapse_hidden_irreps=not self.keep_last_layer_irreps,
         )
 
         self.spherical_harmonics = o3.SphericalHarmonics(
@@ -639,9 +642,12 @@ class EnergyDipolesMACE(_UnavailableReferenceModel):
     pass
 
 
+from .polar import PolarMACE
+
 __all__ = [
     'MACE',
     'ScaleShiftMACE',
+    'PolarMACE',
     'AtomicDipolesMACE',
     'AtomicDielectricMACE',
     'EnergyDipolesMACE',

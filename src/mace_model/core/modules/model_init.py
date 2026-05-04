@@ -250,6 +250,7 @@ class MACEModelInit:
         make_irreps: Any,
         hidden_irreps: Any,
         num_interactions: int,
+        collapse_hidden_irreps: bool = True,
         collapse_hidden_irreps_value: Any | None = None,
     ) -> tuple[Any, Any]:
         """Prepare the readout irreps and the hidden-irrep scheduling callback."""
@@ -263,6 +264,7 @@ class MACEModelInit:
             self.make_hidden_irreps_out_factory(
                 hidden_irreps=hidden_irreps,
                 num_interactions=num_interactions,
+                collapse_hidden_irreps=collapse_hidden_irreps,
                 collapse_hidden_irreps_value=collapse_hidden_irreps_value,
             ),
         )
@@ -285,6 +287,7 @@ class MACEModelInit:
         build_radial_embedding: Any,
         build_pair_repulsion: Any,
         build_atomic_energies: Any,
+        collapse_hidden_irreps: bool = True,
     ) -> tuple[int, Sequence[int], Any, Any, Any]:
         """Build the common energy-model modules shared by both backends."""
         num_heads = len(self._heads)
@@ -308,6 +311,7 @@ class MACEModelInit:
             make_irreps=make_irreps,
             hidden_irreps=hidden_irreps,
             num_interactions=num_interactions,
+            collapse_hidden_irreps=collapse_hidden_irreps,
         )
         return (
             num_heads,
@@ -365,9 +369,12 @@ class MACEModelInit:
         *,
         hidden_irreps: Any,
         num_interactions: int,
+        collapse_hidden_irreps: bool,
         collapse_hidden_irreps_value: Any,
     ) -> Any:
         def _make_hidden_irreps_out(layer_index: int) -> Any:
+            if not collapse_hidden_irreps:
+                return hidden_irreps
             if layer_index == int(num_interactions) - 2:
                 return collapse_hidden_irreps_value(hidden_irreps)
             return hidden_irreps

@@ -11,6 +11,7 @@ from .conversion import (
 from .legacy_checkpoint import (
     SUPPORTED_FOUNDATION_SOURCES,
     get_mace_mp_names,
+    get_mace_polar_names,
     resolve_foundation_checkpoint,
 )
 
@@ -82,6 +83,7 @@ __all__ = [
     'SUPPORTED_FOUNDATION_SOURCES',
     'download_foundation_model',
     'get_mace_mp_names',
+    'get_mace_polar_names',
     'load_foundation_torch_model',
     'save_foundation_model',
 ]

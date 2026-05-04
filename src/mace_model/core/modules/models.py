@@ -5,6 +5,7 @@ from __future__ import annotations
 from .model_assembly import MACEModelAssembly
 from .model_forward import MACEModelForward
 from .model_init import MACEModelInit
+from .polar import PolarMACEModel
 
 
 class MACEModel(
@@ -15,4 +16,4 @@ class MACEModel(
     """Shared helpers for Torch/JAX MACE model wrappers."""
 
 
-__all__ = ['MACEModel']
+__all__ = ['MACEModel', 'PolarMACEModel']

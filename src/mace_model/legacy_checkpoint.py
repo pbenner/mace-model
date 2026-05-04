@@ -21,6 +21,7 @@ from mace_model.torch.adapters.e3nn import (
     set_optimization_defaults,
 )
 from mace_model.torch.adapters.e3nn.math import normalize2mom
+from mace_model.torch.tools.scatter import scatter_mean, scatter_sum
 
 MACE_MP_URLS = {
     'small': 'https://github.com/ACEsuit/mace-mp/releases/download/mace_mp_0/2023-12-10-mace-128-L0_energy_epoch-249.model',
@@ -48,8 +49,13 @@ MACE_OFF_URLS = {
 MACE_OMOL_URLS = {
     'extra_large': 'https://github.com/ACEsuit/mace-foundations/releases/download/mace_omol_0/MACE-omol-0-extra-large-1024.model',
 }
+MACE_POLAR_URLS = {
+    'polar-1-s': 'https://github.com/ACEsuit/mace-foundations/releases/download/mace_polar_1/MACE-POLAR-1-S.model',
+    'polar-1-m': 'https://github.com/ACEsuit/mace-foundations/releases/download/mace_polar_1/MACE-POLAR-1-M.model',
+    'polar-1-l': 'https://github.com/ACEsuit/mace-foundations/releases/download/mace_polar_1/MACE-POLAR-1-L.model',
+}
 ANICC_DEFAULT_URL = 'https://github.com/ACEsuit/mace/raw/main/mace/calculators/foundations_models/ani500k_large_CC.model'
-SUPPORTED_FOUNDATION_SOURCES = ('mp', 'off', 'anicc', 'omol')
+SUPPORTED_FOUNDATION_SOURCES = ('mp', 'off', 'anicc', 'omol', 'polar')
 
 _IRREP_TYPE = type(next(iter(make_irreps('1x1o'))).ir)
 
@@ -319,6 +325,10 @@ def get_mace_mp_names() -> list[str | None]:
     return [None] + list(MACE_MP_URLS.keys())
 
 
+def get_mace_polar_names() -> list[str]:
+    return list(MACE_POLAR_URLS.keys())
+
+
 def _download_if_needed(url: str, cached_path: Path) -> Path:
     if cached_path.exists():
         return cached_path
@@ -372,6 +382,18 @@ def resolve_foundation_checkpoint(source: str, model: str | None = None) -> Path
                 url = MACE_OMOL_URLS[model]
             except KeyError as exc:
                 raise ValueError(f'Unsupported MACE-OMOL model {model!r}.') from exc
+    elif source == 'polar':
+        if model is None:
+            model = 'polar-1-s'
+        if model.startswith('https:'):
+            url = model
+        elif Path(model).exists():
+            return Path(model).expanduser().resolve()
+        else:
+            try:
+                url = MACE_POLAR_URLS[model]
+            except KeyError as exc:
+                raise ValueError(f'Unsupported MACE-Polar model {model!r}.') from exc
     else:
         if model is None:
             url = ANICC_DEFAULT_URL
@@ -424,6 +446,8 @@ def _build_legacy_imports() -> dict[str, types.ModuleType]:
     e3nn_nn = add_module('e3nn.nn', package=True)
     e3nn_nn_fc = add_module('e3nn.nn._fc')
     e3nn_nn_activation = add_module('e3nn.nn._activation')
+    e3nn_nn_extract = add_module('e3nn.nn._extract')
+    e3nn_nn_gate = add_module('e3nn.nn._gate')
     e3nn_math = add_module('e3nn.math', package=True)
     e3nn_math_norm = add_module('e3nn.math._normalize_activation')
     e3nn_util = add_module('e3nn.util', package=True)
@@ -448,6 +472,10 @@ def _build_legacy_imports() -> dict[str, types.ModuleType]:
         'FullyConnectedTensorProduct',
         'e3nn.o3._tensor_product._sub',
     )
+    e3nn_o3.ElementwiseTensorProduct = _legacy_module_type(
+        'ElementwiseTensorProduct',
+        'e3nn.o3._tensor_product._sub',
+    )
     e3nn_o3.SphericalHarmonics = _legacy_module_type(
         'SphericalHarmonics',
         'e3nn.o3._spherical_harmonics',
@@ -463,6 +491,7 @@ def _build_legacy_imports() -> dict[str, types.ModuleType]:
     e3nn_o3_tp_inst.Instruction = tp_instruction
     e3nn_o3_tp_main.TensorProduct = e3nn_o3.TensorProduct
     e3nn_o3_tp_sub.FullyConnectedTensorProduct = e3nn_o3.FullyConnectedTensorProduct
+    e3nn_o3_tp_sub.ElementwiseTensorProduct = e3nn_o3.ElementwiseTensorProduct
 
     e3nn_nn_fc.FullyConnectedNet = _legacy_module_type(
         'FullyConnectedNet',
@@ -473,9 +502,15 @@ def _build_legacy_imports() -> dict[str, types.ModuleType]:
         'Activation',
         'e3nn.nn._activation',
     )
+    e3nn_nn_extract.Extract = _legacy_module_type('Extract', 'e3nn.nn._extract')
+    e3nn_nn_gate.Gate = _legacy_module_type('Gate', 'e3nn.nn._gate')
+    e3nn_nn_gate._Sortcut = _legacy_module_type('_Sortcut', 'e3nn.nn._gate')
     e3nn_nn.FullyConnectedNet = e3nn_nn_fc.FullyConnectedNet
     e3nn_nn._Layer = e3nn_nn_fc._Layer
     e3nn_nn.Activation = e3nn_nn_activation.Activation
+    e3nn_nn.Extract = e3nn_nn_extract.Extract
+    e3nn_nn.Gate = e3nn_nn_gate.Gate
+    e3nn_nn._Sortcut = e3nn_nn_gate._Sortcut
 
     e3nn_math.normalize2mom = normalize2mom
     e3nn_math_norm.normalize2mom = normalize2mom
@@ -492,24 +527,35 @@ def _build_legacy_imports() -> dict[str, types.ModuleType]:
 
     mace = add_module('mace', package=True)
     mace_modules = add_module('mace.modules', package=True)
+    mace_tools = add_module('mace.tools', package=True)
+    mace_tools_scatter = add_module('mace.tools.scatter')
     mace_blocks = add_module('mace.modules.blocks')
+    mace_extensions = add_module('mace.modules.extensions')
+    mace_field_blocks = add_module('mace.modules.field_blocks')
     mace_models = add_module('mace.modules.models')
     mace_radial = add_module('mace.modules.radial')
     mace_irreps_tools = add_module('mace.modules.irreps_tools')
     mace_symmetric = add_module('mace.modules.symmetric_contraction')
 
     mace.modules = mace_modules
+    mace.tools = mace_tools
+    mace_tools.scatter = mace_tools_scatter
+    mace_tools_scatter.scatter_mean = scatter_mean
+    mace_tools_scatter.scatter_sum = scatter_sum
     legacy_block_names = (
         'AtomicEnergiesBlock',
         'EquivariantProductBasisBlock',
+        'GeneralNonLinearBiasReadoutBlock',
         'LinearNodeEmbeddingBlock',
         'LinearReadoutBlock',
+        'NonLinearBiasReadoutBlock',
         'NonLinearReadoutBlock',
         'RadialEmbeddingBlock',
         'RealAgnosticDensityInteractionBlock',
         'RealAgnosticDensityResidualInteractionBlock',
         'RealAgnosticInteractionBlock',
         'RealAgnosticResidualInteractionBlock',
+        'RealAgnosticResidualNonLinearInteractionBlock',
         'ScaleShiftBlock',
     )
     for name in legacy_block_names:
@@ -520,8 +566,40 @@ def _build_legacy_imports() -> dict[str, types.ModuleType]:
         'mace.modules.models',
     )
     mace_models.MACE = _legacy_module_type('MACE', 'mace.modules.models')
+    mace_extensions.PolarMACE = _legacy_module_type(
+        'PolarMACE',
+        'mace.modules.extensions',
+    )
+    mace_extensions.MACELES = _legacy_module_type('MACELES', 'mace.modules.extensions')
 
-    for name in ('AgnesiTransform', 'BesselBasis', 'PolynomialCutoff', 'ZBLBasis'):
+    legacy_field_block_names = (
+        'AgnosticChargeBiasedLinearPotentialEmbedding',
+        'AgnosticEmbeddedOneBodyVariableUpdate',
+        'EnvironmentDependentSpinSourceBlock',
+        'FieldUpdateBlock',
+        'GeneralNonLinearBiasReadoutBlock',
+        'MLPNonLinearity',
+        'MultiLayerFeatureMixer',
+        'NoNonLinearity',
+        'OneBodyMLPFieldReadout',
+        'PostScfReadout',
+        'PotentialEmbeddingBlock',
+        'SparseUvuTensorProduct',
+    )
+    for name in legacy_field_block_names:
+        setattr(
+            mace_field_blocks,
+            name,
+            _legacy_module_type(name, 'mace.modules.field_blocks'),
+        )
+
+    for name in (
+        'AgnesiTransform',
+        'BesselBasis',
+        'PolynomialCutoff',
+        'RadialMLP',
+        'ZBLBasis',
+    ):
         setattr(mace_radial, name, _legacy_module_type(name, 'mace.modules.radial'))
 
     mace_irreps_tools.reshape_irreps = _legacy_module_type(
@@ -564,10 +642,14 @@ def legacy_checkpoint_imports() -> Iterator[None]:
     temp_modules = _build_legacy_imports()
     temp_modules.update(_build_local_namespace_aliases())
     previous = {name: sys.modules.get(name) for name in temp_modules}
+    previous_names = set(sys.modules)
     sys.modules.update(temp_modules)
     try:
         yield
     finally:
+        for name in list(sys.modules):
+            if name not in previous_names and name.startswith('graph_longrange'):
+                sys.modules.pop(name, None)
         for name, module in previous.items():
             if module is None:
                 sys.modules.pop(name, None)
@@ -595,8 +677,10 @@ def load_legacy_torch_model(
 __all__ = [
     'SUPPORTED_FOUNDATION_SOURCES',
     'MACE_MP_URLS',
+    'MACE_POLAR_URLS',
     'get_cache_dir',
     'get_mace_mp_names',
+    'get_mace_polar_names',
     'legacy_checkpoint_imports',
     'load_legacy_torch_model',
     'resolve_foundation_checkpoint',

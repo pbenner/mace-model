@@ -17,6 +17,7 @@ __all__ = [
     'convert_torch_model',
     'download_foundation_model',
     'get_mace_mp_names',
+    'get_mace_polar_names',
     'load_serialized_torch_model',
     'save_initialized_model',
     'save_converted_model',
@@ -35,6 +36,7 @@ _EXPORTS = {
     'convert_torch_model': ('conversion', 'convert_torch_model'),
     'download_foundation_model': ('foundation', 'download_foundation_model'),
     'get_mace_mp_names': ('foundation', 'get_mace_mp_names'),
+    'get_mace_polar_names': ('foundation', 'get_mace_polar_names'),
     'load_serialized_torch_model': ('conversion', 'load_serialized_torch_model'),
     'save_initialized_model': ('build', 'save_initialized_model'),
     'save_converted_model': ('conversion', 'save_converted_model'),
@@ -78,6 +80,7 @@ if TYPE_CHECKING:
         FoundationResult,
         download_foundation_model,
         get_mace_mp_names,
+        get_mace_polar_names,
         load_foundation_torch_model,
         save_foundation_model,
     )

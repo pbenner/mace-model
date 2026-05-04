@@ -66,6 +66,7 @@ from mace_model.torch.modules.blocks import (
     RealAgnosticResidualNonLinearInteractionBlock as TorchRealAgnosticResidualNonLinearInteractionBlock,
 )
 from mace_model.torch.modules.models import MACE as TorchMACE
+from mace_model.torch.modules.models import PolarMACE as TorchPolarMACE
 from mace_model.torch.modules.models import ScaleShiftMACE as TorchScaleShiftMACE
 
 from .config import BuildRequest
@@ -95,7 +96,11 @@ TORCH_READOUTS = {
     )
 }
 
-TORCH_MODEL_CLASSES = {'MACE': TorchMACE, 'ScaleShiftMACE': TorchScaleShiftMACE}
+TORCH_MODEL_CLASSES = {
+    'MACE': TorchMACE,
+    'ScaleShiftMACE': TorchScaleShiftMACE,
+    'PolarMACE': TorchPolarMACE,
+}
 
 
 @dataclass(frozen=True)
@@ -257,6 +262,10 @@ def _torch_kwargs_from_config(
         for param in signature.parameters.values()
     ):
         allowed |= set(inspect.signature(TorchMACE.__init__).parameters) - {
+            'self',
+            'kwargs',
+        }
+        allowed |= set(inspect.signature(TorchScaleShiftMACE.__init__).parameters) - {
             'self',
             'kwargs',
         }

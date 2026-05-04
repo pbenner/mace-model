@@ -38,3 +38,23 @@ def scatter_sum(
         out = torch.zeros(size, dtype=src.dtype, device=src.device)
         return out.scatter_add_(dim, index, src)
     return out.scatter_add_(dim, index, src)
+
+
+def scatter_mean(
+    src: torch.Tensor,
+    index: torch.Tensor,
+    dim: int = -1,
+    out: Optional[torch.Tensor] = None,
+    dim_size: Optional[int] = None,
+) -> torch.Tensor:
+    summed = scatter_sum(src=src, index=index, dim=dim, out=out, dim_size=dim_size)
+    counts = scatter_sum(
+        src=torch.ones_like(src),
+        index=index,
+        dim=dim,
+        dim_size=summed.shape[dim],
+    )
+    return summed / counts.clamp_min(1)
+
+
+__all__ = ['scatter_mean', 'scatter_sum']

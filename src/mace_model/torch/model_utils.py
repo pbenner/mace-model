@@ -26,7 +26,7 @@ def extract_radial_mlp(model: torch.nn.Module) -> list[int]:
 
 def extract_torch_model_config(model: torch.nn.Module) -> dict[str, Any]:
     model_class = model.__class__.__name__
-    if model_class not in {'MACE', 'ScaleShiftMACE'}:
+    if model_class not in {'MACE', 'PolarMACE', 'ScaleShiftMACE'}:
         return {'error': f'Model is not a supported Torch MACE model: {model_class}'}
 
     def radial_to_name(radial_type: str) -> str:
@@ -55,11 +55,14 @@ def extract_torch_model_config(model: torch.nn.Module) -> dict[str, Any]:
     else:
         heads = ['Default']
     num_interactions = int(model.num_interactions.item())
-    model_mlp_irreps = (
-        o3.Irreps(str(model.readouts[-1].hidden_irreps))
-        if num_interactions > 1
-        else o3.Irreps('1x0e')
-    )
+    if model_class == 'PolarMACE':
+        model_mlp_irreps = o3.Irreps(str(model.fukui_source_map.hidden_irreps))
+    else:
+        model_mlp_irreps = (
+            o3.Irreps(str(model.readouts[-1].hidden_irreps))
+            if num_interactions > 1
+            else o3.Irreps('1x0e')
+        )
     try:
         correlation = (
             len(model.products[0].symmetric_contractions.contractions[0].weights) + 1
@@ -92,11 +95,7 @@ def extract_torch_model_config(model: torch.nn.Module) -> dict[str, Any]:
         'num_elements': len(model.atomic_numbers),
         'hidden_irreps': o3.Irreps(str(model.products[0].linear.irreps_out)),
         'edge_irreps': getattr(model, 'edge_irreps', None),
-        'MLP_irreps': (
-            o3.Irreps(f'{model_mlp_irreps.count((0, 1)) // len(heads)}x0e')
-            if num_interactions > 1
-            else o3.Irreps('1x0e')
-        ),
+        'MLP_irreps': o3.Irreps(f'{model_mlp_irreps.count((0, 1)) // len(heads)}x0e'),
         'gate': gate,
         'use_reduced_cg': getattr(model, 'use_reduced_cg', False),
         'use_so3': getattr(model, 'use_so3', False),
@@ -123,6 +122,49 @@ def extract_torch_model_config(model: torch.nn.Module) -> dict[str, Any]:
         'heads': heads,
         'torch_model_class': model_class,
     }
+    if model_class == 'PolarMACE':
+        config.update(
+            {
+                'kspace_cutoff_factor': getattr(model, 'kspace_cutoff_factor', 1.5),
+                'atomic_multipoles_max_l': getattr(
+                    model,
+                    'atomic_multipoles_max_l',
+                    0,
+                ),
+                'atomic_multipoles_smearing_width': getattr(
+                    model,
+                    'atomic_multipoles_smearing_width',
+                    1.0,
+                ),
+                'field_feature_max_l': getattr(model, 'field_feature_max_l', 0),
+                'field_feature_widths': list(
+                    getattr(model, 'field_feature_widths', (1.0,))
+                ),
+                'num_recursion_steps': getattr(model, 'num_recursion_steps', 1),
+                'field_si': getattr(model, 'field_si', False),
+                'include_electrostatic_self_interaction': getattr(
+                    model,
+                    'include_electrostatic_self_interaction',
+                    False,
+                ),
+                'add_local_electron_energy': getattr(
+                    model,
+                    'add_local_electron_energy',
+                    False,
+                ),
+                'quadrupole_feature_corrections': getattr(
+                    model,
+                    'quadrupole_feature_corrections',
+                    False,
+                ),
+                'return_electrostatic_potentials': getattr(
+                    model,
+                    'return_electrostatic_potentials',
+                    False,
+                ),
+                'field_norm_factor': getattr(model, 'field_norm_factor', 0.02),
+            }
+        )
     return config
 
 

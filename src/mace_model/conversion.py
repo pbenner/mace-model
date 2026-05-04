@@ -59,10 +59,10 @@ class TorchConversionResult:
 
 def _extract_model_class(torch_model) -> str:
     model_class = torch_model.__class__.__name__
-    if model_class not in {'MACE', 'ScaleShiftMACE'}:
+    if model_class not in {'MACE', 'PolarMACE', 'ScaleShiftMACE'}:
         raise ValueError(
             f'Unsupported Torch model class {model_class!r}. '
-            "Expected 'MACE' or 'ScaleShiftMACE'."
+            "Expected 'MACE', 'PolarMACE', or 'ScaleShiftMACE'."
         )
     return model_class
 
@@ -154,7 +154,12 @@ def normalize_extracted_torch_config(config: dict[str, Any]) -> dict[str, Any]:
     ):
         value = normalized.get(key)
         if value is not None:
-            normalized[key] = float(np.asarray(value))
+            array_value = np.asarray(value)
+            normalized[key] = (
+                float(array_value)
+                if array_value.ndim == 0
+                else array_value.astype(float).tolist()
+            )
 
     normalized['cueq_config'] = _cue_config_to_dict(normalized.get('cueq_config'))
     normalized['gate'] = _normalize_gate_name(normalized.get('gate'))
@@ -181,6 +186,22 @@ def _map_upstream_to_local_torch_key(key: str) -> str:
     if key.startswith('radial_embedding.bessel_fn.'):
         return key.replace('radial_embedding.bessel_fn.', 'radial_embedding.basis_fn.')
     return key
+
+
+def _candidate_local_torch_keys(key: str) -> tuple[str, ...]:
+    mapped = _map_upstream_to_local_torch_key(key)
+    candidates = [mapped]
+    if key not in candidates:
+        candidates.append(key)
+    if key.endswith('.weight'):
+        linear_key = f'{key[: -len(".weight")]}.linear.weight'
+        if linear_key not in candidates:
+            candidates.append(linear_key)
+    elif key.endswith('.bias'):
+        linear_key = f'{key[: -len(".bias")]}.linear.bias'
+        if linear_key not in candidates:
+            candidates.append(linear_key)
+    return tuple(candidates)
 
 
 def _shapes_match_up_to_unsqueeze(a, b) -> bool:
@@ -369,8 +390,17 @@ def _convert_native_torch_to_local(torch_model, model_class: str):
     source_state = torch_model.state_dict()
     target_state = local_model.state_dict()
     for key, value in source_state.items():
-        mapped = _map_upstream_to_local_torch_key(key)
-        if mapped not in target_state or 'symmetric_contraction' in key:
+        if 'symmetric_contraction' in key:
+            continue
+        mapped = next(
+            (
+                candidate
+                for candidate in _candidate_local_torch_keys(key)
+                if candidate in target_state
+            ),
+            None,
+        )
+        if mapped is None:
             continue
         target_value = target_state[mapped]
         if tuple(value.shape) == tuple(target_value.shape):

@@ -25,6 +25,7 @@ from .models import (
     AtomicDielectricMACE,
     AtomicDipolesMACE,
     EnergyDipolesMACE,
+    PolarMACE,
     ScaleShiftMACE,
 )
 from .radial import (
@@ -60,6 +61,7 @@ __all__ = [
     'NonLinearDipoleReadoutBlock',
     'NonLinearReadoutBlock',
     'PolynomialCutoff',
+    'PolarMACE',
     'RadialEmbeddingBlock',
     'RadialMLP',
     'RealAgnosticAttResidualInteractionBlock',
